@@ -15,6 +15,7 @@ import (
 // CustomTextFormatter formats logs in a clean, readable text format
 type CustomTextFormatter struct {
 	TimestampFormat string
+	ForceColors     bool
 }
 
 func (f *CustomTextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
@@ -44,6 +45,8 @@ func InitializeLogger() *logrus.Logger {
 
 	customFormatter := &CustomTextFormatter{
 		TimestampFormat: "2006-01-02 15:04:05",
+		//colored:         true,
+		ForceColors: true,
 	}
 
 	if env == "debug" {

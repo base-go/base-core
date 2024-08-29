@@ -46,7 +46,9 @@ func main() {
 	log.SetOutput(logger.Out)
 	log.SetFormatter(logger.Formatter)
 	log.SetLevel(logger.Level)
+
 	log.Info("Starting the application")
+	log.Info("Database connected, driver:  " + cfg.DBDriver)
 
 	log.Info("Core initialized mode: ", os.Getenv("GIN_MODE"))
 	gin.SetMode(os.Getenv("GIN_MODE"))

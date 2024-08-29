@@ -70,3 +70,55 @@
 2024-08-30 00:40:34 [INFO] Starting the application
 2024-08-30 00:40:34 [INFO] Core initialized mode: release
 2024-08-30 00:40:34 [INFO] Server starting on :8080
+2024-08-30 00:54:33 [INFO] Starting the application
+2024-08-30 00:54:33 [INFO] Core initialized mode: release
+2024-08-30 00:54:33 [INFO] Server starting on :8080
+2024-08-30 00:54:57 [INFO] Starting the application
+2024-08-30 00:54:57 [INFO] Core initialized mode: release
+2024-08-30 00:54:57 [INFO] Server starting on :8080
+2024-08-30 00:55:24 [INFO] Starting the application
+2024-08-30 00:55:24 [INFO] Core initialized mode: release
+2024-08-30 00:55:24 [INFO] Server starting on :8080
+2024-08-30 00:55:57 [INFO] Starting the application
+2024-08-30 00:55:57 [INFO] Core initialized mode: release
+2024-08-30 00:55:57 [INFO] Server starting on :8080
+2024-08-30 00:57:50 [INFO] Starting the application
+2024-08-30 00:57:50 [INFO] Core initialized mode: release
+2024-08-30 00:57:50 [INFO] Server starting on :8080
+2024-08-30 00:58:31 [INFO] Starting the application
+2024-08-30 00:58:31 [INFO] Core initialized mode: release
+2024-08-30 00:58:31 [INFO] Server starting on :8080
+2024-08-30 00:59:00 [INFO] Starting the application
+2024-08-30 00:59:00 [INFO] Core initialized mode: release
+2024-08-30 00:59:00 [INFO] Server starting on :8080
+2024-08-30 00:59:36 [INFO] Starting the application
+2024-08-30 00:59:36 [INFO] Core initialized mode: release
+2024-08-30 00:59:36 [INFO] Server starting on :8080
+2024-08-30 01:01:31 [INFO] Starting the application
+2024-08-30 01:01:31 [INFO] Core initialized mode: release
+2024-08-30 01:01:31 [INFO] Server starting on :8080
+2024-08-30 01:02:26 [INFO] Starting the application
+2024-08-30 01:02:26 [INFO] Core initialized mode: release
+2024-08-30 01:02:26 [INFO] Server starting on :8080
+2024-08-30 01:03:01 [INFO] Starting the application
+2024-08-30 01:03:01 [INFO] Database connection initializedsqlite
+2024-08-30 01:03:01 [INFO] Core initialized mode: release
+2024-08-30 01:03:01 [INFO] Server starting on :8080
+2024-08-30 01:03:41 [INFO] Starting the application
+2024-08-30 01:03:41 [INFO] Database connected, driver:  sqlite
+2024-08-30 01:03:41 [INFO] Core initialized mode: release
+2024-08-30 01:03:41 [INFO] Server starting on :8080
+2024-08-30 01:04:17 [INFO] Starting the application
+2024-08-30 01:04:17 [INFO] Database connected, driver:  sqlite
+2024-08-30 01:04:17 [INFO] Core initialized mode: release
+2024-08-30 01:04:17 [INFO] Initialized module: %s
+users
+2024-08-30 01:04:17 [INFO] Initialized module: %s
+customers
+2024-08-30 01:04:17 [INFO] Server starting on :8080
+2024-08-30 01:04:33 [INFO] Starting the application
+2024-08-30 01:04:33 [INFO] Database connected, driver:  sqlite
+2024-08-30 01:04:33 [INFO] Core initialized mode: release
+2024-08-30 01:04:33 [INFO] Initialized module: %susers
+2024-08-30 01:04:33 [INFO] Initialized module: %scustomers
+2024-08-30 01:04:33 [INFO] Server starting on :8080

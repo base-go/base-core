@@ -1,13 +1,12 @@
 package app
 
 import (
-	"log"
-
 	"base/app/customers"
 	"base/app/users"
 	"base/core/module"
 
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -27,7 +26,7 @@ func InitializeModules(db *gorm.DB, router *gin.RouterGroup) map[string]module.M
 	for name, initializer := range moduleInitializers {
 		module := initializer(db, router)
 		modules[name] = module
-		log.Printf("Initialized module: %s\n", name)
+		log.Info("Initialized module: %s", name)
 	}
 
 	return modules

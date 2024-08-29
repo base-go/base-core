@@ -3,7 +3,6 @@ package database
 import (
 	"base/core/config"
 	"fmt"
-	"log"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
@@ -39,6 +38,5 @@ func InitDB(cfg *config.Config) error {
 		return fmt.Errorf("failed to connect to the database: %v", err)
 	}
 
-	log.Println("Database connection established successfully")
 	return nil
 }
