@@ -1,0 +1,72 @@
+[36mINFO[0m[2024-08-30T00:06:19+02:00] Starting the application                     
+[36mINFO[0m[2024-08-30T00:06:19+02:00] Core initialized mode: release               
+[36mINFO[0m[2024-08-30T00:06:19+02:00] Server starting on :8080                     
+[36mINFO[0m[2024-08-30T00:06:24+02:00] incoming request                              [36mbody_size[0m=2 [36mclient_ip[0m="::1" [36merror[0m= [36mlatency_time[0m=2.904584ms [36mmethod[0m=GET [36mpath[0m=/users [36mstatus_code[0m=200 [36muser_agent[0m="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
+2024-08-30 00:09:17 [INFO] Starting the application
+2024-08-30 00:09:17 [INFO] Core initialized mode: release
+2024-08-30 00:09:17 [INFO] Server starting on :8080
+2024-08-30 00:09:40 [INFO] Request path=/users ip=::1 latency=1.923958ms user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 error= status=200 method=GET
+2024-08-30 00:11:27 [INFO] Starting the application
+2024-08-30 00:11:27 [INFO] Core initialized mode: release
+2024-08-30 00:11:27 [INFO] Server starting on :8080
+2024-08-30 00:11:30 [INFO] Request path=/users ip=::1 latency=3.835916ms os=macOS browser=Chrome error= status=200 method=GET
+2024-08-30 00:13:59 [INFO] Request error= status=201 method=POST path=/users ip=::1 latency=5.726625ms os=macOS browser=Chrome
+2024-08-30 00:28:43 [INFO] Starting the application
+2024-08-30 00:28:43 [INFO] Core initialized mode: release
+2024-08-30 00:28:43 [INFO] Server starting on :8080
+2024-08-30 00:28:43 [INFO] Request status=401 method=GET path=/swagger/swagger-ui.css.map ip=::1 latency=156.208µs os=macOS browser=Chrome error=
+2024-08-30 00:28:44 [INFO] Request browser=Chrome error= status=401 method=GET path=/swagger/index.html ip=::1 latency=248.917µs os=macOS
+2024-08-30 00:28:46 [INFO] Request status=401 method=GET path=/swagger/index.html ip=::1 latency=36.792µs os=macOS browser=Chrome error=
+2024-08-30 00:29:09 [INFO] Request os=macOS browser=Chrome error= status=401 method=GET path=/swagger/index.html ip=::1 latency=122.709µs
+2024-08-30 00:29:10 [INFO] Request error= status=401 method=GET path=/swagger/index.html ip=::1 latency=29.667µs os=macOS browser=Chrome
+2024-08-30 00:29:28 [INFO] Starting the application
+2024-08-30 00:29:28 [INFO] Core initialized mode: release
+2024-08-30 00:29:28 [INFO] Server starting on :8080
+2024-08-30 00:29:29 [INFO] Request method=GET path=/swagger/index.html ip=::1 latency=344.958µs os=macOS browser=Chrome error= status=401
+2024-08-30 00:32:28 [INFO] Starting the application
+2024-08-30 00:32:28 [INFO] Core initialized mode: release
+2024-08-30 00:32:28 [INFO] Server starting on :8080
+2024-08-30 00:32:29 [INFO] Request error= status=404 method=GET path=/swagger/index.html ip=::1 latency=709ns os=macOS browser=Chrome
+2024-08-30 00:32:31 [INFO] Request latency=750ns os=macOS browser=Chrome error= status=404 method=GET path=/swagger/index.html ip=::1
+2024-08-30 00:32:56 [INFO] Starting the application
+2024-08-30 00:32:56 [INFO] Core initialized mode: release
+2024-08-30 00:32:56 [INFO] Server starting on :8080
+2024-08-30 00:32:57 [INFO] Request error= status=401 method=GET path=/swagger/index.html ip=::1 latency=156.375µs os=macOS browser=Chrome
+2024-08-30 00:32:59 [INFO] Request os=macOS browser=Chrome error= status=401 method=GET path=/swagger/index.html ip=::1 latency=313.958µs
+2024-08-30 00:37:07 [INFO] Starting the application
+2024-08-30 00:37:07 [INFO] Core initialized mode: release
+2024-08-30 00:37:07 [INFO] Server starting on :8080
+2024-08-30 00:37:10 [INFO] Request path=/swagger/index.html ip=::1 latency=375ns os=macOS browser=Chrome error= status=404 method=GET
+2024-08-30 00:37:47 [INFO] Starting the application
+2024-08-30 00:37:47 [INFO] Core initialized mode: release
+2024-08-30 00:37:47 [INFO] Server starting on :8080
+2024-08-30 00:37:51 [INFO] Request status=200 method=GET path=/swagger/index.html ip=::1 latency=865.541µs os=macOS browser=Chrome error=
+2024-08-30 00:37:51 [INFO] Request error= status=200 method=GET path=/swagger/swagger-ui.css ip=::1 latency=1.962708ms os=macOS browser=Chrome
+2024-08-30 00:37:51 [INFO] Request os=macOS browser=Chrome error= status=200 method=GET path=/swagger/swagger-ui-standalone-preset.js ip=::1 latency=17.575791ms
+2024-08-30 00:37:51 [INFO] Request method=GET path=/swagger/swagger-ui.css.map ip=::1 latency=31.235291ms os=macOS browser=Chrome error= status=200
+2024-08-30 00:37:51 [INFO] Request status=200 method=GET path=/swagger/swagger-ui-bundle.js ip=::1 latency=93.130375ms os=macOS browser=Chrome error=
+2024-08-30 00:37:51 [INFO] Request ip=::1 latency=3.045667ms os=macOS browser=Chrome error= status=200 method=GET path=/swagger/swagger-ui-bundle.js.map
+2024-08-30 00:37:51 [INFO] Request status=200 method=GET path=/swagger/swagger-ui-standalone-preset.js.map ip=::1 latency=2.619708ms os=macOS browser=Chrome error=
+2024-08-30 00:37:51 [INFO] Request latency=439.5µs os=macOS browser=Chrome error= status=200 method=GET path=/swagger/doc.json ip=::1
+2024-08-30 00:37:51 [INFO] Request browser=Chrome error= status=200 method=GET path=/swagger/favicon-32x32.png ip=::1 latency=29.834µs os=macOS
+2024-08-30 00:38:01 [INFO] Request os=macOS browser=Chrome error= status=404 method=GET path=/customers ip=::1 latency=416ns
+2024-08-30 00:38:20 [INFO] Starting the application
+2024-08-30 00:38:20 [INFO] Core initialized mode: release
+2024-08-30 00:38:20 [INFO] Server starting on :8080
+2024-08-30 00:38:21 [INFO] Request ip=::1 latency=863.333µs os=macOS browser=Chrome error= status=200 method=GET path=/swagger/index.html
+2024-08-30 00:38:21 [INFO] Request latency=361.334µs os=macOS browser=Chrome error= status=200 method=GET path=/swagger/swagger-ui.css ip=::1
+2024-08-30 00:38:21 [INFO] Request ip=::1 latency=520.458µs os=macOS browser=Chrome error= status=200 method=GET path=/swagger/swagger-ui-standalone-preset.js
+2024-08-30 00:38:21 [INFO] Request browser=Chrome error= status=200 method=GET path=/swagger/swagger-ui-bundle.js ip=::1 latency=1.139917ms os=macOS
+2024-08-30 00:38:21 [INFO] Request os=macOS browser=Chrome error= status=200 method=GET path=/swagger/swagger-ui.css.map ip=::1 latency=707.166µs
+2024-08-30 00:38:21 [INFO] Request path=/swagger/swagger-ui-bundle.js.map ip=::1 latency=8.460541ms os=macOS browser=Chrome error= status=200 method=GET
+2024-08-30 00:38:21 [INFO] Request latency=476.708µs os=macOS browser=Chrome error= status=200 method=GET path=/swagger/swagger-ui-standalone-preset.js.map ip=::1
+2024-08-30 00:38:21 [INFO] Request path=/swagger/doc.json ip=::1 latency=1.519958ms os=macOS browser=Chrome error= status=200 method=GET
+2024-08-30 00:38:21 [INFO] Request status=200 method=GET path=/swagger/favicon-32x32.png ip=::1 latency=9.991916ms os=macOS browser=Chrome error=
+2024-08-30 00:38:27 [INFO] Request os=macOS browser=Chrome error= status=401 method=GET path=/api/v1/customers ip=::1 latency=536.167µs
+2024-08-30 00:38:42 [ERROR] Server error browser=Chrome error= status=500 method=GET path=/api/v1/customers ip=::1 latency=1.614958ms os=macOS
+2024-08-30 00:39:59 [INFO] Starting the application
+2024-08-30 00:39:59 [INFO] Core initialized mode: release
+2024-08-30 00:39:59 [INFO] Server starting on :8080
+2024-08-30 00:40:34 [INFO] Starting the application
+2024-08-30 00:40:34 [INFO] Core initialized mode: release
+2024-08-30 00:40:34 [INFO] Server starting on :8080

@@ -1,28 +1,44 @@
 package config
 
 import (
-	"log"
-
-	"github.com/joho/godotenv"
-	"github.com/kelseyhightower/envconfig"
+	"os"
 )
 
+// Config holds the application configuration.
 type Config struct {
-	DBPath        string `envconfig:"DB_PATH" default:"./sqlite.db"`
-	ServerAddress string `envconfig:"SERVER_ADDRESS" default:":8080"`
-	JWTSecret     string `envconfig:"JWT_SECRET" required:"true"`
+	DBDriver      string
+	DBUser        string
+	DBPassword    string
+	DBHost        string
+	DBPort        string
+	DBName        string
+	DBPath        string
+	DBURL         string
+	JWTSecret     string
+	ServerAddress string
 }
 
-var AppConfig Config
+// NewConfig returns a new Config instance with default values.
+func NewConfig() *Config {
+	return &Config{
+		DBDriver:   getEnv("DB_DRIVER", "mysql"),
+		DBUser:     getEnv("DB_USER", "root"),
+		DBPassword: getEnv("DB_PASSWORD", ""),
+		DBHost:     getEnv("DB_HOST", "localhost"),
+		DBPort:     getEnv("DB_PORT", "3306"),
+		DBName:     getEnv("DB_NAME", "mydatabase"),
+		DBPath:     getEnv("DB_PATH", "test.db"), // Default path for SQLite
+		DBURL:      getEnv("DB_URL", ""),
 
-func Init() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("Error loading .env file, using environment variables")
+		JWTSecret:     getEnv("JWT_SECRET", "secret"),
+		ServerAddress: getEnv("SERVER_ADDRESS", ":8080"),
 	}
+}
 
-	err = envconfig.Process("", &AppConfig)
-	if err != nil {
-		log.Fatal("Cannot process config:", err)
+// getEnv returns the value of an environment variable with a fallback default value.
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
 	}
+	return fallback
 }
