@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Chat Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        #chat-box {
+            height: 300px;
+            border: 1px solid #ccc;
+            overflow-y: scroll;
+            margin-bottom: 20px;
+            padding: 10px;
+        }
+
+        #status {
+            margin-bottom: 10px;
+        }
+
+        #message-form {
+            display: flex;
+        }
+
+        #message-input {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>WebSocket Chat Tester</h1>
+    <div id="status">Status: Disconnected</div>
+    <button id="connect-btn">Connect</button>
+    <button id="disconnect-btn" disabled>Disconnect</button>
+    <div id="chat-box"></div>
+    <form id="message-form">
+        <input type="text" id="message-input" placeholder="Type a message..." disabled>
+        <button type="submit" id="send-btn" disabled>Send</button>
+    </form>
+
+    <script>
+        const statusEl = document.getElementById('status');
+        const chatBoxEl = document.getElementById('chat-box');
+        const messageFormEl = document.getElementById('message-form');
+        const messageInputEl = document.getElementById('message-input');
+        const connectBtnEl = document.getElementById('connect-btn');
+        const disconnectBtnEl = document.getElementById('disconnect-btn');
+        const sendBtnEl = document.getElementById('send-btn');
+
+        let socket;
+
+        function updateStatus(status) {
+            statusEl.textContent = `Status: ${status}`;
+        }
+
+        function appendMessage(message) {
+            const messageEl = document.createElement('div');
+            messageEl.textContent = message;
+            chatBoxEl.appendChild(messageEl);
+            chatBoxEl.scrollTop = chatBoxEl.scrollHeight;
+        }
+
+        function connect() {
+            socket = new WebSocket('ws://localhost:8080/api/v1/ws');
+
+            socket.onopen = function (e) {
+                updateStatus('Connected');
+                messageInputEl.disabled = false;
+                sendBtnEl.disabled = false;
+                connectBtnEl.disabled = true;
+                disconnectBtnEl.disabled = false;
+                appendMessage('Connected to the chat server.');
+            };
+
+            socket.onmessage = function (event) {
+                const message = JSON.parse(event.data);
+                appendMessage(`Received: ${message.content}`);
+            };
+
+            socket.onclose = function (event) {
+                if (event.wasClean) {
+                    updateStatus('Disconnected');
+                } else {
+                    updateStatus('Connection lost');
+                }
+                messageInputEl.disabled = true;
+                sendBtnEl.disabled = true;
+                connectBtnEl.disabled = false;
+                disconnectBtnEl.disabled = true;
+                appendMessage('Disconnected from the chat server.');
+            };
+
+            socket.onerror = function (error) {
+                updateStatus('Error');
+                appendMessage(`Error: ${error.message}`);
+            };
+        }
+
+        function disconnect() {
+            if (socket) {
+                socket.close();
+            }
+        }
+
+        function sendMessage(message) {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                const messageObj = {
+                    type: 'chat',
+                    content: message
+                };
+                socket.send(JSON.stringify(messageObj));
+                appendMessage(`Sent: ${message}`);
+            }
+        }
+
+        connectBtnEl.addEventListener('click', connect);
+        disconnectBtnEl.addEventListener('click', disconnect);
+
+        messageFormEl.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const message = messageInputEl.value.trim();
+            if (message) {
+                sendMessage(message);
+                messageInputEl.value = '';
+            }
+        });
+    </script>
+</body>
+
+</html>

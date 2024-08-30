@@ -1,9 +1,11 @@
 package auth
 
 import (
+	"base/core/email"
 	"base/core/module"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -14,9 +16,9 @@ type AuthModule struct {
 	Service    *AuthService
 }
 
-func NewAuthModule(db *gorm.DB, router *gin.RouterGroup) module.Module {
+func NewAuthModule(db *gorm.DB, router *gin.RouterGroup, emailSender email.Sender, logger *logrus.Logger) module.Module {
 	service := NewAuthService(db)
-	controller := NewAuthController(service)
+	controller := NewAuthController(service, emailSender, logger)
 
 	authModule := &AuthModule{
 		DB:         db,

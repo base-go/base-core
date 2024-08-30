@@ -1,18 +1,24 @@
 package auth
 
 import (
+	"base/core/email"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 type AuthController struct {
 	AuthService *AuthService
+	EmailSender email.Sender
+	Logger      *logrus.Logger
 }
 
-func NewAuthController(service *AuthService) *AuthController {
+func NewAuthController(service *AuthService, emailSender email.Sender, logger *logrus.Logger) *AuthController {
 	return &AuthController{
 		AuthService: service,
+		EmailSender: emailSender,
+		Logger:      logger,
 	}
 }
 
@@ -28,6 +34,7 @@ func (c *AuthController) Routes(router *gin.RouterGroup) {
 // @Summary Register a new user
 // @Description Register a new user with the input payload
 // @Tags Core/Auth
+// @Security ApiKeyAuth
 // @Accept json
 // @Produce json
 // @Param user body RegisterRequest true "Register User"
@@ -48,6 +55,22 @@ func (c *AuthController) Register(ctx *gin.Context) {
 		return
 	}
 
+	// Send welcome email
+	msg := email.Message{
+		To:      []string{user.Email},
+		From:    "noreply@yourdomain.com", // Make sure this matches your Postmark sender signature
+		Subject: "Welcome to Our Application",
+		Body:    c.getWelcomeEmailBody(user.FirstName),
+		IsHTML:  true,
+	}
+
+	err = email.Send(msg)
+	if err != nil {
+		c.Logger.Errorf("Failed to send welcome email: %v", err)
+		// Note: We're not returning an error to the user here, as the registration was successful
+	} else {
+		c.Logger.Infof("Welcome email sent to %s", user.Email)
+	}
 	ctx.JSON(http.StatusCreated, user)
 }
 
@@ -55,6 +78,7 @@ func (c *AuthController) Register(ctx *gin.Context) {
 // @Summary User login
 // @Description Authenticate a user and return a token
 // @Tags Core/Auth
+// @Security ApiKeyAuth
 // @Accept json
 // @Produce json
 // @Param user body LoginRequest true "Login User"
@@ -96,6 +120,7 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 // @Summary Request password reset
 // @Description Request a password reset token
 // @Tags Core/Auth
+// @Security ApiKeyAuth
 // @Accept json
 // @Produce json
 // @Param email body ForgotPasswordRequest true "User Email"
@@ -123,6 +148,7 @@ func (c *AuthController) ForgotPassword(ctx *gin.Context) {
 // @Summary Reset password
 // @Description Reset user password using a token
 // @Tags Core/Auth
+// @Security ApiKeyAuth
 // @Accept json
 // @Produce json
 // @Param reset body ResetPasswordRequest true "Reset Password"
@@ -144,4 +170,11 @@ func (c *AuthController) ResetPassword(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, SuccessResponse{Message: "Password reset successful"})
+}
+
+func (c *AuthController) getWelcomeEmailBody(firstName string) string {
+	return "<h1>Welcome to Our Application</h1>" +
+		"<p>Hi " + firstName + ",</p>" +
+		"<p>Thank you for registering with our application.</p>" +
+		"<p>Best regards,<br>Team</p>"
 }

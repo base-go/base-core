@@ -227,6 +227,8 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/auth.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
       summary: Request password reset
       tags:
       - Core/Auth
@@ -257,6 +259,8 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/auth.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
       summary: User login
       tags:
       - Core/Auth
@@ -302,6 +306,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/auth.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
       summary: Register a new user
       tags:
       - Core/Auth
@@ -332,6 +338,8 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/auth.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
       summary: Reset password
       tags:
       - Core/Auth
@@ -526,6 +534,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/websocket.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
       summary: Connect to WebSocket
       tags:
       - Core/Websocket

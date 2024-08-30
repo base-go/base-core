@@ -83,11 +83,13 @@ func (h *Hub) Run() {
 
 // ServeWs handles WebSocket requests from the peer
 func ServeWs(hub *Hub, c *gin.Context) {
+	log.Info("Received WebSocket connection request")
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		log.Error(err)
+		log.Errorf("Failed to upgrade connection to WebSocket: %v", err)
 		return
 	}
+	log.Info("WebSocket connection established")
 	client := &Client{ID: c.Query("id"), Conn: conn, Send: make(chan []byte, 256)}
 	hub.register <- client
 
@@ -168,6 +170,7 @@ func SetupWebSocketRoutes(router *gin.RouterGroup, hub *Hub) {
 // @Summary Connect to WebSocket
 // @Description Establishes a WebSocket connection
 // @Tags Core/Websocket
+// @Security ApiKeyAuth
 // @Accept  json
 // @Produce  json
 // @Param id query string false "Client ID"

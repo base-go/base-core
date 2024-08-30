@@ -17,6 +17,11 @@ const docTemplate = `{
     "paths": {
         "/auth/forgot-password": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Request a password reset token",
                 "consumes": [
                     "application/json"
@@ -63,6 +68,11 @@ const docTemplate = `{
         },
         "/auth/login": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Authenticate a user and return a token",
                 "consumes": [
                     "application/json"
@@ -134,6 +144,11 @@ const docTemplate = `{
         },
         "/auth/register": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Register a new user with the input payload",
                 "consumes": [
                     "application/json"
@@ -180,6 +195,11 @@ const docTemplate = `{
         },
         "/auth/reset-password": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Reset user password using a token",
                 "consumes": [
                     "application/json"
@@ -495,6 +515,11 @@ const docTemplate = `{
         },
         "/ws": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Establishes a WebSocket connection",
                 "consumes": [
                     "application/json"

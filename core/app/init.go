@@ -3,6 +3,7 @@ package app
 import (
 	"base/core/app/auth"
 	"base/core/app/users"
+	"base/core/email"
 	"base/core/module"
 
 	"github.com/gin-gonic/gin"
@@ -17,7 +18,9 @@ func InitializeCoreModules(db *gorm.DB, router *gin.RouterGroup) map[string]modu
 	// Define the module initializers directly
 	moduleInitializers := map[string]func(*gorm.DB, *gin.RouterGroup) module.Module{
 		"users": func(db *gorm.DB, router *gin.RouterGroup) module.Module { return users.NewUserModule(db, router) },
-		"auth":  func(db *gorm.DB, router *gin.RouterGroup) module.Module { return auth.NewAuthModule(db, router) },
+		"auth": func(db *gorm.DB, router *gin.RouterGroup) module.Module {
+			return auth.NewAuthModule(db, router, &email.DefaultSender{}, &log.Logger{})
+		},
 		// MODULE_INITIALIZER_MARKER - Do not remove this comment because it's used by the CLI to add new module initializers
 
 	}
@@ -26,7 +29,6 @@ func InitializeCoreModules(db *gorm.DB, router *gin.RouterGroup) map[string]modu
 	for name, initializer := range moduleInitializers {
 		module := initializer(db, router)
 		modules[name] = module
-		log.Info("Initialized module: %s", name)
 	}
 
 	return modules

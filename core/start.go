@@ -4,9 +4,11 @@ import (
 	"base/app"
 	"base/core/config"
 	"base/core/database"
+	"base/core/email"
 	"base/core/file"
 	"base/core/middleware"
 	"base/core/websocket"
+	"fmt"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -47,11 +49,25 @@ func StartApplication() (*Application, error) {
 	log.SetFormatter(logger.Formatter)
 	log.SetLevel(logger.Level)
 
+	// Initialize email sender
+	emailSender, err := email.NewSender(cfg)
+	if err != nil {
+		log.Errorf("Failed to initialize email sender: %v", err)
+		return nil, fmt.Errorf("failed to initialize email sender: %w", err)
+	}
+
 	// Set up Gin
 	gin.SetMode(cfg.Env)
+
 	router := gin.New()
 	router.Use(gin.Recovery())
 	router.Use(middleware.LogrusLogger(logger))
+
+	// Set up static file serving
+	router.Static("/static", "./static")
+
+	// Set up storage file serving
+	router.Static("/storage", "./storage")
 
 	// Set up CORS
 	corsConfig := cors.DefaultConfig()
@@ -72,14 +88,31 @@ func StartApplication() (*Application, error) {
 	apiGroup.Use(middleware.APIKeyMiddleware())
 
 	// Initialize application modules
-	InitializeCoreModules(database.DB, apiGroup)
+	InitializeCoreModules(database.DB, apiGroup, emailSender, logger)
 	app.InitializeModules(database.DB, apiGroup)
+
+	// Add ping route to the main router, not to app.Router
+	router.GET("/ping", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "pong",
+		})
+	})
+	if err := email.Initialize(cfg); err != nil {
+		return nil, fmt.Errorf("failed to initialize email sender: %w", err)
+	}
+
+	// Initialize WebSocket module
+	wsHub := websocket.InitWebSocketModule(apiGroup)
 
 	file.InitFileModule(apiGroup)
 
-	return &Application{
+	// Create and return the Application instance
+	application := &Application{
 		Config: cfg,
 		DB:     db,
 		Router: router,
-	}, nil
+		WSHub:  wsHub,
+	}
+
+	return application, nil
 }

@@ -10,6 +10,12 @@ import (
 
 func APIKeyMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+
+		if c.IsWebsocket() {
+			c.Next()
+			return
+		}
+
 		if c.Request.Method == "OPTIONS" {
 			c.Next()
 			return

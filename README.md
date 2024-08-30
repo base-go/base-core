@@ -15,6 +15,12 @@ Base is a lightweight, modular framework for building RESTful APIs in Go. It pro
 - Command-line tool for generating and removing modules via `bin/base` command
 - Customizable routes and middleware
 - Integrated Swagger documentation
+- Real-time with WebSockets module
+- Unified file upload module with custom configurations
+- Integrated CORS support
+- Integrated rate limiting
+- Integrated caching
+- Integrated email sending
 
 ## Installation
 
