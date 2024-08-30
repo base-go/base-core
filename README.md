@@ -126,9 +126,35 @@ For each module, the following files are generated:
 - `service.go`: Contains business logic for the module
 - `mod.go`: Initializes the module and sets up routes
 
+
+## Todo
+- [ ] Add support for initial setup by cloning a template repository
+- [ ] Add support for custom modules non CRUD by passing endpoints and methods
+- [ ] Add support for custom templates
+- [ ] Add support for custom commands
+- [ ] Add support for custom configurations
+- [ ] Add support for custom middleware
+- [ ] Add support for custom error handling
+- [ ] Add support for custom logging
+- [ ] Add support for custom authentication and authorization
+- [ ] Add testing engine for unit and integration tests 
+- [ ] Add generate tests inside the module for CRUD operations test.go file that will be generated with the module 
+
+
+## Testing
+
+Even that there is no testing engine for now, you can test the generated code by running the application and sending requests to the API endpoints. 
+You can use swagger to test the endpoints.
+ 
+
+
 ## Customization
 
-You can customize the generated code by modifying the templates in the `templates/` directory.
+You can customize the generated code by modifying the templates in the `templates/` directory. The templates use Go's `text/template` package, so you can use variables, loops, and conditionals to generate the desired output.
+
+```
+Not Recommended: You can also modify the `bin/base` command to add new features or change the behavior of existing commands. However, this is not recommended as it may break compatibility with future versions of Base.
+```
 
 ## Contributing
 
