@@ -1,1 +1,0 @@
-2024-08-30 00:38:42 [ERROR] Server error method=GET path=/api/v1/customers ip=::1 latency=1.614958ms os=macOS browser=Chrome error= status=500

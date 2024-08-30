@@ -10,6 +10,7 @@ import (
 type Module interface {
 	Init() error
 	Migrate() error
+	GetModels() []interface{}
 }
 
 // DefaultModule provides a default implementation for the Module interface.
@@ -25,6 +26,9 @@ func (DefaultModule) Migrate() error {
 
 func (DefaultModule) Routes() {
 	// Default implementation does nothing
+}
+func (DefaultModule) GetModels() []interface{} {
+	return nil
 }
 
 var (

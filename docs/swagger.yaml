@@ -77,6 +77,20 @@ definitions:
       message:
         type: string
     type: object
+  file.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  file.UploadResult:
+    properties:
+      filename:
+        type: string
+      path:
+        type: string
+      size:
+        type: integer
+    type: object
   gorm.DeletedAt:
     properties:
       time:
@@ -84,115 +98,6 @@ definitions:
       valid:
         description: Valid is true if Time is not NULL
         type: boolean
-    type: object
-  scenes.CreateRequest:
-    properties:
-      cover:
-        type: string
-      description:
-        type: string
-      pg_rating:
-        type: string
-      slug:
-        type: string
-      title:
-        type: string
-      user_id:
-        type: integer
-    type: object
-  scenes.CreateResponse:
-    properties:
-      cover:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      description:
-        type: string
-      id:
-        type: integer
-      pg_rating:
-        type: string
-      slug:
-        type: string
-      title:
-        type: string
-      updatedAt:
-        type: string
-      user_id:
-        type: integer
-    type: object
-  scenes.ErrorResponse:
-    properties:
-      error:
-        type: string
-    type: object
-  scenes.Scene:
-    properties:
-      cover:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      description:
-        type: string
-      id:
-        type: integer
-      pg_rating:
-        type: string
-      slug:
-        type: string
-      title:
-        type: string
-      updatedAt:
-        type: string
-      user_id:
-        type: integer
-    type: object
-  scenes.SuccessResponse:
-    properties:
-      message:
-        type: string
-    type: object
-  scenes.UpdateRequest:
-    properties:
-      cover:
-        type: string
-      description:
-        type: string
-      pg_rating:
-        type: string
-      slug:
-        type: string
-      title:
-        type: string
-      user_id:
-        type: integer
-    type: object
-  scenes.UpdateResponse:
-    properties:
-      cover:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      description:
-        type: string
-      id:
-        type: integer
-      pg_rating:
-        type: string
-      slug:
-        type: string
-      title:
-        type: string
-      updatedAt:
-        type: string
-      user_id:
-        type: integer
     type: object
   users.CreateRequest:
     properties:
@@ -281,6 +186,11 @@ definitions:
       password:
         type: string
       updatedAt:
+        type: string
+    type: object
+  websocket.ErrorResponse:
+    properties:
+      error:
         type: string
     type: object
 host: localhost:8080
@@ -425,149 +335,33 @@ paths:
       summary: Reset password
       tags:
       - Core/Auth
-  /scenes:
-    get:
-      consumes:
-      - application/json
-      description: Get a list of all Scene
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/scenes.Scene'
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/scenes.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: List Scene
-      tags:
-      - App/Scene
+  /upload:
     post:
       consumes:
-      - application/json
-      description: Create a new Scene with the input payload
+      - multipart/form-data
+      description: Upload a file
       parameters:
-      - description: Create Scene
-        in: body
-        name: scenes
+      - description: File to upload
+        in: formData
+        name: file
         required: true
-        schema:
-          $ref: '#/definitions/scenes.CreateRequest'
+        type: file
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
           schema:
-            $ref: '#/definitions/scenes.CreateResponse'
+            $ref: '#/definitions/file.UploadResult'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/scenes.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/scenes.ErrorResponse'
+            $ref: '#/definitions/file.ErrorResponse'
       security:
       - ApiKeyAuth: []
-      summary: Create a new Scene
+      summary: Upload a file
       tags:
-      - App/Scene
-  /scenes/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete a Scene by its ID
-      parameters:
-      - description: ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/scenes.SuccessResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/scenes.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Delete a Scene
-      tags:
-      - App/Scene
-    get:
-      consumes:
-      - application/json
-      description: Get a Scene by its ID
-      parameters:
-      - description: ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/scenes.Scene'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/scenes.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Get a Scene
-      tags:
-      - App/Scene
-    put:
-      consumes:
-      - application/json
-      description: Update a Scene by its ID
-      parameters:
-      - description: ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Update Scene
-        in: body
-        name: scenes
-        required: true
-        schema:
-          $ref: '#/definitions/scenes.UpdateRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/scenes.UpdateResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/scenes.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/scenes.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Update a Scene
-      tags:
-      - App/Scene
+      - Core/FileUpload
   /users:
     get:
       consumes:
@@ -711,6 +505,30 @@ paths:
       summary: Update a User
       tags:
       - Core/Users
+  /ws:
+    get:
+      consumes:
+      - application/json
+      description: Establishes a WebSocket connection
+      parameters:
+      - description: Client ID
+        in: query
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "101":
+          description: Switching Protocols
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/websocket.ErrorResponse'
+      summary: Connect to WebSocket
+      tags:
+      - Core/Websocket
 schemes:
 - http
 securityDefinitions:

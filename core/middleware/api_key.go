@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -20,7 +21,8 @@ func APIKeyMiddleware() gin.HandlerFunc {
 
 		apiKey := c.GetHeader("X-Api-Key")
 		expectedAPIKey := os.Getenv("API_KEY")
-
+		fmt.Println("Expected API Key is: " + expectedAPIKey)
+		fmt.Println("API Key is: " + apiKey)
 		if apiKey == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return

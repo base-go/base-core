@@ -1,4 +1,4 @@
-package core
+package core // file core/core.go
 
 import (
 	"fmt"
@@ -14,49 +14,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
-	log "github.com/sirupsen/logrus"
+
 	"gorm.io/gorm"
 )
-
-// CustomTextFormatter formats logs in a clean, readable text format
-type CustomTextFormatter struct {
-	TimestampFormat string
-	ForceColors     bool
-}
-
-func (f *CustomTextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
-	timestamp := entry.Time.Format(f.TimestampFormat)
-	level := strings.ToUpper(entry.Level.String())
-	msg := fmt.Sprintf("%s [%s] %s", timestamp, level, entry.Message)
-
-	for k, v := range entry.Data {
-		msg += fmt.Sprintf(" %s=%v", k, v)
-	}
-
-	return []byte(msg + "\n"), nil
-}
-
-// InitializeModules loads and initializes all modules directly
-func InitializeCoreModules(db *gorm.DB, router *gin.RouterGroup) map[string]module.Module {
-	modules := make(map[string]module.Module)
-
-	// Define the module initializers directly
-	moduleInitializers := map[string]func(*gorm.DB, *gin.RouterGroup) module.Module{
-		"users": func(db *gorm.DB, router *gin.RouterGroup) module.Module { return users.NewUserModule(db, router) },
-		"auth":  func(db *gorm.DB, router *gin.RouterGroup) module.Module { return auth.NewAuthModule(db, router) },
-		// MODULE_INITIALIZER_MARKER - Do not remove this comment because it's used by the CLI to add new module initializers
-
-	}
-
-	// Initialize and register each module
-	for name, initializer := range moduleInitializers {
-		module := initializer(db, router)
-		modules[name] = module
-		log.Info("Initialized module: %s", name)
-	}
-
-	return modules
-}
 
 // InitializeLogger sets up Logrus as the global logger
 func InitializeLogger() *logrus.Logger {
@@ -133,6 +93,46 @@ func InitializeLogger() *logrus.Logger {
 	logrus.SetLevel(logger.Level)
 
 	return logger
+}
+
+// CustomTextFormatter formats logs in a clean, readable text format
+type CustomTextFormatter struct {
+	TimestampFormat string
+	ForceColors     bool
+}
+
+func (f *CustomTextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
+	timestamp := entry.Time.Format(f.TimestampFormat)
+	level := strings.ToUpper(entry.Level.String())
+	msg := fmt.Sprintf("%s [%s] %s", timestamp, level, entry.Message)
+
+	for k, v := range entry.Data {
+		msg += fmt.Sprintf(" %s=%v", k, v)
+	}
+
+	return []byte(msg + "\n"), nil
+}
+
+// InitializeModules loads and initializes all modules directly
+func InitializeCoreModules(db *gorm.DB, router *gin.RouterGroup) map[string]module.Module {
+	modules := make(map[string]module.Module)
+
+	// Define the module initializers directly
+	moduleInitializers := map[string]func(*gorm.DB, *gin.RouterGroup) module.Module{
+		"users": func(db *gorm.DB, router *gin.RouterGroup) module.Module { return users.NewUserModule(db, router) },
+		"auth":  func(db *gorm.DB, router *gin.RouterGroup) module.Module { return auth.NewAuthModule(db, router) },
+		// MODULE_INITIALIZER_MARKER - Do not remove this comment because it's used by the CLI to add new module initializers
+
+	}
+
+	// Initialize and register each module
+	for name, initializer := range moduleInitializers {
+		module := initializer(db, router)
+		modules[name] = module
+
+	}
+
+	return modules
 }
 
 // writerHook is a hook that writes logs of specified levels to a specified writer

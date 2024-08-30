@@ -12,8 +12,12 @@ import (
 
 var DB *gorm.DB
 
+type Database struct {
+	*gorm.DB
+}
+
 // InitDB initializes the database connection based on the provided configuration.
-func InitDB(cfg *config.Config) error {
+func InitDB(cfg *config.Config) (*Database, error) {
 	var err error
 	switch cfg.DBDriver {
 	case "sqlite":
@@ -31,12 +35,12 @@ func InitDB(cfg *config.Config) error {
 		}
 		DB, err = gorm.Open(postgres.Open(cfg.DBURL), &gorm.Config{})
 	default:
-		return fmt.Errorf("unsupported database driver: %s", cfg.DBDriver)
+		return nil, fmt.Errorf("unsupported database driver: %s", cfg.DBDriver)
 	}
 
 	if err != nil {
-		return fmt.Errorf("failed to connect to the database: %v", err)
+		return nil, fmt.Errorf("failed to connect to the database: %v", err)
 	}
 
-	return nil
+	return &Database{DB: DB}, nil
 }

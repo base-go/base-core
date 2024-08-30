@@ -38,3 +38,9 @@ func (m *AuthModule) Routes(router *gin.RouterGroup) {
 func (m *AuthModule) Migrate() error {
 	return m.DB.AutoMigrate(&User{})
 }
+
+func (m *AuthModule) GetModels() []interface{} {
+	return []interface{}{
+		&User{},
+	}
+}

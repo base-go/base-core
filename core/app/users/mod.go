@@ -37,3 +37,9 @@ func (m *UserModule) Routes(router *gin.RouterGroup) {
 func (m *UserModule) Migrate() error {
 	return m.DB.AutoMigrate(&User{})
 }
+
+func (m *UserModule) GetModels() []interface{} {
+	return []interface{}{
+		&User{},
+	}
+}
