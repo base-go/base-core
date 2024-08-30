@@ -156,6 +156,57 @@ You can customize the generated code by modifying the templates in the `template
 Not Recommended: You can also modify the `bin/base` command to add new features or change the behavior of existing commands. However, this is not recommended as it may break compatibility with future versions of Base.
 ```
 
+
+## Deployment
+
+To deploy the application, you can build the binary and run it on your server. You can also use Docker to create a containerized version of the application.
+
+To build the binary, run:
+
+```
+go build -o base
+```
+
+To run the binary, use:
+
+```
+./base
+```
+
+You can create Ubuntu service to run the binary on startup:
+```
+sudo nano /etc/systemd/system/base.service
+```
+
+Add the following content:
+```
+[Unit]
+Description=Base API
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/path/to/base
+ExecStart=/path/to/base/base
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable the service:
+```
+sudo systemctl enable base
+```
+
+Start the service:
+```
+sudo systemctl start base
+```
+
+
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
