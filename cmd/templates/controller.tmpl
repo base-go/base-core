@@ -28,7 +28,7 @@ func (c *{{.StructName}}Controller) Routes(router *gin.RouterGroup) {
 // Create{{.StructName}} godoc
 // @Summary Create a new {{.StructName}}
 // @Description Create a new {{.StructName}} with the input payload
-// @Tags {{.RouteName}}
+// @Tags App/{{.StructName}}
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
@@ -56,7 +56,7 @@ func (c *{{.StructName}}Controller) Create(ctx *gin.Context) {
 // Get{{.StructName}} godoc
 // @Summary Get a {{.StructName}}
 // @Description Get a {{.StructName}} by its ID
-// @Tags {{.RouteName}}
+// @Tags App/{{.StructName}}
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
@@ -78,7 +78,7 @@ func (c *{{.StructName}}Controller) Get(ctx *gin.Context) {
 // List{{.StructName}} godoc
 // @Summary List {{.StructName}}
 // @Description Get a list of all {{.StructName}}
-// @Tags {{.RouteName}}
+// @Tags App/{{.StructName}}
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
@@ -98,7 +98,7 @@ func (c *{{.StructName}}Controller) List(ctx *gin.Context) {
 // Update{{.StructName}} godoc
 // @Summary Update a {{.StructName}}
 // @Description Update a {{.StructName}} by its ID
-// @Tags {{.RouteName}}
+// @Tags App/{{.StructName}}
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
@@ -128,7 +128,7 @@ func (c *{{.StructName}}Controller) Update(ctx *gin.Context) {
 // Delete{{.StructName}} godoc
 // @Summary Delete a {{.StructName}}
 // @Description Delete a {{.StructName}} by its ID
-// @Tags {{.RouteName}}
+// @Tags App/{{.StructName}}
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json

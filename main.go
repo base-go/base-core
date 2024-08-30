@@ -31,7 +31,7 @@ import (
 // @in header
 // @name X-Api-Key
 func main() {
-	// Load .env file before initializing the logger to use the GIN_MODE variable
+	// Load .env file before initializing the logger to use the ENV variable
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
 	}
@@ -51,8 +51,8 @@ func main() {
 	log.Info("Starting the application")
 	log.Info("Database connected, driver:  " + cfg.DBDriver)
 
-	log.Info("Core initialized mode: ", os.Getenv("GIN_MODE"))
-	gin.SetMode(os.Getenv("GIN_MODE"))
+	log.Info("Core initialized mode: ", os.Getenv("ENV"))
+	gin.SetMode(os.Getenv("ENV"))
 
 	// Set up Gin
 	router := gin.New()
@@ -78,6 +78,7 @@ func main() {
 	//	apiGroup.Use(middleware.APIKeyMiddleware())
 	//	apiGroup.Use(middleware.AuthMiddleware())
 	// Initialize application modules with the authenticated API group
+	core.InitializeCoreModules(database.DB, apiGroup)
 	app.InitializeModules(database.DB, apiGroup)
 
 	// Start the server

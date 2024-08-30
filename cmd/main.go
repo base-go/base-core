@@ -26,22 +26,32 @@ func init() {
 var templateFS embed.FS
 
 var rootCmd = &cobra.Command{
-	Use:   "generate",
-	Short: "Generate new modules for the application",
-	Long:  `A command-line tool to generate new modules with predefined structure for the application.`,
+	Use:   "base [command] [args]",
+	Short: "Generate or destroy modules for the application",
+	Long:  `A command-line tool to generate new modules with predefined structure or destroy existing modules for the application.`,
 }
 
 var generateCmd = &cobra.Command{
-	Use:   "module [name] [field:type...]",
+	Use:   "g [name] [field:type...]",
 	Short: "Generate a new module",
 	Long:  `Generate a new module with the specified name and fields.`,
 	Args:  cobra.MinimumNArgs(1),
 	Run:   generateModule,
 }
 
+var destroyCmd = &cobra.Command{
+	Use:   "d [name]",
+	Short: "Destroy an existing module",
+	Long:  `Destroy an existing module with the specified name.`,
+	Args:  cobra.ExactArgs(1),
+	Run:   destroyModule,
+}
+
 func init() {
 	rootCmd.AddCommand(generateCmd)
+	rootCmd.AddCommand(destroyCmd)
 }
+
 func generateModule(cmd *cobra.Command, args []string) {
 	singularName := args[0]
 	pluralName := toLowerPlural(singularName)
@@ -234,6 +244,77 @@ func generateStructFields(fields []string, includeGorm bool) string {
 	return structFields
 }
 
+// Destroy
+func destroyModule(cmd *cobra.Command, args []string) {
+	singularName := args[0]
+	pluralName := toLowerPlural(singularName)
+
+	// Delete module directory
+	moduleDir := filepath.Join("app", pluralName)
+	err := os.RemoveAll(moduleDir)
+	if err != nil {
+		fmt.Printf("Error removing directory %s: %v\n", moduleDir, err)
+		return
+	}
+
+	// Update app/init.go to unregister the module
+	err = updateInitFileForDestroy(singularName, pluralName)
+	if err != nil {
+		fmt.Printf("Error updating app/init.go: %v\n", err)
+		return
+	}
+
+	fmt.Printf("Module '%s' destroyed successfully.\n", singularName)
+	fmt.Println("Module unregistered from app/init.go successfully!")
+}
+
+func updateInitFileForDestroy(singularName, pluralName string) error {
+	initFilePath := "app/init.go"
+
+	// Read the current content of init.go
+	content, err := ioutil.ReadFile(initFilePath)
+	if err != nil {
+		return err
+	}
+
+	// Remove import for the module
+	importStr := fmt.Sprintf("\"base/app/%s\"", pluralName)
+	content = removeImport(content, importStr)
+
+	// Remove module initializer
+	content = removeModuleInitializer(content, pluralName)
+
+	// Write the updated content back to init.go
+	return ioutil.WriteFile(initFilePath, content, 0644)
+}
+
+func removeImport(content []byte, importStr string) []byte {
+	lines := bytes.Split(content, []byte("\n"))
+	var newLines [][]byte
+
+	for _, line := range lines {
+		if !bytes.Contains(line, []byte(importStr)) {
+			newLines = append(newLines, line)
+		}
+	}
+
+	return bytes.Join(newLines, []byte("\n"))
+}
+
+func removeModuleInitializer(content []byte, pluralName string) []byte {
+	lines := bytes.Split(content, []byte("\n"))
+	var newLines [][]byte
+
+	for _, line := range lines {
+		if !bytes.Contains(line, []byte(fmt.Sprintf(`"%s":`, pluralName))) {
+			newLines = append(newLines, line)
+		}
+	}
+
+	return bytes.Join(newLines, []byte("\n"))
+}
+
+// Gereric functions
 func getGoType(t string) string {
 	switch t {
 	case "int":

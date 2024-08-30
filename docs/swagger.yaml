@@ -77,293 +77,6 @@ definitions:
       message:
         type: string
     type: object
-  chapters.Chapter:
-    properties:
-      cover:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      description:
-        type: string
-      id:
-        type: integer
-      pg_rating:
-        type: string
-      slug:
-        type: string
-      title:
-        type: string
-      updatedAt:
-        type: string
-      user_id:
-        type: integer
-    type: object
-  chapters.CreateRequest:
-    properties:
-      cover:
-        type: string
-      description:
-        type: string
-      pg_rating:
-        type: string
-      slug:
-        type: string
-      title:
-        type: string
-      user_id:
-        type: integer
-    type: object
-  chapters.CreateResponse:
-    properties:
-      cover:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      description:
-        type: string
-      id:
-        type: integer
-      pg_rating:
-        type: string
-      slug:
-        type: string
-      title:
-        type: string
-      updatedAt:
-        type: string
-      user_id:
-        type: integer
-    type: object
-  chapters.ErrorResponse:
-    properties:
-      error:
-        type: string
-    type: object
-  chapters.SuccessResponse:
-    properties:
-      message:
-        type: string
-    type: object
-  chapters.UpdateRequest:
-    properties:
-      cover:
-        type: string
-      description:
-        type: string
-      pg_rating:
-        type: string
-      slug:
-        type: string
-      title:
-        type: string
-      user_id:
-        type: integer
-    type: object
-  chapters.UpdateResponse:
-    properties:
-      cover:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      description:
-        type: string
-      id:
-        type: integer
-      pg_rating:
-        type: string
-      slug:
-        type: string
-      title:
-        type: string
-      updatedAt:
-        type: string
-      user_id:
-        type: integer
-    type: object
-  characters.Character:
-    properties:
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      description:
-        type: string
-      gender:
-        type: string
-      id:
-        type: integer
-      main_character:
-        type: boolean
-      name:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  characters.CreateRequest:
-    properties:
-      description:
-        type: string
-      gender:
-        type: string
-      main_character:
-        type: boolean
-      name:
-        type: string
-    type: object
-  characters.CreateResponse:
-    properties:
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      description:
-        type: string
-      gender:
-        type: string
-      id:
-        type: integer
-      main_character:
-        type: boolean
-      name:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  characters.ErrorResponse:
-    properties:
-      error:
-        type: string
-    type: object
-  characters.SuccessResponse:
-    properties:
-      message:
-        type: string
-    type: object
-  characters.UpdateRequest:
-    properties:
-      description:
-        type: string
-      gender:
-        type: string
-      main_character:
-        type: boolean
-      name:
-        type: string
-    type: object
-  characters.UpdateResponse:
-    properties:
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      description:
-        type: string
-      gender:
-        type: string
-      id:
-        type: integer
-      main_character:
-        type: boolean
-      name:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  customers.CreateRequest:
-    properties:
-      avatar:
-        type: string
-      email:
-        type: string
-      name:
-        type: string
-      password:
-        type: string
-    type: object
-  customers.CreateResponse:
-    properties:
-      avatar:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      email:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-      password:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  customers.Customer:
-    properties:
-      avatar:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      email:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-      password:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  customers.ErrorResponse:
-    properties:
-      error:
-        type: string
-    type: object
-  customers.SuccessResponse:
-    properties:
-      message:
-        type: string
-    type: object
-  customers.UpdateRequest:
-    properties:
-      avatar:
-        type: string
-      email:
-        type: string
-      name:
-        type: string
-      password:
-        type: string
-    type: object
-  customers.UpdateResponse:
-    properties:
-      avatar:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      email:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-      password:
-        type: string
-      updatedAt:
-        type: string
-    type: object
   gorm.DeletedAt:
     properties:
       time:
@@ -459,115 +172,6 @@ definitions:
         type: integer
     type: object
   scenes.UpdateResponse:
-    properties:
-      cover:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      description:
-        type: string
-      id:
-        type: integer
-      pg_rating:
-        type: string
-      slug:
-        type: string
-      title:
-        type: string
-      updatedAt:
-        type: string
-      user_id:
-        type: integer
-    type: object
-  stories.CreateRequest:
-    properties:
-      cover:
-        type: string
-      description:
-        type: string
-      pg_rating:
-        type: string
-      slug:
-        type: string
-      title:
-        type: string
-      user_id:
-        type: integer
-    type: object
-  stories.CreateResponse:
-    properties:
-      cover:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      description:
-        type: string
-      id:
-        type: integer
-      pg_rating:
-        type: string
-      slug:
-        type: string
-      title:
-        type: string
-      updatedAt:
-        type: string
-      user_id:
-        type: integer
-    type: object
-  stories.ErrorResponse:
-    properties:
-      error:
-        type: string
-    type: object
-  stories.Story:
-    properties:
-      cover:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      description:
-        type: string
-      id:
-        type: integer
-      pg_rating:
-        type: string
-      slug:
-        type: string
-      title:
-        type: string
-      updatedAt:
-        type: string
-      user_id:
-        type: integer
-    type: object
-  stories.SuccessResponse:
-    properties:
-      message:
-        type: string
-    type: object
-  stories.UpdateRequest:
-    properties:
-      cover:
-        type: string
-      description:
-        type: string
-      pg_rating:
-        type: string
-      slug:
-        type: string
-      title:
-        type: string
-      user_id:
-        type: integer
-    type: object
-  stories.UpdateResponse:
     properties:
       cover:
         type: string
@@ -715,7 +319,7 @@ paths:
             $ref: '#/definitions/auth.ErrorResponse'
       summary: Request password reset
       tags:
-      - auth
+      - Core/Auth
   /auth/login:
     post:
       consumes:
@@ -745,7 +349,7 @@ paths:
             $ref: '#/definitions/auth.ErrorResponse'
       summary: User login
       tags:
-      - auth
+      - Core/Auth
   /auth/logout:
     post:
       description: Logout a user
@@ -760,7 +364,7 @@ paths:
       - ApiKeyAuth: []
       summary: User logout
       tags:
-      - auth
+      - Core/Auth
   /auth/register:
     post:
       consumes:
@@ -790,7 +394,7 @@ paths:
             $ref: '#/definitions/auth.ErrorResponse'
       summary: Register a new user
       tags:
-      - auth
+      - Core/Auth
   /auth/reset-password:
     post:
       consumes:
@@ -820,436 +424,7 @@ paths:
             $ref: '#/definitions/auth.ErrorResponse'
       summary: Reset password
       tags:
-      - auth
-  /chapters:
-    get:
-      consumes:
-      - application/json
-      description: Get a list of all Chapter
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/chapters.Chapter'
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/chapters.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: List Chapter
-      tags:
-      - chapters
-    post:
-      consumes:
-      - application/json
-      description: Create a new Chapter with the input payload
-      parameters:
-      - description: Create Chapter
-        in: body
-        name: chapters
-        required: true
-        schema:
-          $ref: '#/definitions/chapters.CreateRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/chapters.CreateResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/chapters.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/chapters.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Create a new Chapter
-      tags:
-      - chapters
-  /chapters/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete a Chapter by its ID
-      parameters:
-      - description: ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/chapters.SuccessResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/chapters.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Delete a Chapter
-      tags:
-      - chapters
-    get:
-      consumes:
-      - application/json
-      description: Get a Chapter by its ID
-      parameters:
-      - description: ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/chapters.Chapter'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/chapters.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Get a Chapter
-      tags:
-      - chapters
-    put:
-      consumes:
-      - application/json
-      description: Update a Chapter by its ID
-      parameters:
-      - description: ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Update Chapter
-        in: body
-        name: chapters
-        required: true
-        schema:
-          $ref: '#/definitions/chapters.UpdateRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/chapters.UpdateResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/chapters.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/chapters.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Update a Chapter
-      tags:
-      - chapters
-  /characters:
-    get:
-      consumes:
-      - application/json
-      description: Get a list of all Character
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/characters.Character'
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/characters.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: List Character
-      tags:
-      - characters
-    post:
-      consumes:
-      - application/json
-      description: Create a new Character with the input payload
-      parameters:
-      - description: Create Character
-        in: body
-        name: characters
-        required: true
-        schema:
-          $ref: '#/definitions/characters.CreateRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/characters.CreateResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/characters.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/characters.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Create a new Character
-      tags:
-      - characters
-  /characters/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete a Character by its ID
-      parameters:
-      - description: ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/characters.SuccessResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/characters.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Delete a Character
-      tags:
-      - characters
-    get:
-      consumes:
-      - application/json
-      description: Get a Character by its ID
-      parameters:
-      - description: ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/characters.Character'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/characters.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Get a Character
-      tags:
-      - characters
-    put:
-      consumes:
-      - application/json
-      description: Update a Character by its ID
-      parameters:
-      - description: ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Update Character
-        in: body
-        name: characters
-        required: true
-        schema:
-          $ref: '#/definitions/characters.UpdateRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/characters.UpdateResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/characters.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/characters.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Update a Character
-      tags:
-      - characters
-  /customers:
-    get:
-      consumes:
-      - application/json
-      description: Get a list of all Customer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/customers.Customer'
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/customers.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: List Customer
-      tags:
-      - customers
-    post:
-      consumes:
-      - application/json
-      description: Create a new Customer with the input payload
-      parameters:
-      - description: Create Customer
-        in: body
-        name: customers
-        required: true
-        schema:
-          $ref: '#/definitions/customers.CreateRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/customers.CreateResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/customers.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/customers.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Create a new Customer
-      tags:
-      - customers
-  /customers/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete a Customer by its ID
-      parameters:
-      - description: ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/customers.SuccessResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/customers.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Delete a Customer
-      tags:
-      - customers
-    get:
-      consumes:
-      - application/json
-      description: Get a Customer by its ID
-      parameters:
-      - description: ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/customers.Customer'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/customers.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Get a Customer
-      tags:
-      - customers
-    put:
-      consumes:
-      - application/json
-      description: Update a Customer by its ID
-      parameters:
-      - description: ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Update Customer
-        in: body
-        name: customers
-        required: true
-        schema:
-          $ref: '#/definitions/customers.UpdateRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/customers.UpdateResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/customers.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/customers.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Update a Customer
-      tags:
-      - customers
+      - Core/Auth
   /scenes:
     get:
       consumes:
@@ -1272,7 +447,7 @@ paths:
       - ApiKeyAuth: []
       summary: List Scene
       tags:
-      - scenes
+      - App/Scene
     post:
       consumes:
       - application/json
@@ -1303,7 +478,7 @@ paths:
       - ApiKeyAuth: []
       summary: Create a new Scene
       tags:
-      - scenes
+      - App/Scene
   /scenes/{id}:
     delete:
       consumes:
@@ -1330,7 +505,7 @@ paths:
       - ApiKeyAuth: []
       summary: Delete a Scene
       tags:
-      - scenes
+      - App/Scene
     get:
       consumes:
       - application/json
@@ -1356,7 +531,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get a Scene
       tags:
-      - scenes
+      - App/Scene
     put:
       consumes:
       - application/json
@@ -1392,150 +567,7 @@ paths:
       - ApiKeyAuth: []
       summary: Update a Scene
       tags:
-      - scenes
-  /stories:
-    get:
-      consumes:
-      - application/json
-      description: Get a list of all Story
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/stories.Story'
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/stories.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: List Story
-      tags:
-      - stories
-    post:
-      consumes:
-      - application/json
-      description: Create a new Story with the input payload
-      parameters:
-      - description: Create Story
-        in: body
-        name: stories
-        required: true
-        schema:
-          $ref: '#/definitions/stories.CreateRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/stories.CreateResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/stories.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/stories.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Create a new Story
-      tags:
-      - stories
-  /stories/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete a Story by its ID
-      parameters:
-      - description: ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/stories.SuccessResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/stories.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Delete a Story
-      tags:
-      - stories
-    get:
-      consumes:
-      - application/json
-      description: Get a Story by its ID
-      parameters:
-      - description: ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/stories.Story'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/stories.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Get a Story
-      tags:
-      - stories
-    put:
-      consumes:
-      - application/json
-      description: Update a Story by its ID
-      parameters:
-      - description: ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Update Story
-        in: body
-        name: stories
-        required: true
-        schema:
-          $ref: '#/definitions/stories.UpdateRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/stories.UpdateResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/stories.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/stories.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Update a Story
-      tags:
-      - stories
+      - App/Scene
   /users:
     get:
       consumes:
@@ -1558,7 +590,7 @@ paths:
       - ApiKeyAuth: []
       summary: List User
       tags:
-      - users
+      - Core/Users
     post:
       consumes:
       - application/json
@@ -1589,7 +621,7 @@ paths:
       - ApiKeyAuth: []
       summary: Create a new User
       tags:
-      - users
+      - Core/Users
   /users/{id}:
     delete:
       consumes:
@@ -1616,7 +648,7 @@ paths:
       - ApiKeyAuth: []
       summary: Delete a User
       tags:
-      - users
+      - Core/Users
     get:
       consumes:
       - application/json
@@ -1642,7 +674,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get a User
       tags:
-      - users
+      - Core/Users
     put:
       consumes:
       - application/json
@@ -1678,7 +710,7 @@ paths:
       - ApiKeyAuth: []
       summary: Update a User
       tags:
-      - users
+      - Core/Users
 schemes:
 - http
 securityDefinitions:
