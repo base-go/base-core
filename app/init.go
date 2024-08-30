@@ -1,7 +1,12 @@
 package app
 
 import (
+	"base/app/auth"
+	"base/app/chapters"
+	"base/app/characters"
 	"base/app/customers"
+	"base/app/scenes"
+	"base/app/stories"
 	"base/app/users"
 	"base/core/module"
 
@@ -20,6 +25,19 @@ func InitializeModules(db *gorm.DB, router *gin.RouterGroup) map[string]module.M
 		"customers": func(db *gorm.DB, router *gin.RouterGroup) module.Module {
 			return customers.NewCustomerModule(db, router)
 		},
+		"stories": func(db *gorm.DB, router *gin.RouterGroup) module.Module {
+			return stories.NewStoryModule(db, router)
+		},
+		"chapters": func(db *gorm.DB, router *gin.RouterGroup) module.Module {
+			return chapters.NewChapterModule(db, router)
+		},
+		"scenes": func(db *gorm.DB, router *gin.RouterGroup) module.Module { return scenes.NewSceneModule(db, router) },
+		"characters": func(db *gorm.DB, router *gin.RouterGroup) module.Module {
+			return characters.NewCharacterModule(db, router)
+		},
+		"auth": func(db *gorm.DB, router *gin.RouterGroup) module.Module { return auth.NewAuthModule(db, router) },
+		// MODULE_INITIALIZER_MARKER
+
 	}
 
 	// Initialize and register each module

@@ -1,5 +1,280 @@
 basePath: /api/v1
 definitions:
+  auth.AuthResponse:
+    properties:
+      access_token:
+        type: string
+      email:
+        type: string
+      expires_in:
+        type: integer
+      first_name:
+        type: string
+      last_login:
+        type: string
+      last_name:
+        type: string
+      token_type:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  auth.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  auth.ForgotPasswordRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  auth.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  auth.RegisterRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    type: object
+  auth.ResetPasswordRequest:
+    properties:
+      email:
+        type: string
+      new_password:
+        minLength: 8
+        type: string
+      token:
+        type: string
+    required:
+    - email
+    - new_password
+    - token
+    type: object
+  auth.SuccessResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  chapters.Chapter:
+    properties:
+      cover:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      description:
+        type: string
+      id:
+        type: integer
+      pg_rating:
+        type: string
+      slug:
+        type: string
+      title:
+        type: string
+      updatedAt:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  chapters.CreateRequest:
+    properties:
+      cover:
+        type: string
+      description:
+        type: string
+      pg_rating:
+        type: string
+      slug:
+        type: string
+      title:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  chapters.CreateResponse:
+    properties:
+      cover:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      description:
+        type: string
+      id:
+        type: integer
+      pg_rating:
+        type: string
+      slug:
+        type: string
+      title:
+        type: string
+      updatedAt:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  chapters.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  chapters.SuccessResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  chapters.UpdateRequest:
+    properties:
+      cover:
+        type: string
+      description:
+        type: string
+      pg_rating:
+        type: string
+      slug:
+        type: string
+      title:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  chapters.UpdateResponse:
+    properties:
+      cover:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      description:
+        type: string
+      id:
+        type: integer
+      pg_rating:
+        type: string
+      slug:
+        type: string
+      title:
+        type: string
+      updatedAt:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  characters.Character:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      description:
+        type: string
+      gender:
+        type: string
+      id:
+        type: integer
+      main_character:
+        type: boolean
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  characters.CreateRequest:
+    properties:
+      description:
+        type: string
+      gender:
+        type: string
+      main_character:
+        type: boolean
+      name:
+        type: string
+    type: object
+  characters.CreateResponse:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      description:
+        type: string
+      gender:
+        type: string
+      id:
+        type: integer
+      main_character:
+        type: boolean
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  characters.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  characters.SuccessResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  characters.UpdateRequest:
+    properties:
+      description:
+        type: string
+      gender:
+        type: string
+      main_character:
+        type: boolean
+      name:
+        type: string
+    type: object
+  characters.UpdateResponse:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      description:
+        type: string
+      gender:
+        type: string
+      id:
+        type: integer
+      main_character:
+        type: boolean
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
   customers.CreateRequest:
     properties:
       avatar:
@@ -97,6 +372,224 @@ definitions:
         description: Valid is true if Time is not NULL
         type: boolean
     type: object
+  scenes.CreateRequest:
+    properties:
+      cover:
+        type: string
+      description:
+        type: string
+      pg_rating:
+        type: string
+      slug:
+        type: string
+      title:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  scenes.CreateResponse:
+    properties:
+      cover:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      description:
+        type: string
+      id:
+        type: integer
+      pg_rating:
+        type: string
+      slug:
+        type: string
+      title:
+        type: string
+      updatedAt:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  scenes.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  scenes.Scene:
+    properties:
+      cover:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      description:
+        type: string
+      id:
+        type: integer
+      pg_rating:
+        type: string
+      slug:
+        type: string
+      title:
+        type: string
+      updatedAt:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  scenes.SuccessResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  scenes.UpdateRequest:
+    properties:
+      cover:
+        type: string
+      description:
+        type: string
+      pg_rating:
+        type: string
+      slug:
+        type: string
+      title:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  scenes.UpdateResponse:
+    properties:
+      cover:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      description:
+        type: string
+      id:
+        type: integer
+      pg_rating:
+        type: string
+      slug:
+        type: string
+      title:
+        type: string
+      updatedAt:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  stories.CreateRequest:
+    properties:
+      cover:
+        type: string
+      description:
+        type: string
+      pg_rating:
+        type: string
+      slug:
+        type: string
+      title:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  stories.CreateResponse:
+    properties:
+      cover:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      description:
+        type: string
+      id:
+        type: integer
+      pg_rating:
+        type: string
+      slug:
+        type: string
+      title:
+        type: string
+      updatedAt:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  stories.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  stories.Story:
+    properties:
+      cover:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      description:
+        type: string
+      id:
+        type: integer
+      pg_rating:
+        type: string
+      slug:
+        type: string
+      title:
+        type: string
+      updatedAt:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  stories.SuccessResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  stories.UpdateRequest:
+    properties:
+      cover:
+        type: string
+      description:
+        type: string
+      pg_rating:
+        type: string
+      slug:
+        type: string
+      title:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  stories.UpdateResponse:
+    properties:
+      cover:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      description:
+        type: string
+      id:
+        type: integer
+      pg_rating:
+        type: string
+      slug:
+        type: string
+      title:
+        type: string
+      updatedAt:
+        type: string
+      user_id:
+        type: integer
+    type: object
   users.CreateRequest:
     properties:
       avatar:
@@ -193,6 +686,427 @@ info:
   title: Base API
   version: "1.0"
 paths:
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Request a password reset token
+      parameters:
+      - description: User Email
+        in: body
+        name: email
+        required: true
+        schema:
+          $ref: '#/definitions/auth.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+      summary: Request password reset
+      tags:
+      - auth
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate a user and return a token
+      parameters:
+      - description: Login User
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/auth.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+      summary: User login
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      description: Logout a user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.SuccessResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: User logout
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with the input payload
+      parameters:
+      - description: Register User
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/auth.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/auth.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - auth
+  /auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Reset user password using a token
+      parameters:
+      - description: Reset Password
+        in: body
+        name: reset
+        required: true
+        schema:
+          $ref: '#/definitions/auth.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+      summary: Reset password
+      tags:
+      - auth
+  /chapters:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all Chapter
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/chapters.Chapter'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/chapters.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: List Chapter
+      tags:
+      - chapters
+    post:
+      consumes:
+      - application/json
+      description: Create a new Chapter with the input payload
+      parameters:
+      - description: Create Chapter
+        in: body
+        name: chapters
+        required: true
+        schema:
+          $ref: '#/definitions/chapters.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/chapters.CreateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/chapters.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/chapters.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new Chapter
+      tags:
+      - chapters
+  /chapters/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a Chapter by its ID
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/chapters.SuccessResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/chapters.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a Chapter
+      tags:
+      - chapters
+    get:
+      consumes:
+      - application/json
+      description: Get a Chapter by its ID
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/chapters.Chapter'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/chapters.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get a Chapter
+      tags:
+      - chapters
+    put:
+      consumes:
+      - application/json
+      description: Update a Chapter by its ID
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Chapter
+        in: body
+        name: chapters
+        required: true
+        schema:
+          $ref: '#/definitions/chapters.UpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/chapters.UpdateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/chapters.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/chapters.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update a Chapter
+      tags:
+      - chapters
+  /characters:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all Character
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/characters.Character'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/characters.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: List Character
+      tags:
+      - characters
+    post:
+      consumes:
+      - application/json
+      description: Create a new Character with the input payload
+      parameters:
+      - description: Create Character
+        in: body
+        name: characters
+        required: true
+        schema:
+          $ref: '#/definitions/characters.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/characters.CreateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/characters.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/characters.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new Character
+      tags:
+      - characters
+  /characters/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a Character by its ID
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/characters.SuccessResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/characters.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a Character
+      tags:
+      - characters
+    get:
+      consumes:
+      - application/json
+      description: Get a Character by its ID
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/characters.Character'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/characters.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get a Character
+      tags:
+      - characters
+    put:
+      consumes:
+      - application/json
+      description: Update a Character by its ID
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Character
+        in: body
+        name: characters
+        required: true
+        schema:
+          $ref: '#/definitions/characters.UpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/characters.UpdateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/characters.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/characters.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update a Character
+      tags:
+      - characters
   /customers:
     get:
       consumes:
@@ -336,6 +1250,292 @@ paths:
       summary: Update a Customer
       tags:
       - customers
+  /scenes:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all Scene
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/scenes.Scene'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/scenes.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: List Scene
+      tags:
+      - scenes
+    post:
+      consumes:
+      - application/json
+      description: Create a new Scene with the input payload
+      parameters:
+      - description: Create Scene
+        in: body
+        name: scenes
+        required: true
+        schema:
+          $ref: '#/definitions/scenes.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/scenes.CreateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/scenes.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/scenes.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new Scene
+      tags:
+      - scenes
+  /scenes/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a Scene by its ID
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/scenes.SuccessResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/scenes.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a Scene
+      tags:
+      - scenes
+    get:
+      consumes:
+      - application/json
+      description: Get a Scene by its ID
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/scenes.Scene'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/scenes.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get a Scene
+      tags:
+      - scenes
+    put:
+      consumes:
+      - application/json
+      description: Update a Scene by its ID
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Scene
+        in: body
+        name: scenes
+        required: true
+        schema:
+          $ref: '#/definitions/scenes.UpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/scenes.UpdateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/scenes.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/scenes.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update a Scene
+      tags:
+      - scenes
+  /stories:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all Story
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/stories.Story'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/stories.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: List Story
+      tags:
+      - stories
+    post:
+      consumes:
+      - application/json
+      description: Create a new Story with the input payload
+      parameters:
+      - description: Create Story
+        in: body
+        name: stories
+        required: true
+        schema:
+          $ref: '#/definitions/stories.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/stories.CreateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/stories.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/stories.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new Story
+      tags:
+      - stories
+  /stories/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a Story by its ID
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/stories.SuccessResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/stories.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a Story
+      tags:
+      - stories
+    get:
+      consumes:
+      - application/json
+      description: Get a Story by its ID
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/stories.Story'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/stories.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get a Story
+      tags:
+      - stories
+    put:
+      consumes:
+      - application/json
+      description: Update a Story by its ID
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Story
+        in: body
+        name: stories
+        required: true
+        schema:
+          $ref: '#/definitions/stories.UpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/stories.UpdateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/stories.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/stories.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update a Story
+      tags:
+      - stories
   /users:
     get:
       consumes:

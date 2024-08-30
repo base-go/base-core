@@ -122,3 +122,102 @@ customers
 2024-08-30 01:04:33 [INFO] Initialized module: %susers
 2024-08-30 01:04:33 [INFO] Initialized module: %scustomers
 2024-08-30 01:04:33 [INFO] Server starting on :8080
+2024-08-30 01:05:12 [INFO] Request browser=Chrome error= status=200 method=GET path=/api/v1/customers ip=::1 latency=918µs os=macOS
+2024-08-30 01:12:31 [INFO] Starting the application
+2024-08-30 01:12:31 [INFO] Database connected, driver:  sqlite
+2024-08-30 01:12:31 [INFO] Core initialized mode: release
+2024-08-30 01:12:31 [INFO] Initialized module: %susers
+2024-08-30 01:12:31 [INFO] Initialized module: %scustomers
+2024-08-30 01:12:31 [INFO] Server starting on :8080
+2024-08-30 01:37:58 [INFO] Starting the application
+2024-08-30 01:37:58 [INFO] Database connected, driver:  sqlite
+2024-08-30 01:37:58 [INFO] Core initialized mode: release
+2024-08-30 01:37:58 [INFO] Initialized module: %scharacters
+2024-08-30 01:37:58 [INFO] Initialized module: %susers
+2024-08-30 01:37:58 [INFO] Initialized module: %scustomers
+2024-08-30 01:37:58 [INFO] Initialized module: %sstories
+2024-08-30 01:37:58 [INFO] Initialized module: %schapters
+2024-08-30 01:37:58 [INFO] Initialized module: %sscenes
+2024-08-30 01:37:58 [INFO] Server starting on :8080
+2024-08-30 01:38:15 [INFO] Request path=/api/v1/chapters ip=::1 latency=221.667µs os=macOS browser=Chrome error= status=401 method=GET
+2024-08-30 01:38:33 [INFO] Starting the application
+2024-08-30 01:38:33 [INFO] Database connected, driver:  sqlite
+2024-08-30 01:38:33 [INFO] Core initialized mode: release
+2024-08-30 01:38:33 [INFO] Initialized module: %scharacters
+2024-08-30 01:38:33 [INFO] Initialized module: %susers
+2024-08-30 01:38:33 [INFO] Initialized module: %scustomers
+2024-08-30 01:38:33 [INFO] Initialized module: %sstories
+2024-08-30 01:38:33 [INFO] Initialized module: %schapters
+2024-08-30 01:38:33 [INFO] Initialized module: %sscenes
+2024-08-30 01:38:33 [INFO] Server starting on :8080
+2024-08-30 01:38:40 [INFO] Request path=/api/v1/chapters ip=::1 latency=11.688667ms os=macOS browser=Chrome error= status=200 method=GET
+2024-08-30 01:41:52 [INFO] Starting the application
+2024-08-30 01:41:52 [INFO] Database connected, driver:  sqlite
+2024-08-30 01:41:52 [INFO] Core initialized mode: release
+2024-08-30 01:41:52 [INFO] Initialized module: %scharacters
+2024-08-30 01:41:52 [INFO] Initialized module: %susers
+2024-08-30 01:41:52 [INFO] Initialized module: %scustomers
+2024-08-30 01:41:52 [INFO] Initialized module: %sstories
+2024-08-30 01:41:52 [INFO] Initialized module: %schapters
+2024-08-30 01:41:52 [INFO] Initialized module: %sscenes
+2024-08-30 01:41:52 [INFO] Server starting on :8080
+2024-08-30 01:51:07 [INFO] Starting the application
+2024-08-30 01:51:07 [INFO] Database connected, driver:  sqlite
+2024-08-30 01:51:07 [INFO] Core initialized mode: release
+2024-08-30 01:51:07 [INFO] Initialized module: %schapters
+2024-08-30 01:51:07 [INFO] Initialized module: %sscenes
+2024-08-30 01:51:07 [INFO] Initialized module: %scharacters
+2024-08-30 01:51:07 [INFO] Initialized module: %sauth
+2024-08-30 01:51:07 [INFO] Initialized module: %susers
+2024-08-30 01:51:07 [INFO] Initialized module: %scustomers
+2024-08-30 01:51:07 [INFO] Initialized module: %sstories
+2024-08-30 01:51:07 [INFO] Server starting on :8080
+2024-08-30 01:57:08 [INFO] Starting the application
+2024-08-30 01:57:08 [INFO] Database connected, driver:  sqlite
+2024-08-30 01:57:08 [INFO] Core initialized mode: release
+2024-08-30 01:57:08 [INFO] Initialized module: %scharacters
+2024-08-30 01:57:08 [INFO] Initialized module: %sauth
+2024-08-30 01:57:08 [INFO] Initialized module: %susers
+2024-08-30 01:57:08 [INFO] Initialized module: %scustomers
+2024-08-30 01:57:08 [INFO] Initialized module: %sstories
+2024-08-30 01:57:08 [INFO] Initialized module: %schapters
+2024-08-30 01:57:08 [INFO] Initialized module: %sscenes
+2024-08-30 01:57:08 [INFO] Server starting on :8080
+2024-08-30 01:57:22 [INFO] Starting the application
+2024-08-30 01:57:22 [INFO] Database connected, driver:  sqlite
+2024-08-30 01:57:22 [INFO] Core initialized mode: release
+2024-08-30 01:57:22 [INFO] Initialized module: %susers
+2024-08-30 01:57:22 [INFO] Initialized module: %scustomers
+2024-08-30 01:57:22 [INFO] Initialized module: %sstories
+2024-08-30 01:57:22 [INFO] Initialized module: %schapters
+2024-08-30 01:57:22 [INFO] Initialized module: %sscenes
+2024-08-30 01:57:22 [INFO] Initialized module: %scharacters
+2024-08-30 01:57:22 [INFO] Initialized module: %sauth
+2024-08-30 01:57:22 [INFO] Server starting on :8080
+2024-08-30 01:58:01 [INFO] Request ip=::1 latency=245.625µs os=macOS browser=Chrome error= status=401 method=GET path=/api/v1/chapters
+2024-08-30 01:59:10 [INFO] Request browser=Chrome error= status=200 method=GET path=/api/v1/chapters ip=::1 latency=1.941375ms os=macOS
+2024-08-30 02:00:02 [INFO] Starting the application
+2024-08-30 02:00:02 [INFO] Database connected, driver:  sqlite
+2024-08-30 02:00:02 [INFO] Core initialized mode: release
+2024-08-30 02:00:02 [INFO] Initialized module: %susers
+2024-08-30 02:00:02 [INFO] Initialized module: %scustomers
+2024-08-30 02:00:02 [INFO] Initialized module: %sstories
+2024-08-30 02:00:02 [INFO] Initialized module: %schapters
+2024-08-30 02:00:02 [INFO] Initialized module: %sscenes
+2024-08-30 02:00:02 [INFO] Initialized module: %scharacters
+2024-08-30 02:00:02 [INFO] Initialized module: %sauth
+2024-08-30 02:00:02 [INFO] Server starting on :8080
+2024-08-30 02:00:05 [WARNING] Authorization header is required
+2024-08-30 02:00:05 [INFO] Request browser=Chrome error= status=401 method=GET path=/api/v1/chapters ip=::1 latency=4.426375ms os=macOS
+2024-08-30 02:00:32 [INFO] Starting the application
+2024-08-30 02:00:32 [INFO] Database connected, driver:  sqlite
+2024-08-30 02:00:32 [INFO] Core initialized mode: release
+2024-08-30 02:00:32 [INFO] Initialized module: %susers
+2024-08-30 02:00:32 [INFO] Initialized module: %scustomers
+2024-08-30 02:00:32 [INFO] Initialized module: %sstories
+2024-08-30 02:00:32 [INFO] Initialized module: %schapters
+2024-08-30 02:00:32 [INFO] Initialized module: %sscenes
+2024-08-30 02:00:32 [INFO] Initialized module: %scharacters
+2024-08-30 02:00:32 [INFO] Initialized module: %sauth
+2024-08-30 02:00:32 [INFO] Server starting on :8080
+2024-08-30 02:00:40 [INFO] Request path=/api/v1/chapters ip=::1 latency=1.650416ms os=macOS browser=Chrome error= status=200 method=GET

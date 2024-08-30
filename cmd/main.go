@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"text/template"
 
@@ -87,8 +86,7 @@ func updateInitFile(singularName, pluralName string) error {
 	content, importAdded := addImport(content, importStr)
 
 	// Add module initializer if it doesn't exist
-	initializerStr := fmt.Sprintf("\"%s\": func(db *gorm.DB, router *gin.RouterGroup) module.Module { return %s.New%sModule(db, router) },", pluralName, pluralName, singularName)
-	content, initializerAdded := addModuleInitializer(content, initializerStr)
+	content, initializerAdded := addModuleInitializer(content, pluralName, singularName)
 
 	// Write the updated content back to init.go only if changes were made
 	if importAdded || initializerAdded {
@@ -97,32 +95,55 @@ func updateInitFile(singularName, pluralName string) error {
 
 	return nil
 }
-
 func addImport(content []byte, importStr string) ([]byte, bool) {
 	// Check if the import already exists
 	if bytes.Contains(content, []byte(importStr)) {
 		return content, false
 	}
 
-	// Find the import block and add the new import
-	importBlock := regexp.MustCompile(`import \(([\s\S]*?)\)`)
-	return importBlock.ReplaceAllFunc(content, func(match []byte) []byte {
-		return append(match[:len(match)-1], []byte("\t"+importStr+"\n)")...)
-	}), true
-}
-
-func addModuleInitializer(content []byte, initializerStr string) ([]byte, bool) {
-	// Check if the initializer already exists
-	if bytes.Contains(content, []byte(initializerStr)) {
+	// Find the position of "import ("
+	importPos := bytes.Index(content, []byte("import ("))
+	if importPos == -1 {
+		// If "import (" is not found, return original content
 		return content, false
 	}
 
-	// Find the moduleInitializers map and add the new initializer
-	initializerBlock := regexp.MustCompile(`moduleInitializers := map\[string\]func\(\*gorm\.DB, \*gin\.Engine\) module\.Module{([\s\S]*?)}`)
-	return initializerBlock.ReplaceAllFunc(content, func(match []byte) []byte {
-		return append(match[:len(match)-1], []byte("\t\t"+initializerStr+"\n\t}")...)
-	}), true
+	// Position to insert the new import (after "import (" and newline)
+	insertPos := importPos + len("import (") + 1
+
+	// Create the new import line with proper indentation
+	newImportLine := []byte("\t" + importStr + "\n")
+
+	// Insert the new import line
+	updatedContent := append(content[:insertPos], append(newImportLine, content[insertPos:]...)...)
+
+	return updatedContent, true
 }
+
+func addModuleInitializer(content []byte, pluralName, singularName string) ([]byte, bool) {
+	contentStr := string(content)
+
+	// Find the module initializer marker
+	markerIndex := strings.Index(contentStr, "// MODULE_INITIALIZER_MARKER")
+	if markerIndex == -1 {
+		return content, false
+	}
+
+	// Check if the module already exists
+	if strings.Contains(contentStr[:markerIndex], fmt.Sprintf(`"%s":`, pluralName)) {
+		return content, false
+	}
+
+	// Create the new initializer
+	newInitializer := fmt.Sprintf(`        "%s": func(db *gorm.DB, router *gin.RouterGroup) module.Module { return %s.New%sModule(db, router) },`,
+		pluralName, pluralName, toTitle(singularName))
+
+	// Insert the new initializer before the marker
+	updatedContent := contentStr[:markerIndex] + newInitializer + "\n        " + contentStr[markerIndex:]
+
+	return []byte(updatedContent), true
+}
+
 func generateFileFromTemplate(dir, filename, templateFile, singularName, pluralName string, fields []string) {
 	tmplContent, err := templateFS.ReadFile(templateFile)
 	if err != nil {

@@ -9,6 +9,7 @@ import (
 	"base/core/database"
 	"base/core/middleware"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
@@ -55,17 +56,27 @@ func main() {
 
 	// Set up Gin
 	router := gin.New()
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	router.Use(gin.Recovery())
 	router.Use(middleware.LogrusLogger(logger))
+	// cors.Default() setup the middleware with default options being
+	corsConfig := cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:8080"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Api-Key"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}
+
+	router.Use(cors.New(corsConfig))
 
 	// Setup Swagger
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Create a new router group for API routes with authentication
 	apiGroup := router.Group("/api/v1")
-	apiGroup.Use(middleware.APIKeyMiddleware())
-
+	//	apiGroup.Use(middleware.APIKeyMiddleware())
+	//	apiGroup.Use(middleware.AuthMiddleware())
 	// Initialize application modules with the authenticated API group
 	app.InitializeModules(database.DB, apiGroup)
 
