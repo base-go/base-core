@@ -152,9 +152,8 @@ You can use swagger to test the endpoints.
 
 You can customize the generated code by modifying the templates in the `templates/` directory. The templates use Go's `text/template` package, so you can use variables, loops, and conditionals to generate the desired output.
 
-```
-Not Recommended: You can also modify the `bin/base` command to add new features or change the behavior of existing commands. However, this is not recommended as it may break compatibility with future versions of Base.
-```
+> **_NOTE:_** Not Recommended: You can also modify the `cmd/main.go` to add new features or change the behavior of existing commands. However, this is not recommended as it may break compatibility with future versions of Base. Better to create a new command and add it to the `cmd/` directory.
+ 
 
 
 ## Deployment
