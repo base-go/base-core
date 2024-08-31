@@ -19,7 +19,8 @@
 
 # Go workspace file
 go.work
-/logs
-/storage
 .env
-/storage
+logs/error.log
+logs/info.log
+logs/requests.log
+/storage/uploads/*.*
