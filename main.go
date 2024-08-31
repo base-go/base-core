@@ -19,7 +19,6 @@ import (
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
 // @name X-Api-Key
-
 func main() {
 	app, err := core.StartApplication()
 	if err != nil {

@@ -22,3 +22,4 @@ go.work
 /logs
 /storage
 .env
+/storage

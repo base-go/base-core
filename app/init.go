@@ -4,7 +4,6 @@ import (
 	"base/core/module"
 
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -14,6 +13,7 @@ func InitializeModules(db *gorm.DB, router *gin.RouterGroup) map[string]module.M
 
 	// Define the module initializers directly
 	moduleInitializers := map[string]func(*gorm.DB, *gin.RouterGroup) module.Module{
+
 		// MODULE_INITIALIZER_MARKER - Do not remove this comment because it's used by the CLI to add new module initializers
 
 	}
@@ -22,7 +22,6 @@ func InitializeModules(db *gorm.DB, router *gin.RouterGroup) map[string]module.M
 	for name, initializer := range moduleInitializers {
 		module := initializer(db, router)
 		modules[name] = module
-		log.Info("Initialized module: %s", name)
 	}
 
 	return modules

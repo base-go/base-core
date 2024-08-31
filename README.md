@@ -100,11 +100,50 @@ Example:
 ```
 bin/base g user name:string age:int email:string
 ```
+Example with relationships:
 
-This command will:
-1. Create a new directory `app/users/` (note the plural form)
-2. Generate `model.go`, `controller.go`, `service.go`, and `mod.go` files in the new directory
-3. Update `app/init.go` to register the new module
+Possible relationships are:
+- has_one : Reference to another model foreign key in the current model
+- has_many: Reference to another model foreign key in the other model
+- belongs_to : Reference to another model foreign key in the current model
+
+Example:
+department:belongs_to:Department
+
+This command will refer to the Department model and create a foreign key in the current model. Department model should be created before the user model.
+
+Example Department model:
+
+type Department struct {
+    ID        uint   `json:"id" gorm:"primary_key"`
+    Name      string `json:"name"`
+    CreatedAt time.Time
+    UpdatedAt time.Time
+}
+
+Example User model:
+
+type User struct {
+    ID        uint   `json:"id" gorm:"primary_key"`
+    Name      string `json:"name"`
+    Age       int    `json:"age"`
+    Email     string `json:"email"`
+    CreatedAt time.Time
+    UpdatedAt time.Time
+    DepartmentID uint `json:"department_id"`
+    Department Department `json:"department" gorm:"foreignKey:DepartmentID"`
+}
+
+Example command:
+
+```
+bin/base g Category name:string
+
+bin/base g Post name:string age:int email:string category:belongs_to:Category
+
+```
+
+  
 
 ### Destroying an Existing Module
 
