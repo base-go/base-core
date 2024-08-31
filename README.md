@@ -7,6 +7,7 @@ Base is a lightweight, modular framework for building RESTful APIs in Go. It pro
 - Modular architecture with support for multiple modules
 - Built-in support for CRUD operations
 - Automatic routing and request handling
+- Automatic runs swagger to generate API documentation if ENV=debug
 - Integrated logging and error handling
 - Configurable database connections 
 - Support for multiple database types (MySQL, PostgreSQL, SQLite)

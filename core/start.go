@@ -12,7 +12,6 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -29,10 +28,6 @@ type Application struct {
 }
 
 func StartApplication() (*Application, error) {
-	// Load .env file
-	if err := godotenv.Load(); err != nil {
-		log.Warn("Error loading .env file")
-	}
 
 	// Initialize config
 	cfg := config.NewConfig()
