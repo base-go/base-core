@@ -1,9 +1,7 @@
 package helper
 
 import (
-	"base/app/models"
 	"base/core/config"
-	"reflect"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -42,21 +40,4 @@ func ValidateJWT(tokenString string) (uint, error) {
 	}
 
 	return 0, jwt.ErrSignatureInvalid
-}
-func ToResponseSlice(items interface{}) interface{} {
-    val := reflect.ValueOf(items)
-    responses := reflect.MakeSlice(reflect.SliceOf(reflect.TypeOf((*models.PostResponse)(nil))), val.Len(), val.Cap())
-
-    for i := 0; i < val.Len(); i++ {
-        item := val.Index(i).Interface().(*models.Post)
-        response := &models.PostResponse{
-            ID:      item.ID,
-            Title:   item.Title,
-            Content: item.Content,
-            // Map other fields
-        }
-        responses.Index(i).Set(reflect.ValueOf(response))
-    }
-
-    return responses.Interface()
 }
