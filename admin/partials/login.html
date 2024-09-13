@@ -1,0 +1,63 @@
+<div class="flex justify-center items-center h-full">
+    <div class="card w-96 bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title">Login</h2>
+            <form id="login-form">
+                <div class="form-control">
+                    <label class="label" for="email">
+                        <span class="label-text">Email</span>
+                    </label>
+                    <input type="email" id="email" name="email" class="input input-bordered" required>
+                </div>
+                <div class="form-control">
+                    <label class="label" for="password">
+                        <span class="label-text">Password</span>
+                    </label>
+                    <input type="password" id="password" name="password" class="input input-bordered" required>
+                </div>
+                <div class="form-control mt-6">
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </div>
+            </form>
+            <div class="text-center mt-4">
+                <a href="#" data-page="forgot_password" class="link link-primary">Forgot Password?</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('#login-form').submit(function (e) {
+            e.preventDefault();
+            const email = $('#email').val();
+            const password = $('#password').val();
+
+            $.ajax({
+                url: '/api/v1/auth/login',
+                method: 'POST',
+                headers: { 'X-Api-Key': 'api', 'Content-Type': 'application/json' },
+                data: JSON.stringify({ email, password }),
+                success: function (response) {
+                    localStorage.setItem('authToken', response.access_token);
+                    localStorage.setItem('userInfo', JSON.stringify({
+                        email: response.email,
+                        first_name: response.first_name,
+                        last_name: response.last_name,
+                        user_id: response.user_id,
+                        last_login: response.last_login
+                    }));
+                    $(document).trigger('loginSuccess');
+                },
+                error: function (xhr, status, error) {
+                    console.error('Login failed:', xhr.responseText);
+                    let errorMessage = 'Login failed. Please check your credentials and try again.';
+                    if (xhr.responseJSON && xhr.responseJSON.error) {
+                        errorMessage = xhr.responseJSON.error;
+                    }
+                    alert(errorMessage);
+                }
+            });
+        });
+    });
+</script>

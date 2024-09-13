@@ -3,23 +3,21 @@ package middleware
 import (
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
 func APIKeyMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
-		if c.IsWebsocket() {
+		// Skip middleware for non-JSON requests
+		if !isJSONRequest(c) {
 			c.Next()
 			return
 		}
 
-		if c.Request.Method == "OPTIONS" {
-			c.Next()
-			return
-		}
-		if c.Request.URL.Path == "/public" {
+		// Existing exceptions
+		if c.IsWebsocket() || c.Request.Method == "OPTIONS" || c.Request.URL.Path == "/public" {
 			c.Next()
 			return
 		}
@@ -38,4 +36,31 @@ func APIKeyMiddleware() gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+// Helper function to determine if the request is a JSON request
+func isJSONRequest(c *gin.Context) bool {
+	// Check Accept header
+	if strings.Contains(c.GetHeader("Accept"), "application/json") {
+		return true
+	}
+
+	// Check Content-Type header for POST, PUT, PATCH requests
+	if c.Request.Method == "POST" || c.Request.Method == "PUT" || c.Request.Method == "PATCH" {
+		if strings.Contains(c.GetHeader("Content-Type"), "application/json") {
+			return true
+		}
+	}
+
+	// Check if the URL ends with .json
+	if strings.HasSuffix(c.Request.URL.Path, ".json") {
+		return true
+	}
+
+	// Check if there's a format=json query parameter
+	if c.Query("format") == "json" {
+		return true
+	}
+
+	return false
 }

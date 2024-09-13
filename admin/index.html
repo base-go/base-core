@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body class="flex flex-col min-h-screen bg-base-200">
+    <div id="header"></div>
+    <div id="nav"></div>
+    <main id="main-content" class="flex-grow container mx-auto p-4">
+        <!-- Dynamic content will be loaded here -->
+    </main>
+    <div id="footer"></div>
+
+    <script>
+        $(document).ready(function () {
+            const apiKey = 'api';
+            const apiUrl = '/api/v1';
+
+            function checkAuth() {
+                const token = localStorage.getItem('authToken');
+                const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+                if (token && userInfo) {
+                    // User is logged in
+                    $('.auth-only').show();
+                    $('.guest-only').hide();
+                    // You can use userInfo to display user-specific information
+                    // For example: $('#user-name').text(userInfo.first_name + ' ' + userInfo.last_name);
+                } else {
+                    // User is not logged in
+                    $('.auth-only').hide();
+                    $('.guest-only').show();
+                    loadPage('login');
+                }
+            }
+
+            function loadPage(page) {
+                switch (page) {
+                    case 'dashboard':
+                        $('#main-content').load('/admin/dashboard/index.html');
+                        break;
+                    case 'posts':
+                        $('#main-content').load('/admin/posts/index.html');
+                        break;
+                    case 'categories':
+                        $('#main-content').load('/admin/categories/index.html');
+                        break;
+                    case 'login':
+                        $('#main-content').load('/admin/partials/login.html');
+                        break;
+                    case 'register':
+                        $('#main-content').load('/admin/partials/register.html');
+                        break;
+                    case 'forgot_password':
+                        $('#main-content').load('/admin/partials/forgot_password.html');
+                        break;
+                    case 'logout':
+                        logout();
+                        break;
+                    default:
+                        $('#main-content').load('/admin/dashboard/index.html');
+                }
+            }
+
+            function logout() {
+                $.ajax({
+                    url: `${apiUrl}/auth/logout`,
+                    method: 'POST',
+                    headers: {
+                        'X-Api-Key': apiKey,
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    },
+                    success: function () {
+                        localStorage.removeItem('authToken');
+                        localStorage.removeItem('userInfo');
+                        checkAuth();
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Logout failed:', error);
+                        alert('Logout failed. Please try again.');
+                    }
+                });
+            }
+
+            // Load partials
+            $('#header').load('/admin/partials/header.html');
+            $('#nav').load('/admin/partials/nav.html', function () {
+                setupNavigation();
+                checkAuth();
+            });
+            $('#footer').load('/admin/partials/footer.html');
+
+            function setupNavigation() {
+                $('nav a').on('click', function (e) {
+                    e.preventDefault();
+                    const page = $(this).data('page');
+                    loadPage(page);
+                });
+            }
+
+            // Handle successful registration
+            $(document).on('registrationSuccess', function () {
+                alert('Registration successful. You are now logged in.');
+                checkAuth();
+                loadPage('dashboard');
+            });
+
+            // Handle successful login
+            $(document).on('loginSuccess', function () {
+                checkAuth();
+                loadPage('dashboard');
+            });
+
+            // Initial auth check
+            checkAuth();
+        });
+    </script>
+</body>
+
+</html>

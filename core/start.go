@@ -57,9 +57,9 @@ func StartApplication() (*Application, error) {
 	router := gin.New()
 	router.Use(gin.Recovery())
 	router.Use(middleware.LogrusLogger(logger))
-
 	// Set up static file serving
 	router.Static("/static", "./static")
+	router.Static("/admin", "./admin")
 
 	// Set up storage file serving
 	router.Static("/storage", "./storage")
