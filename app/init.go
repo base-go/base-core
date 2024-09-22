@@ -26,3 +26,13 @@ func InitializeModules(db *gorm.DB, router *gin.RouterGroup) map[string]module.M
 
 	return modules
 }
+
+func InitializeSeeders() []module.Seeder {
+	seeders := []module.Seeder{
+
+		// SEEDER_INITIALIZER_MARKER - Do not remove this comment because it's used by the CLI to add new seed initializers
+
+	}
+	return seeders
+
+}
