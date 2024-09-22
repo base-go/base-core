@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
+
+	"gorm.io/gorm"
 )
 
 // Module defines the common interface that all modules must implement.
@@ -29,6 +31,11 @@ func (DefaultModule) Routes() {
 }
 func (DefaultModule) GetModels() []interface{} {
 	return nil
+}
+
+// Seeder is an interface that modules can implement to seed the database.
+type Seeder interface {
+	Seed(*gorm.DB) error
 }
 
 var (
