@@ -11,20 +11,21 @@ import (
 	_ "base/docs" // Import for Swagger docs
 )
 
-// @title Base API
-// @version 1.0
-// @description This is the API documentation for Base
-// @host localhost:8080
-// @BasePath /api/v1
-// @schemes http
-// @produces json
-// @consumes json
-// @securityDefinitions.apikey ApiKeyAuth
-// @in header
-// @name X-Api-Key
+// ... (keep the existing comments and annotations)
+
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Warn("Error loading .env file")
+	}
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "seed":
+			core.SeedDatabase(false)
+			return
+		case "replant":
+			core.SeedDatabase(true)
+			return
+		}
 	}
 
 	// if debug mode is enabled, run swag init
@@ -37,6 +38,7 @@ func main() {
 			log.Fatalf("Failed to run swag init: %v", err)
 		}
 	}
+
 	// Bootstrap the application
 	app, err := core.StartApplication()
 	if err != nil {
