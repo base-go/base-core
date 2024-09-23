@@ -7,6 +7,7 @@ import (
 	"base/core/email"
 	"base/core/file"
 	"base/core/middleware"
+	"base/core/module"
 	"base/core/websocket"
 	"fmt"
 
@@ -21,14 +22,14 @@ import (
 )
 
 type Application struct {
-	Config *config.Config
-	DB     *database.Database
-	Router *gin.Engine
-	WSHub  *websocket.Hub
+	Config  *config.Config
+	DB      *database.Database
+	Router  *gin.Engine
+	WSHub   *websocket.Hub
+	Modules map[string]module.Module
 }
 
 func StartApplication() (*Application, error) {
-
 	// Initialize config
 	cfg := config.NewConfig()
 
@@ -57,11 +58,10 @@ func StartApplication() (*Application, error) {
 	router := gin.New()
 	router.Use(gin.Recovery())
 	router.Use(middleware.LogrusLogger(logger))
+
 	// Set up static file serving
 	router.Static("/static", "./static")
 	router.Static("/admin", "./admin")
-
-	// Set up storage file serving
 	router.Static("/storage", "./storage")
 
 	// Set up CORS
@@ -82,31 +82,36 @@ func StartApplication() (*Application, error) {
 	apiGroup := router.Group("/api/v1")
 	apiGroup.Use(middleware.APIKeyMiddleware())
 
-	// Initialize application modules
-	InitializeCoreModules(database.DB, apiGroup, emailSender, logger)
-	app.InitializeModules(database.DB, apiGroup)
+	// Initialize core modules
+	InitializeCoreModules(db.DB, apiGroup, emailSender, logger)
 
-	// Add ping route to the main router, not to app.Router
+	// Initialize application modules using AppModuleInitializer
+	appInitializer := &app.AppModuleInitializer{Router: apiGroup}
+	appInitializer.InitializeModules(db.DB)
+
+	// Get all registered modules
+	allModules := module.GetAllModules()
+
+	// Add ping route to the main router
 	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
 		})
 	})
-	if err := email.Initialize(cfg); err != nil {
-		return nil, fmt.Errorf("failed to initialize email sender: %w", err)
-	}
 
 	// Initialize WebSocket module
 	wsHub := websocket.InitWebSocketModule(apiGroup)
 
+	// Initialize File module
 	file.InitFileModule(apiGroup)
 
 	// Create and return the Application instance
 	application := &Application{
-		Config: cfg,
-		DB:     db,
-		Router: router,
-		WSHub:  wsHub,
+		Config:  cfg,
+		DB:      db,
+		Router:  router,
+		WSHub:   wsHub,
+		Modules: allModules,
 	}
 
 	return application, nil

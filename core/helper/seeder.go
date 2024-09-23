@@ -38,7 +38,9 @@ func SeedDatabase(clean bool) {
 }
 
 func runSeeders(db *gorm.DB) error {
-	seeders := app.InitializeSeeders()
+	appInitializer := &app.AppModuleInitializer{}
+
+	seeders := appInitializer.InitializeSeeders()
 	for _, seeder := range seeders {
 		fmt.Printf("Seeding %T...\n", seeder)
 		if err := seeder.Seed(db); err != nil {
@@ -71,9 +73,14 @@ func cleanDatabase(db *gorm.DB) error {
 	return nil
 }
 
+type FieldMapping struct {
+	Source []string
+	Target string
+}
+
 func FeedData(args []string) {
 	var mysqlTable, jsonPath string
-	var fieldMappings map[string]string
+	var fieldMappings []FieldMapping
 
 	// Parse table and file path
 	if !strings.Contains(args[0], ":") {
@@ -124,15 +131,27 @@ func FeedData(args []string) {
 			insertData = item
 		} else {
 			// Apply specific mappings
-			for jsonField, mysqlField := range fieldMappings {
-				if value, ok := item[jsonField]; ok {
-					insertData[mysqlField] = value
+			for _, mapping := range fieldMappings {
+				if len(mapping.Source) == 1 {
+					// Single field mapping
+					if value, ok := item[mapping.Source[0]]; ok {
+						insertData[mapping.Target] = value
+					}
+				} else {
+					// Multiple field concatenation
+					var values []string
+					for _, source := range mapping.Source {
+						if value, ok := item[source].(string); ok {
+							values = append(values, value)
+						}
+					}
+					insertData[mapping.Target] = strings.Join(values, " ")
 				}
 			}
 
 			// For fields not in the mapping, use the JSON field name as is
 			for jsonField, value := range item {
-				if _, mapped := fieldMappings[jsonField]; !mapped {
+				if !isMapped(jsonField, fieldMappings) {
 					insertData[jsonField] = value
 				}
 			}
@@ -151,15 +170,27 @@ func FeedData(args []string) {
 	fmt.Println("Data feed complete.")
 }
 
-func parseFieldMappings(args []string) map[string]string {
-	fieldMappings := make(map[string]string)
+func parseFieldMappings(args []string) []FieldMapping {
+	var fieldMappings []FieldMapping
 	for _, mapping := range args {
 		parts := strings.Split(mapping, ":")
 		if len(parts) != 2 {
 			fmt.Printf("Warning: Ignoring invalid mapping '%s'\n", mapping)
 			continue
 		}
-		fieldMappings[parts[0]] = parts[1]
+		sources := strings.Split(strings.Trim(parts[0], "\""), " ")
+		fieldMappings = append(fieldMappings, FieldMapping{Source: sources, Target: parts[1]})
 	}
 	return fieldMappings
+}
+
+func isMapped(field string, mappings []FieldMapping) bool {
+	for _, mapping := range mappings {
+		for _, source := range mapping.Source {
+			if source == field {
+				return true
+			}
+		}
+	}
+	return false
 }
