@@ -11,21 +11,16 @@ import (
 	_ "base/docs" // Import for Swagger docs
 )
 
-// ... (keep the existing comments and annotations)
-
 func main() {
+	// Load the .env file
 	if err := godotenv.Load(); err != nil {
 		log.Warn("Error loading .env file")
 	}
+
+	// If there are command line arguments, execute the command
 	if len(os.Args) > 1 {
-		switch os.Args[1] {
-		case "seed":
-			core.SeedDatabase(false)
-			return
-		case "replant":
-			core.SeedDatabase(true)
-			return
-		}
+		core.ExecuteCommand(os.Args)
+		return
 	}
 
 	// if debug mode is enabled, run swag init
@@ -46,7 +41,7 @@ func main() {
 	}
 
 	// Start the server
-	log.Infof("Server starting on %s", app.Config.ServerAddress)
+	log.Infof("Server starting on http://localhost%s", app.Config.ServerAddress)
 	if err := app.Router.Run(app.Config.ServerAddress); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}

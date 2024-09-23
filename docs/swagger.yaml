@@ -1,4 +1,3 @@
-basePath: /api/v1
 definitions:
   auth.AuthResponse:
     properties:
@@ -77,6 +76,16 @@ definitions:
       message:
         type: string
     type: object
+  author.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  author.SuccessResponse:
+    properties:
+      message:
+        type: string
+    type: object
   file.ErrorResponse:
     properties:
       error:
@@ -98,6 +107,74 @@ definitions:
       valid:
         description: Valid is true if Time is not NULL
         type: boolean
+    type: object
+  models.AuthorResponse:
+    properties:
+      bio:
+        type: string
+      createdAt:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      joined_at:
+        type: string
+      password_hash:
+        type: string
+      ranking:
+        type: integer
+      updatedAt:
+        type: string
+      username:
+        type: string
+    type: object
+  models.CreateAuthorRequest:
+    properties:
+      bio:
+        type: string
+      email:
+        type: string
+      joined_at:
+        type: string
+      password_hash:
+        type: string
+      ranking:
+        type: integer
+      username:
+        type: string
+    type: object
+  models.UpdateAuthorRequest:
+    properties:
+      bio:
+        type: string
+      email:
+        type: string
+      joined_at:
+        type: string
+      password_hash:
+        type: string
+      ranking:
+        type: integer
+      username:
+        type: string
+    type: object
+  types.PaginatedResponse:
+    properties:
+      data: {}
+      pagination:
+        $ref: '#/definitions/types.Pagination'
+    type: object
+  types.Pagination:
+    properties:
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
     type: object
   users.CreateRequest:
     properties:
@@ -193,12 +270,8 @@ definitions:
       error:
         type: string
     type: object
-host: localhost:8080
 info:
   contact: {}
-  description: This is the API documentation for Base
-  title: Base API
-  version: "1.0"
 paths:
   /auth/forgot-password:
     post:
@@ -343,6 +416,193 @@ paths:
       summary: Reset password
       tags:
       - Core/Auth
+  /author:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of Authors
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Number of items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.PaginatedResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/author.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/author.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: List Authors
+      tags:
+      - Author
+    post:
+      consumes:
+      - application/json
+      description: Create a new Author with the input payload
+      parameters:
+      - description: Create Author request
+        in: body
+        name: author
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateAuthorRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.AuthorResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/author.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/author.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new Author
+      tags:
+      - Author
+  /author/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a Author by its ID
+      parameters:
+      - description: Author ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/author.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/author.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/author.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a Author
+      tags:
+      - Author
+    get:
+      consumes:
+      - application/json
+      description: Get a Author by its ID
+      parameters:
+      - description: Author ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.AuthorResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/author.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/author.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get a Author
+      tags:
+      - Author
+    put:
+      consumes:
+      - application/json
+      description: Update a Author by its ID
+      parameters:
+      - description: Author ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Author request
+        in: body
+        name: author
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateAuthorRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.AuthorResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/author.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/author.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/author.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update a Author
+      tags:
+      - Author
+  /author/all:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all Authors without pagination
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.PaginatedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/author.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: List all Authors
+      tags:
+      - Author
   /upload:
     post:
       consumes:
@@ -539,11 +799,4 @@ paths:
       summary: Connect to WebSocket
       tags:
       - Core/Websocket
-schemes:
-- http
-securityDefinitions:
-  ApiKeyAuth:
-    in: header
-    name: X-Api-Key
-    type: apiKey
 swagger: "2.0"

@@ -71,14 +71,14 @@ func NewConfig() *Config {
 	config.SMTPPort = smtpPort
 
 	// Debug logging
-	logrus.Infof("Loaded configuration:")
-	logrus.Infof("EMAIL_PROVIDER: %s", config.EmailProvider)
-	logrus.Infof("EMAIL_FROM_ADDRESS: %s", config.EmailFromAddress)
-	logrus.Infof("SMTP_HOST: %s", config.SMTPHost)
-	logrus.Infof("SMTP_PORT: %d", config.SMTPPort)
-	logrus.Infof("SMTP_USERNAME: %s", config.SMTPUsername)
-	logrus.Infof("SENDGRID_API_KEY: %s", maskString(config.SendGridAPIKey))
-	logrus.Infof("POSTMARK_SERVER_TOKEN: %s", maskString(config.PostmarkServerToken))
+	// logrus.Infof("Loaded configuration:")
+	// logrus.Infof("EMAIL_PROVIDER: %s", config.EmailProvider)
+	// logrus.Infof("EMAIL_FROM_ADDRESS: %s", config.EmailFromAddress)
+	// logrus.Infof("SMTP_HOST: %s", config.SMTPHost)
+	// logrus.Infof("SMTP_PORT: %d", config.SMTPPort)
+	// logrus.Infof("SMTP_USERNAME: %s", config.SMTPUsername)
+	// logrus.Infof("SENDGRID_API_KEY: %s", maskString(config.SendGridAPIKey))
+	// logrus.Infof("POSTMARK_SERVER_TOKEN: %s", maskString(config.PostmarkServerToken))
 
 	return config
 }
@@ -93,9 +93,9 @@ func getEnvWithLog(key, fallback string) string {
 }
 
 // maskString masks a string for secure logging
-func maskString(s string) string {
-	if len(s) <= 4 {
-		return "****"
-	}
-	return s[:4] + "****"
-}
+// func maskString(s string) string {
+// 	if len(s) <= 4 {
+// 		return "****"
+// 	}
+// 	return s[:4] + "****"
+// }

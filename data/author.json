@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "created_at": "2021-01-01T00:00:00.000Z",
+    "updated_at": "2021-01-01T00:00:00.000Z",
+    "deleted_at": null,
+    "username": "john",
+    "email": "john@base.al",
+    "password_hash": "password",
+    "ranking": 1,
+    "bio": "I am the admin",
+    "joined_at": "2021-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 2,
+    "created_at": "2021-01-01T00:00:00.000Z",
+    "updated_at": "2021-01-01T00:00:00.000Z",
+    "deleted_at": null,
+    "username": "jane",
+    "email": "jane@base.al",
+    "password_hash": "password",
+    "ranking": 2,
+    "bio": "I am the user",
+    "joined_at": "2021-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 3,
+    "created_at": "2021-01-01T00:00:00.000Z",
+    "updated_at": "2021-01-01T00:00:00.000Z",
+    "deleted_at": null,
+    "username": "joe",
+    "email": "joe@base.al",
+    "password_hash": "password",
+    "ranking": 3,
+    "bio": "I am the user",
+    "joined_at": "2021-01-01T00:00:00.000Z"
+  }
+]

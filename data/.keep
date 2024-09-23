@@ -1,0 +1,4 @@
+Add data for base feed feature
+Currently only supports adding data from json files
+
+base feed mysql_table:json_file_path [source:target]
