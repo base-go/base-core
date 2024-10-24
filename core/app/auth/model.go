@@ -1,28 +1,26 @@
 package auth
 
 import (
+	"base/core/app/users"
 	"time"
-
-	"gorm.io/gorm"
 )
 
-type User struct {
-	gorm.Model
-	Email            string     `json:"email" gorm:"uniqueIndex"`
-	Password         string     `json:"-" gorm:"column:password"`
-	FirstName        string     `json:"first_name" gorm:"column:first_name"`
-	LastName         string     `json:"last_name" gorm:"column:last_name"`
-	StripeID         string     `json:"stripe_id" gorm:"column:stripe_id"`
-	ResetToken       string     `json:"-" gorm:"column:reset_token"`
-	ResetTokenExpiry *time.Time `json:"-" gorm:"column:reset_token_expiry"`
-	LastLogin        *time.Time `json:"last_login" gorm:"column:last_login"`
+type AuthUser struct {
+	users.User       `gorm:"embedded"`
+	LastLogin        *time.Time `gorm:"column:last_login"`
+	ResetToken       string     `gorm:"column:reset_token"`
+	ResetTokenExpiry *time.Time `gorm:"column:reset_token_expiry"`
+}
+
+func (AuthUser) TableName() string {
+	return "users"
 }
 
 type RegisterRequest struct {
-	Email     string `json:"email" binding:"required,email"`
-	Password  string `json:"password" binding:"required,min=8"`
-	FirstName string `json:"first_name" binding:"required"`
-	LastName  string `json:"last_name" binding:"required"`
+	Name     string `json:"name" gorm:"column:name"`
+	Username string `json:"username" gorm:"column:username"`
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=8"`
 }
 
 type LoginRequest struct {
@@ -37,18 +35,19 @@ type ForgotPasswordRequest struct {
 type ResetPasswordRequest struct {
 	Email       string `json:"email" binding:"required,email"`
 	Token       string `json:"token" binding:"required"`
-	NewPassword string `json:"new_password" binding:"required,min=8"`
+	NewPassword string `json:"new_password" binding:"required,min=6"`
 }
 
 type AuthResponse struct {
-	AccessToken string    `json:"access_token"`
-	TokenType   string    `json:"token_type"`
-	ExpiresIn   int       `json:"expires_in"`
-	UserID      uint      `json:"user_id"`
-	Email       string    `json:"email"`
-	FirstName   string    `json:"first_name"`
-	LastName    string    `json:"last_name"`
-	LastLogin   time.Time `json:"last_login"`
+	AccessToken string `json:"accessToken"`
+	Exp         int64  `json:"exp"`
+	Username    string `json:"username"`
+	ID          uint   `json:"id"`
+	Avatar      string `json:"avatar"`
+	Email       string `json:"email"`
+	Name        string `json:"name"`
+	StripeID    string `json:"stripe_id"`
+	LastLogin   string `json:"last_login"`
 }
 
 type ErrorResponse struct {
@@ -57,4 +56,15 @@ type ErrorResponse struct {
 
 type SuccessResponse struct {
 	Message string `json:"message"`
+}
+
+// VerifyOTPRequest represents the payload to verify an OTP for login
+type VerifyOTPRequest struct {
+	Email string `json:"email" binding:"required,email"`
+	OTP   string `json:"otp" binding:"required"`
+}
+
+// SendOTPRequest represents the payload to request sending an OTP
+type SendOTPRequest struct {
+	Email string `json:"email" binding:"required,email"`
 }

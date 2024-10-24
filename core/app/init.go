@@ -21,8 +21,6 @@ func InitializeCoreModules(db *gorm.DB, router *gin.RouterGroup) map[string]modu
 		"auth": func(db *gorm.DB, router *gin.RouterGroup) module.Module {
 			return auth.NewAuthModule(db, router, &email.DefaultSender{}, &log.Logger{})
 		},
-		// MODULE_INITIALIZER_MARKER - Do not remove this comment because it's used by the CLI to add new module initializers
-
 	}
 
 	// Initialize and register each module

@@ -9,20 +9,21 @@ import (
 
 // Config holds the application configuration.
 type Config struct {
-	Env                string
-	DBDriver           string
-	DBUser             string
-	DBPassword         string
-	DBHost             string
-	DBPort             string
-	DBName             string
-	DBPath             string
-	DBURL              string
-	ApiKey             string
-	JWTSecret          string
-	ServerAddress      string
-	CORSAllowedOrigins []string
-
+	BaseURL              string
+	Env                  string
+	DBDriver             string
+	DBUser               string
+	DBPassword           string
+	DBHost               string
+	DBPort               string
+	DBName               string
+	DBPath               string
+	DBURL                string
+	ApiKey               string
+	JWTSecret            string
+	ServerAddress        string
+	CORSAllowedOrigins   []string
+	Version              string
 	EmailProvider        string
 	EmailFromAddress     string
 	SMTPHost             string
@@ -37,6 +38,7 @@ type Config struct {
 // NewConfig returns a new Config instance with default values.
 func NewConfig() *Config {
 	config := &Config{
+		BaseURL:            getEnvWithLog("APPHOST", "http://localhost:8080"),
 		Env:                getEnvWithLog("ENV", "development"),
 		DBDriver:           getEnvWithLog("DB_DRIVER", "mysql"),
 		DBUser:             getEnvWithLog("DB_USER", "root"),
@@ -48,8 +50,9 @@ func NewConfig() *Config {
 		DBURL:              getEnvWithLog("DB_URL", ""),
 		ApiKey:             getEnvWithLog("API_KEY", "test_api_key"),
 		JWTSecret:          getEnvWithLog("JWT_SECRET", "secret"),
-		ServerAddress:      getEnvWithLog("SERVER_ADDRESS", ":8080"),
-		CORSAllowedOrigins: []string{"http://localhost:3000"},
+		ServerAddress:      ":8090",
+		CORSAllowedOrigins: []string{"https://admin.albafone.net", "http://localhost:3000"},
+		Version:            "1.1.2",
 
 		EmailProvider:        getEnvWithLog("EMAIL_PROVIDER", "default"),
 		EmailFromAddress:     getEnvWithLog("EMAIL_FROM_ADDRESS", "no-reply@localhost"),

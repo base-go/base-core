@@ -17,7 +17,7 @@ type AuthModule struct {
 }
 
 func NewAuthModule(db *gorm.DB, router *gin.RouterGroup, emailSender email.Sender, logger *logrus.Logger) module.Module {
-	service := NewAuthService(db)
+	service := NewAuthService(db, emailSender)
 	controller := NewAuthController(service, emailSender, logger)
 
 	authModule := &AuthModule{
@@ -38,11 +38,11 @@ func (m *AuthModule) Routes(router *gin.RouterGroup) {
 }
 
 func (m *AuthModule) Migrate() error {
-	return m.DB.AutoMigrate(&User{})
+	return m.DB.AutoMigrate(&AuthUser{})
 }
 
 func (m *AuthModule) GetModels() []interface{} {
 	return []interface{}{
-		&User{},
+		&AuthUser{},
 	}
 }

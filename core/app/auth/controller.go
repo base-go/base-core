@@ -2,7 +2,9 @@ package auth
 
 import (
 	"base/core/email"
+	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -28,6 +30,7 @@ func (c *AuthController) Routes(router *gin.RouterGroup) {
 	router.POST("/logout", c.Logout)
 	router.POST("/forgot-password", c.ForgotPassword)
 	router.POST("/reset-password", c.ResetPassword)
+
 }
 
 // Register godoc
@@ -58,9 +61,9 @@ func (c *AuthController) Register(ctx *gin.Context) {
 	// Send welcome email
 	msg := email.Message{
 		To:      []string{user.Email},
-		From:    "noreply@yourdomain.com", // Make sure this matches your Postmark sender signature
+		From:    "support@albafone.app",
 		Subject: "Welcome to Our Application",
-		Body:    c.getWelcomeEmailBody(user.FirstName),
+		Body:    c.getWelcomeEmailBody(user.Name),
 		IsHTML:  true,
 	}
 
@@ -131,16 +134,26 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 func (c *AuthController) ForgotPassword(ctx *gin.Context) {
 	var req ForgotPasswordRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
+		c.Logger.WithError(err).Error("Failed to bind JSON in ForgotPassword")
 		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 		return
 	}
 
+	c.Logger.WithField("email", req.Email).Info("Processing forgot password request")
+
 	err := c.AuthService.ForgotPassword(req.Email)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, ErrorResponse{Error: "User not found"})
+		if strings.Contains(err.Error(), "user not found") {
+			c.Logger.WithError(err).WithField("email", req.Email).Warn("User not found for forgot password request")
+			ctx.JSON(http.StatusNotFound, ErrorResponse{Error: "User not found"})
+		} else {
+			c.Logger.WithError(err).WithField("email", req.Email).Error("Failed to process forgot password request")
+			ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "An error occurred while processing your request"})
+		}
 		return
 	}
 
+	c.Logger.WithField("email", req.Email).Info("Forgot password request processed successfully")
 	ctx.JSON(http.StatusOK, SuccessResponse{Message: "Password reset email sent"})
 }
 
@@ -159,22 +172,42 @@ func (c *AuthController) ForgotPassword(ctx *gin.Context) {
 func (c *AuthController) ResetPassword(ctx *gin.Context) {
 	var req ResetPasswordRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+		c.Logger.WithError(err).Error("Failed to bind reset password request")
+		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid request format"})
 		return
 	}
+
+	c.Logger.WithFields(logrus.Fields{
+		"email": req.Email,
+		"token": req.Token,
+	}).Info("Processing reset password request")
 
 	err := c.AuthService.ResetPassword(req.Email, req.Token, req.NewPassword)
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Invalid or expired reset token"})
+		c.Logger.WithError(err).WithFields(logrus.Fields{
+			"email": req.Email,
+			"token": req.Token,
+		}).Error("Failed to reset password")
+
+		// Return specific error messages
+		switch {
+		case errors.Is(err, ErrInvalidToken):
+			ctx.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Invalid reset token"})
+		case errors.Is(err, ErrTokenExpired):
+			ctx.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Reset token has expired"})
+		default:
+			ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to reset password"})
+		}
 		return
 	}
 
+	c.Logger.WithField("email", req.Email).Info("Password reset successful")
 	ctx.JSON(http.StatusOK, SuccessResponse{Message: "Password reset successful"})
 }
 
-func (c *AuthController) getWelcomeEmailBody(firstName string) string {
-	return "<h1>Welcome to Our Application</h1>" +
-		"<p>Hi " + firstName + ",</p>" +
+func (c *AuthController) getWelcomeEmailBody(name string) string {
+	return "<h1>Welcome to Albafone!</h1>" +
+		"<p>Hi " + name + ",</p>" +
 		"<p>Thank you for registering with our application.</p>" +
 		"<p>Best regards,<br>Team</p>"
 }
