@@ -16,7 +16,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"golang.org/x/time/rate"
 
 	_ "base/docs" // Import for Swagger docs
 )
@@ -72,14 +71,17 @@ func StartApplication() (*Application, error) {
 	router.Use(cors.New(corsConfig))
 
 	// Set up rate limiter
-	limiter := middleware.NewIPRateLimiter(rate.Limit(1), 5) // 1 request per second with burst of 5
-	router.Use(middleware.RateLimitMiddleware(limiter))
+	// limiter := middleware.NewIPRateLimiter(rate.Limit(1), 5) // 1 request per second with burst of 5
+	// router.Use(middleware.RateLimitMiddleware(limiter))
 
-	// Set up Swagger
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
+	// Set up Swagger if debug
+	if cfg.Env == "debug" {
+		router.GET("/swagger/*any",
+			ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.PersistAuthorization(true)),
+		)
+	}
 	// Create a new router group for API routes
-	apiGroup := router.Group("/api/v1")
+	apiGroup := router.Group("/api")
 	apiGroup.Use(middleware.APIKeyMiddleware())
 
 	// Initialize core modules
@@ -93,9 +95,10 @@ func StartApplication() (*Application, error) {
 	allModules := module.GetAllModules()
 
 	// Add ping route to the main router
-	router.GET("/ping", func(c *gin.Context) {
+	router.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
+			"version": cfg.Version,
 		})
 	})
 

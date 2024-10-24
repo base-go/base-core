@@ -13,10 +13,6 @@ func ExecuteCommand(args []string) {
 	}
 
 	switch args[1] {
-	case "seed":
-		helper.SeedDatabase(false)
-	case "replant":
-		helper.SeedDatabase(true)
 	case "feed":
 		if len(args) < 3 {
 			fmt.Println("Error: Not enough arguments for feed command")
