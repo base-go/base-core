@@ -46,7 +46,6 @@ type AuthResponse struct {
 	Avatar      string `json:"avatar"`
 	Email       string `json:"email"`
 	Name        string `json:"name"`
-	StripeID    string `json:"stripe_id"`
 	LastLogin   string `json:"last_login"`
 }
 

@@ -1,91 +1,5 @@
+basePath: /api
 definitions:
-  auth.AuthResponse:
-    properties:
-      access_token:
-        type: string
-      email:
-        type: string
-      expires_in:
-        type: integer
-      first_name:
-        type: string
-      last_login:
-        type: string
-      last_name:
-        type: string
-      token_type:
-        type: string
-      user_id:
-        type: integer
-    type: object
-  auth.ErrorResponse:
-    properties:
-      error:
-        type: string
-    type: object
-  auth.ForgotPasswordRequest:
-    properties:
-      email:
-        type: string
-    required:
-    - email
-    type: object
-  auth.LoginRequest:
-    properties:
-      email:
-        type: string
-      password:
-        type: string
-    required:
-    - email
-    - password
-    type: object
-  auth.RegisterRequest:
-    properties:
-      email:
-        type: string
-      first_name:
-        type: string
-      last_name:
-        type: string
-      password:
-        minLength: 8
-        type: string
-    required:
-    - email
-    - first_name
-    - last_name
-    - password
-    type: object
-  auth.ResetPasswordRequest:
-    properties:
-      email:
-        type: string
-      new_password:
-        minLength: 8
-        type: string
-      token:
-        type: string
-    required:
-    - email
-    - new_password
-    - token
-    type: object
-  auth.SuccessResponse:
-    properties:
-      message:
-        type: string
-    type: object
-  author.ErrorResponse:
-    properties:
-      error:
-        type: string
-    type: object
-  author.SuccessResponse:
-    properties:
-      message:
-        type: string
-    type: object
   file.ErrorResponse:
     properties:
       error:
@@ -108,142 +22,9 @@ definitions:
         description: Valid is true if Time is not NULL
         type: boolean
     type: object
-  models.AuthorResponse:
-    properties:
-      bio:
-        type: string
-      createdAt:
-        type: string
-      email:
-        type: string
-      id:
-        type: integer
-      joined_at:
-        type: string
-      password_hash:
-        type: string
-      ranking:
-        type: integer
-      updatedAt:
-        type: string
-      username:
-        type: string
-    type: object
-  models.CreateAuthorRequest:
-    properties:
-      bio:
-        type: string
-      email:
-        type: string
-      joined_at:
-        type: string
-      password_hash:
-        type: string
-      ranking:
-        type: integer
-      username:
-        type: string
-    type: object
-  models.UpdateAuthorRequest:
-    properties:
-      bio:
-        type: string
-      email:
-        type: string
-      joined_at:
-        type: string
-      password_hash:
-        type: string
-      ranking:
-        type: integer
-      username:
-        type: string
-    type: object
-  types.PaginatedResponse:
-    properties:
-      data: {}
-      pagination:
-        $ref: '#/definitions/types.Pagination'
-    type: object
-  types.Pagination:
-    properties:
-      page:
-        type: integer
-      page_size:
-        type: integer
-      total:
-        type: integer
-      total_pages:
-        type: integer
-    type: object
-  users.CreateRequest:
-    properties:
-      avatar:
-        type: string
-      email:
-        type: string
-      name:
-        type: string
-      password:
-        type: string
-    type: object
-  users.CreateResponse:
-    properties:
-      avatar:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      email:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-      password:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  users.ErrorResponse:
+  oauth.ErrorResponse:
     properties:
       error:
-        type: string
-    type: object
-  users.SuccessResponse:
-    properties:
-      message:
-        type: string
-    type: object
-  users.UpdateRequest:
-    properties:
-      avatar:
-        type: string
-      email:
-        type: string
-      name:
-        type: string
-      password:
-        type: string
-    type: object
-  users.UpdateResponse:
-    properties:
-      avatar:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      email:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-      password:
-        type: string
-      updatedAt:
         type: string
     type: object
   users.User:
@@ -264,6 +45,8 @@ definitions:
         type: string
       updatedAt:
         type: string
+      username:
+        type: string
     type: object
   websocket.ErrorResponse:
     properties:
@@ -272,337 +55,70 @@ definitions:
     type: object
 info:
   contact: {}
+  description: This is the API documentation for Albafone
+  title: Base API
+  version: "1.5"
 paths:
-  /auth/forgot-password:
+  /oauth/facebook/callback:
     post:
       consumes:
       - application/json
-      description: Request a password reset token
+      description: Handle the OAuth callback from Facebook
       parameters:
-      - description: User Email
+      - description: Facebook Access Token
         in: body
-        name: email
+        name: accessToken
         required: true
         schema:
-          $ref: '#/definitions/auth.ForgotPasswordRequest'
+          type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/auth.SuccessResponse'
+            $ref: '#/definitions/users.User'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/auth.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/auth.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Request password reset
-      tags:
-      - Core/Auth
-  /auth/login:
-    post:
-      consumes:
-      - application/json
-      description: Authenticate a user and return a token
-      parameters:
-      - description: Login User
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/auth.LoginRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/auth.AuthResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/auth.ErrorResponse'
+            $ref: '#/definitions/oauth.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/auth.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: User login
+            $ref: '#/definitions/oauth.ErrorResponse'
+      summary: Facebook OAuth callback
       tags:
-      - Core/Auth
-  /auth/logout:
+      - OAuth
+  /oauth/google/callback:
     post:
-      description: Logout a user
+      consumes:
+      - application/json
+      description: Handle the OAuth callback from Google
+      parameters:
+      - description: Google ID Token
+        in: body
+        name: idToken
+        required: true
+        schema:
+          type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/auth.SuccessResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: User logout
-      tags:
-      - Core/Auth
-  /auth/register:
-    post:
-      consumes:
-      - application/json
-      description: Register a new user with the input payload
-      parameters:
-      - description: Register User
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/auth.RegisterRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/auth.AuthResponse'
+            $ref: '#/definitions/users.User'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/auth.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/auth.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Register a new user
-      tags:
-      - Core/Auth
-  /auth/reset-password:
-    post:
-      consumes:
-      - application/json
-      description: Reset user password using a token
-      parameters:
-      - description: Reset Password
-        in: body
-        name: reset
-        required: true
-        schema:
-          $ref: '#/definitions/auth.ResetPasswordRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/auth.SuccessResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/auth.ErrorResponse'
+            $ref: '#/definitions/oauth.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/auth.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Reset password
+            $ref: '#/definitions/oauth.ErrorResponse'
+      summary: Google OAuth callback
       tags:
-      - Core/Auth
-  /author:
-    get:
-      consumes:
-      - application/json
-      description: Get a list of Authors
-      parameters:
-      - description: Page number
-        in: query
-        name: page
-        type: integer
-      - description: Number of items per page
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/types.PaginatedResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/author.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/author.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: List Authors
-      tags:
-      - Author
-    post:
-      consumes:
-      - application/json
-      description: Create a new Author with the input payload
-      parameters:
-      - description: Create Author request
-        in: body
-        name: author
-        required: true
-        schema:
-          $ref: '#/definitions/models.CreateAuthorRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/models.AuthorResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/author.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/author.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Create a new Author
-      tags:
-      - Author
-  /author/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete a Author by its ID
-      parameters:
-      - description: Author ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/author.SuccessResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/author.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/author.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Delete a Author
-      tags:
-      - Author
-    get:
-      consumes:
-      - application/json
-      description: Get a Author by its ID
-      parameters:
-      - description: Author ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.AuthorResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/author.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/author.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Get a Author
-      tags:
-      - Author
-    put:
-      consumes:
-      - application/json
-      description: Update a Author by its ID
-      parameters:
-      - description: Author ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Update Author request
-        in: body
-        name: author
-        required: true
-        schema:
-          $ref: '#/definitions/models.UpdateAuthorRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.AuthorResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/author.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/author.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/author.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Update a Author
-      tags:
-      - Author
-  /author/all:
-    get:
-      consumes:
-      - application/json
-      description: Get a list of all Authors without pagination
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/types.PaginatedResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/author.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: List all Authors
-      tags:
-      - Author
+      - OAuth
   /upload:
     post:
       consumes:
@@ -630,149 +146,6 @@ paths:
       summary: Upload a file
       tags:
       - Core/FileUpload
-  /users:
-    get:
-      consumes:
-      - application/json
-      description: Get a list of all User
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/users.User'
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/users.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: List User
-      tags:
-      - Core/Users
-    post:
-      consumes:
-      - application/json
-      description: Create a new User with the input payload
-      parameters:
-      - description: Create User
-        in: body
-        name: users
-        required: true
-        schema:
-          $ref: '#/definitions/users.CreateRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/users.CreateResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/users.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/users.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Create a new User
-      tags:
-      - Core/Users
-  /users/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete a User by its ID
-      parameters:
-      - description: ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/users.SuccessResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/users.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Delete a User
-      tags:
-      - Core/Users
-    get:
-      consumes:
-      - application/json
-      description: Get a User by its ID
-      parameters:
-      - description: ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/users.User'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/users.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Get a User
-      tags:
-      - Core/Users
-    put:
-      consumes:
-      - application/json
-      description: Update a User by its ID
-      parameters:
-      - description: ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Update User
-        in: body
-        name: users
-        required: true
-        schema:
-          $ref: '#/definitions/users.UpdateRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/users.UpdateResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/users.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/users.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Update a User
-      tags:
-      - Core/Users
   /ws:
     get:
       consumes:
@@ -799,4 +172,12 @@ paths:
       summary: Connect to WebSocket
       tags:
       - Core/Websocket
+schemes:
+- http
+- https
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: X-Api-Key
+    type: apiKey
 swagger: "2.0"

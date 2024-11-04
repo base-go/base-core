@@ -10,8 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/stripe/stripe-go/v80"
-	"github.com/stripe/stripe-go/v80/customer"
 	"google.golang.org/api/idtoken"
 	"gorm.io/gorm"
 )
@@ -112,16 +110,6 @@ func (s *OAuthService) processUser(email, name, username, picture, provider, pro
 				OAuthLastLogin: time.Now(),
 			}
 
-			// Create Stripe customer
-			customerParams := &stripe.CustomerParams{
-				Email: stripe.String(user.Email),
-				Name:  stripe.String(user.Name),
-			}
-			cust, err := customer.New(customerParams)
-			if err != nil {
-				return nil, fmt.Errorf("failed to create Stripe customer: %w", err)
-			}
-			user.StripeID = cust.ID
 
 			if err := s.DB.Create(&user).Error; err != nil {
 				return nil, fmt.Errorf("failed to create user: %w", err)

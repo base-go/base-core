@@ -11,16 +11,22 @@ import (
 	_ "base/docs" // Import for Swagger docs
 )
 
+// @title Base API
+// @info This is the API documentation for Base
+// @servers localhost:8090
+// @BasePath /api
+// @version 1.5
+// @description This is the API documentation for Albafone
+// @schemes http https
+// @produces json
+// @consumes json
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name X-Api-Key
 func main() {
 	// Load the .env file
 	if err := godotenv.Load(); err != nil {
 		log.Warn("Error loading .env file")
-	}
-
-	// If there are command line arguments, execute the command
-	if len(os.Args) > 1 {
-		core.ExecuteCommand(os.Args)
-		return
 	}
 
 	// if debug mode is enabled, run swag init
@@ -41,7 +47,7 @@ func main() {
 	}
 
 	// Start the server
-	log.Infof("Server starting on http://localhost%s", app.Config.ServerAddress)
+	log.Infof("Server starting on %s%s", app.Config.BaseURL, app.Config.ServerAddress)
 	if err := app.Router.Run(app.Config.ServerAddress); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}

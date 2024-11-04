@@ -15,10 +15,9 @@ import (
 	"base/core/helper"
 
 	"github.com/stripe/stripe-go"
-	"github.com/stripe/stripe-go/customer"
 	"golang.org/x/crypto/bcrypt"
-	"golang.org/x/exp/rand"
 	"gorm.io/gorm"
+	"pgregory.net/rand"
 )
 
 var (
@@ -73,16 +72,6 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 		return nil, fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	// Create Stripe customer
-	customerParams := &stripe.CustomerParams{
-		Email: stripe.String(req.Email),
-		Name:  stripe.String(req.Name),
-	}
-	cust, err := customer.New(customerParams)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create Stripe customer: %w", err)
-	}
-
 	now := time.Now()
 	user := AuthUser{
 		User: users.User{
@@ -90,7 +79,6 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 			Password: string(hashedPassword),
 			Name:     req.Name,
 			Username: req.Username,
-			StripeID: cust.ID,
 		},
 		LastLogin: &now,
 	}
@@ -134,8 +122,8 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 		Avatar:      user.Avatar,
 		Email:       user.Email,
 		Name:        user.Name,
-		StripeID:    user.StripeID,
-		LastLogin:   now.Format(time.RFC3339),
+
+		LastLogin: now.Format(time.RFC3339),
 	}, nil
 }
 
@@ -174,8 +162,8 @@ func (s *AuthService) Login(req *LoginRequest) (*AuthResponse, error) {
 		Avatar:      user.Avatar,
 		Email:       user.Email,
 		Name:        user.Name,
-		StripeID:    user.StripeID,
-		LastLogin:   now.Format(time.RFC3339),
+
+		LastLogin: now.Format(time.RFC3339),
 	}, nil
 }
 

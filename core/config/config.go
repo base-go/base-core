@@ -38,7 +38,7 @@ type Config struct {
 // NewConfig returns a new Config instance with default values.
 func NewConfig() *Config {
 	config := &Config{
-		BaseURL:            getEnvWithLog("APPHOST", "http://localhost:8080"),
+		BaseURL:            getEnvWithLog("APPHOST", "http://localhost"),
 		Env:                getEnvWithLog("ENV", "development"),
 		DBDriver:           getEnvWithLog("DB_DRIVER", "mysql"),
 		DBUser:             getEnvWithLog("DB_USER", "root"),
@@ -50,9 +50,9 @@ func NewConfig() *Config {
 		DBURL:              getEnvWithLog("DB_URL", ""),
 		ApiKey:             getEnvWithLog("API_KEY", "test_api_key"),
 		JWTSecret:          getEnvWithLog("JWT_SECRET", "secret"),
-		ServerAddress:      ":8090",
+		ServerAddress:      getEnvWithLog("SERVER_ADDRESS", ":8080"),
 		CORSAllowedOrigins: []string{"https://admin.albafone.net", "http://localhost:3000"},
-		Version:            "1.1.2",
+		Version:            getEnvWithLog("APP_VERSION", "0.0.1"),
 
 		EmailProvider:        getEnvWithLog("EMAIL_PROVIDER", "default"),
 		EmailFromAddress:     getEnvWithLog("EMAIL_FROM_ADDRESS", "no-reply@localhost"),

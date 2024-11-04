@@ -13,8 +13,6 @@ type User struct {
 	Email     string         `gorm:"column:email;unique;not null"`
 	Avatar    string         `gorm:"column:avatar"`
 	Password  string         `gorm:"column:password"`
-	StripeID  string         `gorm:"column:stripe_id"`
-	Grade     string         `gorm:"column:grade"`
 	CreatedAt time.Time      `gorm:"column:created_at"`
 	UpdatedAt time.Time      `gorm:"column:updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at"`
@@ -48,6 +46,4 @@ type UserResponse struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Avatar   string `json:"avatar"`
-	Grade    string `json:"grade"`
-	StripeID string `json:"stripe_id"`
 }

@@ -1,156 +1,268 @@
-package core // file core/core.go
+package core
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"base/core/app/auth"
 	"base/core/app/users"
 	"base/core/email"
+	"base/core/event"
 	"base/core/module"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/sirupsen/logrus"
-
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"gorm.io/gorm"
 )
 
-// InitializeLogger sets up Logrus as the global logger
-func InitializeLogger() *logrus.Logger {
-	// Load .env file
-	godotenv.Load()
+// ModuleInitializer is a struct to hold dependencies for module initialization
+type ModuleInitializer struct {
+	DB           *gorm.DB
+	Router       *gin.RouterGroup
+	EmailSender  email.Sender
+	Logger       *zap.Logger
+	EventService *event.EventService
+}
 
-	logger := logrus.New()
+// InitializeLogger sets up Zap as the global logger
+func InitializeLogger() *zap.Logger {
+	// Load .env file
+	if err := godotenv.Load(); err != nil {
+		// Only log warning as .env file might not exist in production
+		fmt.Printf("Warning: Error loading .env file: %v\n", err)
+	}
+
 	env := os.Getenv("ENV")
+	if env == "" {
+		env = "production" // Default to production if not set
+	}
 
 	logDir := "./logs"
 	if err := os.MkdirAll(logDir, os.ModePerm); err != nil {
-		logger.Fatalf("Failed to create log directory: %v", err)
+		panic(fmt.Sprintf("Failed to create log directory: %v", err))
 	}
 
-	customFormatter := &CustomTextFormatter{
-		TimestampFormat: "2006-01-02 15:04:05",
-		//colored:         true,
-		ForceColors: true,
+	// Configure encoder with detailed settings
+	encoderConfig := zapcore.EncoderConfig{
+		TimeKey:        "timestamp",
+		LevelKey:       "level",
+		NameKey:        "logger",
+		CallerKey:      "caller",
+		FunctionKey:    "func",
+		MessageKey:     "msg",
+		StacktraceKey:  "stacktrace",
+		LineEnding:     zapcore.DefaultLineEnding,
+		EncodeLevel:    zapcore.CapitalLevelEncoder,
+		EncodeTime:     zapcore.ISO8601TimeEncoder,
+		EncodeDuration: zapcore.StringDurationEncoder,
+		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
 
-	if env == "debug" {
-		// Debug mode: Log everything to the terminal
-		logger.SetOutput(os.Stdout)
-		logger.SetLevel(logrus.DebugLevel)
-		logger.SetFormatter(customFormatter)
+	var cores []zapcore.Core
 
-		// Redirect Gin's logs to Logrus
-		gin.DefaultWriter = logger.WriterLevel(logrus.InfoLevel)
-		gin.DefaultErrorWriter = logger.WriterLevel(logrus.ErrorLevel)
-	} else {
-		// Release mode: Log to separate files
-		// Setup log files
-		requestFile, err := os.OpenFile(filepath.Join(logDir, "requests.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if err != nil {
-			logger.Fatalf("Failed to open request log file: %v", err)
-		}
-
-		errorFile, err := os.OpenFile(filepath.Join(logDir, "error.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if err != nil {
-			logger.Fatalf("Failed to open error log file: %v", err)
-		}
-
-		infoFile, err := os.OpenFile(filepath.Join(logDir, "info.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if err != nil {
-			logger.Fatalf("Failed to open info log file: %v", err)
-		}
-
-		// Set up multi-writer for different log levels
-		logger.SetOutput(io.MultiWriter(infoFile, os.Stdout))
-		logger.SetLevel(logrus.InfoLevel)
-		logger.SetFormatter(customFormatter)
-
-		// Create hooks for error and request logs
-		logger.AddHook(&writerHook{
-			Writer:    errorFile,
-			LogLevels: []logrus.Level{logrus.ErrorLevel, logrus.FatalLevel, logrus.PanicLevel},
-			Formatter: customFormatter,
-		})
-
-		logger.AddHook(&writerHook{
-			Writer:    requestFile,
-			LogLevels: []logrus.Level{logrus.InfoLevel},
-			Formatter: customFormatter,
-		})
+	if env == "debug" || env == "development" {
+		// Debug mode: Log everything to console with development settings
+		consoleEncoder := zapcore.NewConsoleEncoder(encoderConfig)
+		consoleCore := zapcore.NewCore(
+			consoleEncoder,
+			zapcore.AddSync(os.Stdout),
+			zapcore.DebugLevel,
+		)
+		cores = append(cores, consoleCore)
 
 		// Redirect Gin's logs
+		gin.DefaultWriter = os.Stdout
+		gin.DefaultErrorWriter = os.Stderr
+	} else {
+		// Production mode: Log to files with appropriate levels
+		jsonEncoder := zapcore.NewJSONEncoder(encoderConfig)
+
+		// Info logs
+		infoFile, err := os.OpenFile(
+			filepath.Join(logDir, "info.log"),
+			os.O_APPEND|os.O_CREATE|os.O_WRONLY,
+			0644,
+		)
+		if err != nil {
+			panic(fmt.Sprintf("Failed to open info log file: %v", err))
+		}
+
+		infoCore := zapcore.NewCore(
+			jsonEncoder,
+			zapcore.AddSync(io.MultiWriter(infoFile, os.Stdout)),
+			zapcore.InfoLevel,
+		)
+		cores = append(cores, infoCore)
+
+		// Error logs
+		errorFile, err := os.OpenFile(
+			filepath.Join(logDir, "error.log"),
+			os.O_APPEND|os.O_CREATE|os.O_WRONLY,
+			0644,
+		)
+		if err != nil {
+			panic(fmt.Sprintf("Failed to open error log file: %v", err))
+		}
+
+		errorCore := zapcore.NewCore(
+			jsonEncoder,
+			zapcore.AddSync(io.MultiWriter(errorFile, os.Stderr)),
+			zapcore.ErrorLevel,
+		)
+		cores = append(cores, errorCore)
+
+		// Request logs for API access
+		requestFile, err := os.OpenFile(
+			filepath.Join(logDir, "requests.log"),
+			os.O_APPEND|os.O_CREATE|os.O_WRONLY,
+			0644,
+		)
+		if err != nil {
+			panic(fmt.Sprintf("Failed to open request log file: %v", err))
+		}
+
+		// Redirect Gin's logs to the request log file
 		gin.DefaultWriter = io.MultiWriter(requestFile, os.Stdout)
 		gin.DefaultErrorWriter = io.MultiWriter(errorFile, os.Stderr)
 	}
 
-	// Set the global logger
-	logrus.SetOutput(logger.Out)
-	logrus.SetFormatter(logger.Formatter)
-	logrus.SetLevel(logger.Level)
+	// Combine cores
+	core := zapcore.NewTee(cores...)
+
+	// Create logger with caller and stacktrace
+	logger := zap.New(
+		core,
+		zap.AddCaller(),
+		zap.AddCallerSkip(1),
+		zap.AddStacktrace(zapcore.ErrorLevel),
+		zap.Development(),
+	)
+
+	// Replace the global logger
+	zap.ReplaceGlobals(logger)
 
 	return logger
 }
 
-// CustomTextFormatter formats logs in a clean, readable text format
-type CustomTextFormatter struct {
-	TimestampFormat string
-	ForceColors     bool
-}
+// InitializeCoreModules loads and initializes all core modules
+func InitializeCoreModules(init ModuleInitializer) map[string]module.Module {
+	modules := make(map[string]module.Module)
+	ctx := context.Background()
 
-func (f *CustomTextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
-	timestamp := entry.Time.Format(f.TimestampFormat)
-	level := strings.ToUpper(entry.Level.String())
-	msg := fmt.Sprintf("%s [%s] %s", timestamp, level, entry.Message)
-
-	for k, v := range entry.Data {
-		msg += fmt.Sprintf(" %s=%v", k, v)
+	if init.Logger == nil {
+		init.Logger = zap.NewNop()
 	}
 
-	return []byte(msg + "\n"), nil
-}
+	if init.EventService != nil {
+		// Track system startup
+		init.EventService.Track(ctx, event.EventOptions{
+			Type:        "system",
+			Category:    "startup",
+			Actor:       "system",
+			Action:      "initialize_modules",
+			Status:      "started",
+			Description: "Starting core modules initialization",
+		})
+	}
 
-// InitializeModules loads and initializes all modules directly
-func InitializeCoreModules(db *gorm.DB, router *gin.RouterGroup, emailSender email.Sender, logger *logrus.Logger) map[string]module.Module {
-	modules := make(map[string]module.Module)
-
-	// Define the module initializers directly
-	moduleInitializers := map[string]func(*gorm.DB, *gin.RouterGroup) module.Module{
-		"users": func(db *gorm.DB, router *gin.RouterGroup) module.Module { return users.NewUserModule(db, router) },
-		"auth": func(db *gorm.DB, router *gin.RouterGroup) module.Module {
-			return auth.NewAuthModule(db, router, emailSender, logger)
+	// Define module initializers with proper error handling
+	moduleInitializers := map[string]func() (module.Module, error){
+		"users": func() (module.Module, error) {
+			m := users.NewUserModule(
+				init.DB,
+				init.Router,
+				init.Logger,
+				init.EventService,
+			)
+			if m == nil {
+				return nil, fmt.Errorf("failed to create users module")
+			}
+			return m, nil
+		},
+		"auth": func() (module.Module, error) {
+			m := auth.NewAuthModule(
+				init.DB,
+				init.Router,
+				init.EmailSender,
+				init.Logger,
+				init.EventService,
+			)
+			if m == nil {
+				return nil, fmt.Errorf("failed to create auth module")
+			}
+			return m, nil
 		},
 	}
-	// Initialize and register each module
-	for name, initializer := range moduleInitializers {
-		module := initializer(db, router)
-		modules[name] = module
 
+	// Initialize each module with error handling
+	for name, initializer := range moduleInitializers {
+		init.Logger.Info("Initializing module", zap.String("module", name))
+
+		module, err := initializer()
+		if err != nil {
+			init.Logger.Error("Module initialization failed",
+				zap.String("module", name),
+				zap.Error(err))
+			continue
+		}
+
+		// Perform module migration
+		if err := module.Migrate(); err != nil {
+			init.Logger.Error("Module migration failed",
+				zap.String("module", name),
+				zap.Error(err))
+
+			if init.EventService != nil {
+				init.EventService.Track(ctx, event.EventOptions{
+					Type:        "system",
+					Category:    "startup",
+					Actor:       "system",
+					Target:      name,
+					Action:      "migrate",
+					Status:      "failed",
+					Description: "Module migration failed",
+					Metadata: map[string]interface{}{
+						"error":  err.Error(),
+						"module": name,
+					},
+				})
+			}
+			continue
+		}
+
+		modules[name] = module
+		init.Logger.Info("Module initialized successfully",
+			zap.String("module", name))
+	}
+
+	if init.EventService != nil {
+		// Track successful module initialization
+		init.EventService.Track(ctx, event.EventOptions{
+			Type:        "system",
+			Category:    "startup",
+			Actor:       "system",
+			Action:      "initialize_modules",
+			Status:      "completed",
+			Description: "Core modules initialization completed",
+			Metadata: map[string]interface{}{
+				"modules": getModuleNames(modules),
+			},
+		})
 	}
 
 	return modules
 }
 
-// writerHook is a hook that writes logs of specified levels to a specified writer
-type writerHook struct {
-	Writer    io.Writer
-	LogLevels []logrus.Level
-	Formatter logrus.Formatter
-}
-
-func (hook *writerHook) Fire(entry *logrus.Entry) error {
-	line, err := hook.Formatter.Format(entry)
-	if err != nil {
-		return err
+// Helper function to get module names
+func getModuleNames(modules map[string]module.Module) []string {
+	names := make([]string, 0, len(modules))
+	for name := range modules {
+		names = append(names, name)
 	}
-	_, err = hook.Writer.Write(line)
-	return err
-}
-
-func (hook *writerHook) Levels() []logrus.Level {
-	return hook.LogLevels
+	return names
 }

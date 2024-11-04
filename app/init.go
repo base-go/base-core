@@ -4,11 +4,13 @@ import (
 	"base/core/module"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
 type AppModuleInitializer struct {
 	Router *gin.RouterGroup
+	Logger *zap.Logger
 }
 
 func (a *AppModuleInitializer) InitializeModules(db *gorm.DB) []module.Module {
@@ -42,16 +44,4 @@ func (a *AppModuleInitializer) InitializeModules(db *gorm.DB) []module.Module {
 	}
 
 	return modules
-}
-
-func (a *AppModuleInitializer) InitializeSeeders() []module.Seeder {
-	seeders := []module.Seeder{
-		// Example:
-		// &user.UserSeeder{},
-		// &product.ProductSeeder{},
-
-		// SEEDER_INITIALIZER_MARKER - Do not remove this comment because it's used by the CLI to add new seeder initializers
-	}
-
-	return seeders
 }
