@@ -6,7 +6,8 @@ import (
 	"base/core/database"
 	"base/core/email"
 	"base/core/event"
-	"base/core/file"
+	"base/core/storage"
+
 	"base/core/middleware"
 	"base/core/module"
 	"base/core/websocket"
@@ -175,9 +176,45 @@ func StartApplication() (*Application, error) {
 	logger.Info("Initializing WebSocket module")
 	wsHub := websocket.InitWebSocketModule(apiGroup)
 
-	// Initialize File module
-	logger.Info("Initializing File module")
-	file.InitFileModule(apiGroup)
+	// Initialize storage service
+	logger.Info("Initializing storage service")
+
+	// Create storage config from application config
+	storageConfig := storage.Config{
+		Provider:  cfg.StorageProvider,
+		Path:      cfg.StoragePath,
+		BaseURL:   cfg.BaseURL,
+		APIKey:    cfg.StorageAPIKey,
+		APISecret: cfg.StorageAPISecret,
+		Endpoint:  cfg.StorageEndpoint,
+		Bucket:    cfg.StorageBucket,
+	}
+
+	// Initialize active storage
+	activeStorage, err := storage.NewActiveStorage(storageConfig)
+	if err != nil {
+		logger.Error("Failed to initialize storage service", zap.Error(err))
+		return nil, fmt.Errorf("storage service initialization failed: %w", err)
+	}
+
+	activeStorage.RegisterAttachment("users", storage.AttachmentConfig{
+		Field:             "avatar",
+		Path:              "avatars",
+		AllowedExtensions: []string{".jpg", ".jpeg", ".png"},
+		MaxFileSize:       2 << 20, // 2MB
+		Multiple:          false,
+	})
+
+	activeStorage.RegisterAttachment("users", storage.AttachmentConfig{
+		Field:             "documents",
+		Path:              "documents",
+		AllowedExtensions: []string{".pdf", ".doc", ".docx"},
+		MaxFileSize:       10 << 20, // 10MB
+		Multiple:          true,
+	})
+	logger.Info("Storage service initialized successfully",
+		zap.String("provider", cfg.StorageProvider),
+		zap.String("path", cfg.StoragePath))
 
 	// Create application instance
 	application := &Application{

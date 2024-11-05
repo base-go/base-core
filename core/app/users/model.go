@@ -1,21 +1,22 @@
 package users
 
 import (
+	"base/core/storage"
 	"time"
 
 	"gorm.io/gorm"
 )
 
 type User struct {
-	Id        uint           `gorm:"column:id;primary_key;auto_increment"`
-	Name      string         `gorm:"column:name;not null"`
-	Username  string         `gorm:"column:username;unique;not null"`
-	Email     string         `gorm:"column:email;unique;not null"`
-	Avatar    string         `gorm:"column:avatar"`
-	Password  string         `gorm:"column:password"`
-	CreatedAt time.Time      `gorm:"column:created_at"`
-	UpdatedAt time.Time      `gorm:"column:updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at"`
+	Id        uint                `gorm:"column:id;primary_key;auto_increment"`
+	Name      string              `gorm:"column:name;not null"`
+	Username  string              `gorm:"column:username;unique;not null"`
+	Email     string              `gorm:"column:email;unique;not null"`
+	Avatar    *storage.Attachment `gorm:"foreignKey:ModelId;references:Id"`
+	Password  string              `gorm:"column:password"`
+	CreatedAt time.Time           `gorm:"column:created_at"`
+	UpdatedAt time.Time           `gorm:"column:updated_at"`
+	DeletedAt gorm.DeletedAt      `gorm:"column:deleted_at"`
 }
 
 func (User) TableName() string {
@@ -40,10 +41,20 @@ type UpdatePasswordRequest struct {
 	NewPassword string `form:"NewPassword" binding:"required,min=6"`
 }
 
+// Implement the Attachable interface
+func (u *User) GetId() uint {
+	return u.Id
+}
+
+func (u *User) GetModelName() string {
+	return "users"
+}
+
+// UserResponse represents the API response structure
 type UserResponse struct {
-	Id       uint   `json:"id"`
-	Name     string `json:"name"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Avatar   string `json:"avatar"`
+	Id       uint                `json:"id"`
+	Name     string              `json:"name"`
+	Username string              `json:"username"`
+	Email    string              `json:"email"`
+	Avatar   *storage.Attachment `json:"avatar,omitempty"`
 }

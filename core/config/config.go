@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 )
@@ -33,6 +34,16 @@ type Config struct {
 	SendGridAPIKey       string
 	PostmarkServerToken  string
 	PostmarkAccountToken string
+	StorageProvider      string   `json:"storage_provider"`
+	StorageAPIKey        string   `json:"storage_api_key"`
+	StorageAPISecret     string   `json:"storage_api_secret"`
+	StorageEndpoint      string   `json:"storage_endpoint"`
+	StorageRegion        string   `json:"storage_region"`
+	StorageBucket        string   `json:"storage_bucket"`
+	StoragePublicURL     string   `json:"storage_public_url"`
+	StorageMaxSize       int64    `json:"storage_max_size"`
+	StorageAllowedExt    []string `json:"storage_allowed_ext"`
+	StoragePath          string   `json:"storage_path"`
 }
 
 // NewConfig returns a new Config instance with default values.
@@ -62,6 +73,18 @@ func NewConfig() *Config {
 		SendGridAPIKey:       getEnvWithLog("SENDGRID_API_KEY", ""),
 		PostmarkServerToken:  getEnvWithLog("POSTMARK_SERVER_TOKEN", ""),
 		PostmarkAccountToken: getEnvWithLog("POSTMARK_ACCOUNT_TOKEN", ""),
+		StorageProvider:      getEnvWithLog("STORAGE_PROVIDER", "local"),
+		StorageAPIKey:        getEnvWithLog("STORAGE_API_KEY", ""),
+		StorageAPISecret:     getEnvWithLog("STORAGE_API_SECRET", ""),
+		StorageEndpoint:      getEnvWithLog("STORAGE_ENDPOINT", ""),
+		StorageRegion:        getEnvWithLog("STORAGE_REGION", "eu-central-1"),
+		StorageBucket:        getEnvWithLog("STORAGE_BUCKET", "default"),
+		StoragePublicURL:     getEnvWithLog("STORAGE_PUBLIC_URL", ""),
+		StoragePath:          getEnvWithLog("STORAGE_PATH", "storage/uploads"),
+		StorageAllowedExt: strings.Split(
+			getEnvWithLog("STORAGE_ALLOWED_EXT", ".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx"),
+			",",
+		),
 	}
 
 	// Handle SMTP_PORT as an integer
@@ -73,17 +96,30 @@ func NewConfig() *Config {
 	}
 	config.SMTPPort = smtpPort
 
-	// Debug logging
-	// logrus.Infof("Loaded configuration:")
-	// logrus.Infof("EMAIL_PROVIDER: %s", config.EmailProvider)
-	// logrus.Infof("EMAIL_FROM_ADDRESS: %s", config.EmailFromAddress)
-	// logrus.Infof("SMTP_HOST: %s", config.SMTPHost)
-	// logrus.Infof("SMTP_PORT: %d", config.SMTPPort)
-	// logrus.Infof("SMTP_USERNAME: %s", config.SMTPUsername)
-	// logrus.Infof("SENDGRID_API_KEY: %s", maskString(config.SendGridAPIKey))
-	// logrus.Infof("POSTMARK_SERVER_TOKEN: %s", maskString(config.PostmarkServerToken))
+	storageSizeStr := getEnvWithLog("STORAGE_MAX_SIZE", "10485760")
+	storageSize, err := strconv.ParseInt(storageSizeStr, 10, 64)
+	if err != nil {
+		logrus.Warnf("Invalid STORAGE_MAX_SIZE value: %s. Using default: 10MB", storageSizeStr)
+		storageSize = 10 << 20
+	}
+	config.StorageMaxSize = storageSize
 
 	return config
+}
+func (c *Config) GetStorageConfig() map[string]interface{} {
+	return map[string]interface{}{
+		"provider":    c.StorageProvider,
+		"api_key":     c.StorageAPIKey,
+		"api_secret":  c.StorageAPISecret,
+		"endpoint":    c.StorageEndpoint,
+		"region":      c.StorageRegion,
+		"bucket":      c.StorageBucket,
+		"public_url":  c.StoragePublicURL,
+		"max_size":    c.StorageMaxSize,
+		"allowed_ext": c.StorageAllowedExt,
+		"path":        c.StoragePath,
+		"env":         c.Env,
+	}
 }
 
 // getEnvWithLog returns the value of an environment variable with a fallback default value and logs the result.

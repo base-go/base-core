@@ -1,18 +1,79 @@
 basePath: /api
 definitions:
-  file.ErrorResponse:
+  auth.AuthResponse:
+    properties:
+      accessToken:
+        type: string
+      avatar:
+        $ref: '#/definitions/storage.Attachment'
+      email:
+        type: string
+      exp:
+        type: integer
+      id:
+        type: integer
+      last_login:
+        type: string
+      name:
+        type: string
+      username:
+        type: string
+    type: object
+  auth.ErrorResponse:
     properties:
       error:
         type: string
     type: object
-  file.UploadResult:
+  auth.ForgotPasswordRequest:
     properties:
-      filename:
+      email:
         type: string
-      path:
+    required:
+    - email
+    type: object
+  auth.LoginRequest:
+    properties:
+      email:
         type: string
-      size:
-        type: integer
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  auth.RegisterRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      username:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  auth.ResetPasswordRequest:
+    properties:
+      email:
+        type: string
+      new_password:
+        minLength: 6
+        type: string
+      token:
+        type: string
+    required:
+    - email
+    - new_password
+    - token
+    type: object
+  auth.SuccessResponse:
+    properties:
+      message:
+        type: string
     type: object
   gorm.DeletedAt:
     properties:
@@ -27,10 +88,54 @@ definitions:
       error:
         type: string
     type: object
+  storage.Attachment:
+    properties:
+      field:
+        type: string
+      filename:
+        type: string
+      id:
+        type: integer
+      model_id:
+        type: integer
+      model_type:
+        type: string
+      path:
+        type: string
+      size:
+        type: integer
+      url:
+        type: string
+    type: object
+  users.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  users.UpdatePasswordRequest:
+    properties:
+      NewPassword:
+        minLength: 6
+        type: string
+      OldPassword:
+        type: string
+    required:
+    - NewPassword
+    - OldPassword
+    type: object
+  users.UpdateRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      username:
+        type: string
+    type: object
   users.User:
     properties:
       avatar:
-        type: string
+        $ref: '#/definitions/storage.Attachment'
       createdAt:
         type: string
       deletedAt:
@@ -59,6 +164,175 @@ info:
   title: Base API
   version: "1.5"
 paths:
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Request to reset password
+      parameters:
+      - description: Forgot Password Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/auth.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+      summary: Forgot Password
+      tags:
+      - Core/Auth
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login user
+      parameters:
+      - description: Login Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/auth.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+      summary: Login
+      tags:
+      - Core/Auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Logout
+      tags:
+      - Core/Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register user
+      parameters:
+      - description: Register Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/auth.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/auth.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+      summary: Register
+      tags:
+      - Core/Auth
+  /auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Reset user password
+      parameters:
+      - description: Reset Password Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/auth.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/auth.ErrorResponse'
+      summary: Reset Password
+      tags:
+      - Core/Auth
   /oauth/facebook/callback:
     post:
       consumes:
@@ -88,7 +362,7 @@ paths:
             $ref: '#/definitions/oauth.ErrorResponse'
       summary: Facebook OAuth callback
       tags:
-      - OAuth
+      - Core/OAuth
   /oauth/google/callback:
     post:
       consumes:
@@ -118,16 +392,92 @@ paths:
             $ref: '#/definitions/oauth.ErrorResponse'
       summary: Google OAuth callback
       tags:
-      - OAuth
-  /upload:
-    post:
+      - Core/OAuth
+  /users/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/users.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+      summary: Get user by ID
+      tags:
+      - Core/Users
+    put:
+      consumes:
+      - application/json
+      description: Update user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/users.UpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/users.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+      summary: Update user
+      tags:
+      - Core/Users
+  /users/{id}/avatar:
+    put:
       consumes:
       - multipart/form-data
-      description: Upload a file
+      description: Update user avatar
       parameters:
-      - description: File to upload
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Avatar file
         in: formData
-        name: file
+        name: avatar
         required: true
         type: file
       produces:
@@ -136,16 +486,61 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/file.UploadResult'
+            $ref: '#/definitions/users.User'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/file.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Upload a file
+            $ref: '#/definitions/users.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+      summary: Update user avatar
       tags:
-      - Core/FileUpload
+      - Core/Users
+  /users/{id}/password:
+    put:
+      consumes:
+      - application/json
+      description: Update user password
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Password Request
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/users.UpdatePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/users.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+      summary: Update user password
+      tags:
+      - Core/Users
   /ws:
     get:
       consumes:

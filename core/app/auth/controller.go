@@ -40,6 +40,16 @@ func (c *AuthController) Routes(router *gin.RouterGroup) {
 	router.POST("/reset-password", c.ResetPassword)
 }
 
+// @Summary Register
+// @Description Register user
+// @Tags Core/Auth
+// @Accept json
+// @Produce json
+// @Param body body RegisterRequest true "Register Request"
+// @Success 201 {object} AuthResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /auth/register [post]
 func (c *AuthController) Register(ctx *gin.Context) {
 	var req RegisterRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -57,28 +67,28 @@ func (c *AuthController) Register(ctx *gin.Context) {
 		return
 	}
 
-	// Send welcome email
-	// msg := email.Message{
-	// 	To:      []string{user.Email},
-	// 	From:    "support@albafone.app",
-	// 	Subject: "Welcome to Our Application",
-	// 	Body:    c.getWelcomeEmailBody(user.Name),
-	// 	IsHTML:  true,
-	// }
+	//	Send welcome email
+	msg := email.Message{
+		To:      []string{user.Email},
+		From:    "support@albafone.app",
+		Subject: "Welcome to Our Application",
+		Body:    c.getWelcomeEmailBody(user.Name),
+		IsHTML:  true,
+	}
 
-	// err = email.Send(msg)
-	// if err != nil {
-	// 	c.Logger.Error("Failed to send welcome email",
-	// 		zap.Error(err),
-	// 		zap.String("email", user.Email))
-	// 	c.trackEvent(ctx, "welcome_email", "failed", "email_error", user.Email, map[string]interface{}{
-	// 		"error": err.Error(),
-	// 	})
-	// } else {
-	// 	c.Logger.Info("Welcome email sent",
-	// 		zap.String("email", user.Email))
-	// 	c.trackEvent(ctx, "welcome_email", "success", "sent", user.Email, nil)
-	// }
+	err = email.Send(msg)
+	if err != nil {
+		c.Logger.Error("Failed to send welcome email",
+			zap.Error(err),
+			zap.String("email", user.Email))
+		c.trackEvent(ctx, "welcome_email", "failed", "email_error", user.Email, map[string]interface{}{
+			"error": err.Error(),
+		})
+	} else {
+		c.Logger.Info("Welcome email sent",
+			zap.String("email", user.Email))
+		c.trackEvent(ctx, "welcome_email", "success", "sent", user.Email, nil)
+	}
 
 	c.trackEvent(ctx, "registration", "success", "completed", user.Email, map[string]interface{}{
 		"user_id": user.ID,
@@ -88,6 +98,18 @@ func (c *AuthController) Register(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, user)
 }
 
+// @Summary Login
+// @Description Login user
+// @Tags Core/Auth
+// @Accept json
+// @Produce json
+// @Param body body LoginRequest true "Login Request"
+// @Success 200 {object} AuthResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /auth/login [post]
 func (c *AuthController) Login(ctx *gin.Context) {
 	var req LoginRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -113,6 +135,17 @@ func (c *AuthController) Login(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 
+// @Summary Logout
+// @Description Logout user
+// @Tags Core/Auth
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Success 200 {object} SuccessResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /auth/logout [post]
 func (c *AuthController) Logout(ctx *gin.Context) {
 	userID := ctx.GetString("user_id")
 	userEmail := ctx.GetString("user_email")
@@ -125,6 +158,17 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, SuccessResponse{Message: "Logout successful"})
 }
 
+// @Summary Forgot Password
+// @Description Request to reset password
+// @Tags Core/Auth
+// @Accept json
+// @Produce json
+// @Param body body ForgotPasswordRequest true "Forgot Password Request"
+// @Success 200 {object} SuccessResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /auth/forgot-password [post]
 func (c *AuthController) ForgotPassword(ctx *gin.Context) {
 	var req ForgotPasswordRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -157,6 +201,18 @@ func (c *AuthController) ForgotPassword(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, SuccessResponse{Message: "Password reset email sent"})
 }
 
+// @Summary Reset Password
+// @Description Reset user password
+// @Tags Core/Auth
+// @Accept json
+// @Produce json
+// @Param body body ResetPasswordRequest true "Reset Password Request"
+// @Success 200 {object} SuccessResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /auth/reset-password [post]
 func (c *AuthController) ResetPassword(ctx *gin.Context) {
 	var req ResetPasswordRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {

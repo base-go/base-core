@@ -12,6 +12,7 @@ import (
 	"base/core/email"
 	"base/core/event"
 	"base/core/module"
+	"base/core/storage"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -22,11 +23,12 @@ import (
 
 // ModuleInitializer is a struct to hold dependencies for module initialization
 type ModuleInitializer struct {
-	DB           *gorm.DB
-	Router       *gin.RouterGroup
-	EmailSender  email.Sender
-	Logger       *zap.Logger
-	EventService *event.EventService
+	DB             *gorm.DB
+	Router         *gin.RouterGroup
+	EmailSender    email.Sender
+	Logger         *zap.Logger
+	EventService   *event.EventService
+	StorageService *storage.ActiveStorage
 }
 
 // InitializeLogger sets up Zap as the global logger
@@ -178,6 +180,7 @@ func InitializeCoreModules(init ModuleInitializer) map[string]module.Module {
 				init.Router,
 				init.Logger,
 				init.EventService,
+				init.StorageService,
 			)
 			if m == nil {
 				return nil, fmt.Errorf("failed to create users module")

@@ -3,6 +3,7 @@ package users
 import (
 	"base/core/event"
 	"base/core/module"
+	"base/core/storage"
 	"context"
 
 	"github.com/gin-gonic/gin"
@@ -12,26 +13,34 @@ import (
 
 type UserModule struct {
 	module.DefaultModule
-	DB           *gorm.DB
-	Controller   *UserController
-	Service      *UserService
-	Logger       *zap.Logger
-	EventService *event.EventService
+	DB            *gorm.DB
+	Controller    *UserController
+	Service       *UserService
+	Logger        *zap.Logger
+	EventService  *event.EventService
+	ActiveStorage *storage.ActiveStorage
 }
 
-func NewUserModule(db *gorm.DB, router *gin.RouterGroup, logger *zap.Logger, eventService *event.EventService) module.Module {
-	// Initialize service without event tracking
-	service := NewUserService(db, logger)
+func NewUserModule(
+	db *gorm.DB,
+	router *gin.RouterGroup,
+	logger *zap.Logger,
+	eventService *event.EventService,
+	activeStorage *storage.ActiveStorage,
+) module.Module {
+	// Initialize service with active storage
+	service := NewUserService(db, logger, activeStorage)
 
 	// Initialize controller with event tracking
 	controller := NewUserController(service, logger, eventService)
 
 	usersModule := &UserModule{
-		DB:           db,
-		Controller:   controller,
-		Service:      service,
-		Logger:       logger,
-		EventService: eventService,
+		DB:            db,
+		Controller:    controller,
+		Service:       service,
+		Logger:        logger,
+		EventService:  eventService,
+		ActiveStorage: activeStorage,
 	}
 
 	// Set up routes
@@ -78,7 +87,6 @@ func (m *UserModule) GetModels() []interface{} {
 	}
 }
 
-// GetModelNames returns the names of all models in the module
 func (m *UserModule) GetModelNames() []string {
 	models := m.GetModels()
 	names := make([]string, len(models))

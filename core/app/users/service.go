@@ -1,8 +1,8 @@
 package users
 
 import (
-	"base/core/config"
-	"base/core/file"
+	"base/core/storage"
+	"context"
 	"errors"
 	"fmt"
 	"mime/multipart"
@@ -13,97 +13,50 @@ import (
 )
 
 type UserService struct {
-	DB     *gorm.DB
-	Logger *zap.Logger
+	db            *gorm.DB
+	logger        *zap.Logger
+	activeStorage *storage.ActiveStorage
 }
 
-func NewUserService(db *gorm.DB, logger *zap.Logger) *UserService {
+func NewUserService(db *gorm.DB, logger *zap.Logger, activeStorage *storage.ActiveStorage) *UserService {
 	return &UserService{
-		DB:     db,
-		Logger: logger,
+		db:            db,
+		logger:        logger,
+		activeStorage: activeStorage,
 	}
 }
 
-func (s *UserService) Create(req *CreateRequest) (*UserResponse, error) {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-	if err != nil {
-		s.Logger.Error("Failed to hash password",
-			zap.Error(err),
-			zap.String("email", req.Email))
-		return nil, fmt.Errorf("failed to hash password: %w", err)
-	}
-
-	user := User{
-		Name:     req.Name,
-		Username: req.Username,
-		Email:    req.Email,
-		Password: string(hashedPassword),
-	}
-
-	if err := s.DB.Create(&user).Error; err != nil {
-		s.Logger.Error("Failed to create user in database",
-			zap.Error(err),
-			zap.String("email", req.Email))
-		return nil, fmt.Errorf("failed to create user: %w", err)
-	}
-
+// Helper method to convert user to response
+func (s *UserService) toResponse(user *User) *UserResponse {
 	return &UserResponse{
 		Id:       user.Id,
 		Name:     user.Name,
 		Username: user.Username,
 		Email:    user.Email,
 		Avatar:   user.Avatar,
-	}, nil
+	}
 }
 
 func (s *UserService) GetByID(id uint) (*UserResponse, error) {
 	var user User
-	if err := s.DB.First(&user, id).Error; err != nil {
+	if err := s.db.Preload("Avatar").First(&user, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			s.Logger.Debug("User not found",
-				zap.Uint("user_id", id))
+			s.logger.Debug("User not found", zap.Uint("user_id", id))
 		} else {
-			s.Logger.Error("Database error while fetching user",
+			s.logger.Error("Database error while fetching user",
 				zap.Error(err),
 				zap.Uint("user_id", id))
 		}
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 
-	return &UserResponse{
-		Id:       user.Id,
-		Name:     user.Name,
-		Username: user.Username,
-		Email:    user.Email,
-		Avatar:   user.Avatar,
-	}, nil
-}
-
-func (s *UserService) GetAll() ([]UserResponse, error) {
-	var users []User
-	if err := s.DB.Find(&users).Error; err != nil {
-		s.Logger.Error("Failed to fetch users from database", zap.Error(err))
-		return nil, fmt.Errorf("failed to get users: %w", err)
-	}
-
-	userResponses := make([]UserResponse, len(users))
-	for i, user := range users {
-		userResponses[i] = UserResponse{
-			Id:       user.Id,
-			Name:     user.Name,
-			Username: user.Username,
-			Email:    user.Email,
-			Avatar:   user.Avatar,
-		}
-	}
-
-	return userResponses, nil
+	return s.toResponse(&user), nil
 }
 
 func (s *UserService) Update(id uint, req *UpdateRequest) (*UserResponse, error) {
 	var user User
-	if err := s.DB.First(&user, id).Error; err != nil {
-		s.Logger.Error("Failed to find user for update",
+	if err := s.db.Preload("Avatar").First(&user, id).Error; err != nil {
+		s.logger.Error("Failed to find user for update",
 			zap.Error(err),
 			zap.Uint("user_id", id))
 		return nil, fmt.Errorf("failed to get user: %w", err)
@@ -120,107 +73,138 @@ func (s *UserService) Update(id uint, req *UpdateRequest) (*UserResponse, error)
 		user.Email = req.Email
 	}
 
-	if err := s.DB.Save(&user).Error; err != nil {
-		s.Logger.Error("Failed to save user updates",
+	if err := s.db.Save(&user).Error; err != nil {
+		s.logger.Error("Failed to save user updates",
 			zap.Error(err),
 			zap.Uint("user_id", id))
 		return nil, fmt.Errorf("failed to update user: %w", err)
 	}
 
-	return &UserResponse{
-		Id:       user.Id,
-		Name:     user.Name,
-		Username: user.Username,
-		Email:    user.Email,
-		Avatar:   user.Avatar,
-	}, nil
+	return s.toResponse(&user), nil
 }
 
-func (s *UserService) Delete(id uint) error {
-	result := s.DB.Delete(&User{}, id)
-	if result.Error != nil {
-		s.Logger.Error("Failed to delete user",
-			zap.Error(result.Error),
-			zap.Uint("user_id", id))
-		return fmt.Errorf("failed to delete user: %w", result.Error)
-	}
-	if result.RowsAffected == 0 {
-		s.Logger.Debug("No user found to delete",
-			zap.Uint("user_id", id))
-		return errors.New("user not found")
-	}
-	return nil
-}
+func (s *UserService) UpdateAvatar(ctx context.Context, id uint, avatarFile *multipart.FileHeader) (*UserResponse, error) {
+	tx := s.db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
 
-func (s *UserService) UpdateAvatar(id uint, avatarFile *multipart.FileHeader) (*UserResponse, error) {
 	var user User
-	if err := s.DB.First(&user, id).Error; err != nil {
-		s.Logger.Error("Failed to find user for avatar update",
+	if err := tx.Preload("Avatar").First(&user, id).Error; err != nil {
+		tx.Rollback()
+		s.logger.Error("Failed to find user for avatar update",
 			zap.Error(err),
 			zap.Uint("user_id", id))
 		return nil, err
 	}
 
-	config := config.NewConfig()
-	customConfig := file.UploadConfig{
-		AllowedExtensions: []string{".jpg", ".jpeg", ".png", ".gif"},
-		MaxFileSize:       5 << 20, // 5 MB
-		UploadPath:        "/storage/avatars",
+	// Delete existing avatar if exists
+	if user.Avatar != nil {
+		if err := s.activeStorage.Delete(user.Avatar); err != nil {
+			tx.Rollback()
+			s.logger.Error("Failed to delete existing avatar",
+				zap.Error(err),
+				zap.Uint("user_id", id))
+			return nil, fmt.Errorf("failed to delete existing avatar: %w", err)
+		}
 	}
 
-	result, err := file.Upload(avatarFile, customConfig)
+	// Upload new avatar
+	attachment, err := s.activeStorage.Attach(&user, "avatar", avatarFile)
 	if err != nil {
-		s.Logger.Error("Failed to upload avatar file",
+		tx.Rollback()
+		s.logger.Error("Failed to upload avatar",
 			zap.Error(err),
 			zap.Uint("user_id", id),
 			zap.String("filename", avatarFile.Filename))
 		return nil, fmt.Errorf("failed to upload avatar: %w", err)
 	}
 
-	user.Avatar = config.BaseURL + result.Path
+	// Update user's avatar
+	user.Avatar = attachment
 
-	if err := s.DB.Save(&user).Error; err != nil {
-		s.Logger.Error("Failed to save user with new avatar",
+	if err := tx.Save(&user).Error; err != nil {
+		tx.Rollback()
+		s.logger.Error("Failed to save user with new avatar",
 			zap.Error(err),
 			zap.Uint("user_id", id))
-		return nil, fmt.Errorf("failed to update user avatar: %w", err)
+		return nil, fmt.Errorf("failed to update avatar: %w", err)
 	}
 
-	return &UserResponse{
-		Id:       user.Id,
-		Name:     user.Name,
-		Username: user.Username,
-		Email:    user.Email,
-		Avatar:   user.Avatar,
-	}, nil
+	if err := tx.Commit().Error; err != nil {
+		s.logger.Error("Failed to commit transaction",
+			zap.Error(err),
+			zap.Uint("user_id", id))
+		return nil, fmt.Errorf("failed to update avatar: %w", err)
+	}
+
+	return s.toResponse(&user), nil
+}
+
+func (s *UserService) RemoveAvatar(ctx context.Context, id uint) (*UserResponse, error) {
+	tx := s.db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	var user User
+	if err := tx.Preload("Avatar").First(&user, id).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	if user.Avatar != nil {
+		if err := s.activeStorage.Delete(user.Avatar); err != nil {
+			tx.Rollback()
+			s.logger.Error("Failed to delete avatar",
+				zap.Error(err),
+				zap.Uint("user_id", id))
+			return nil, fmt.Errorf("failed to delete avatar: %w", err)
+		}
+		user.Avatar = nil
+		if err := tx.Save(&user).Error; err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, err
+	}
+
+	return s.toResponse(&user), nil
 }
 
 func (s *UserService) UpdatePassword(id uint, req *UpdatePasswordRequest) error {
 	var user User
-	if err := s.DB.First(&user, id).Error; err != nil {
-		s.Logger.Error("Failed to find user for password update",
+	if err := s.db.First(&user, id).Error; err != nil {
+		s.logger.Error("Failed to find user for password update",
 			zap.Error(err),
 			zap.Uint("user_id", id))
 		return fmt.Errorf("failed to get user: %w", err)
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.OldPassword)); err != nil {
-		s.Logger.Info("Invalid old password provided",
+		s.logger.Info("Invalid old password provided",
 			zap.Uint("user_id", id))
 		return bcrypt.ErrMismatchedHashAndPassword
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
 	if err != nil {
-		s.Logger.Error("Failed to hash new password",
+		s.logger.Error("Failed to hash new password",
 			zap.Error(err),
 			zap.Uint("user_id", id))
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
 
 	user.Password = string(hashedPassword)
-	if err := s.DB.Save(&user).Error; err != nil {
-		s.Logger.Error("Failed to save new password",
+	if err := s.db.Save(&user).Error; err != nil {
+		s.logger.Error("Failed to save new password",
 			zap.Error(err),
 			zap.Uint("user_id", id))
 		return fmt.Errorf("failed to update user password: %w", err)

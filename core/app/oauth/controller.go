@@ -29,7 +29,7 @@ func (c *OAuthController) Routes(router *gin.RouterGroup) {
 // GoogleCallback godoc
 // @Summary Google OAuth callback
 // @Description Handle the OAuth callback from Google
-// @Tags OAuth
+// @Tags Core/OAuth
 // @Accept json
 // @Produce json
 // @Param idToken body string true "Google ID Token"
@@ -61,7 +61,7 @@ func (c *OAuthController) GoogleCallback(ctx *gin.Context) {
 // FacebookCallback godoc
 // @Summary Facebook OAuth callback
 // @Description Handle the OAuth callback from Facebook
-// @Tags OAuth
+// @Tags Core/OAuth
 // @Accept json
 // @Produce json
 // @Param accessToken body string true "Facebook Access Token"
