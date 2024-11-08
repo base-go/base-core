@@ -20,10 +20,11 @@ import (
 )
 
 var (
-	ErrInvalidToken = errors.New("invalid reset token")
-	ErrTokenExpired = errors.New("reset token expired")
-	ErrUserExists   = errors.New("user already exists")
-	ErrInvalidTime  = errors.New("invalid time value")
+	ErrInvalidToken  = errors.New("invalid reset token")
+	ErrTokenExpired  = errors.New("reset token expired")
+	ErrUserExists    = errors.New("user already exists")
+	ErrInvalidTime   = errors.New("invalid time value")
+	ErrNotAuthorized = errors.New("not authorized")
 
 	emailTemplateMutex sync.RWMutex
 	emailTemplateCache *template.Template
@@ -130,7 +131,6 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 		LastLogin: now.Format(time.RFC3339),
 	}, nil
 }
-
 func (s *AuthService) Login(req *LoginRequest) (*AuthResponse, error) {
 	var user AuthUser
 	if err := s.DB.Where("email = ?", req.Email).First(&user).Error; err != nil {
@@ -144,6 +144,25 @@ func (s *AuthService) Login(req *LoginRequest) (*AuthResponse, error) {
 		return nil, ErrInvalidToken
 	}
 
+	// Prepare the login event
+	loginAllowed := true
+	event := LoginEvent{
+		User:         &user,
+		LoginAllowed: &loginAllowed,
+	}
+
+	// Emit the login attempt event
+	s.Emitter.Emit("user.login_attempt", &event)
+	// Debug statement to confirm loginAllowed status after event processing
+	fmt.Printf("Login allowed after event processing: %v\n", loginAllowed)
+
+	// Check if login was allowed after event listeners have processed it
+	if !loginAllowed {
+		fmt.Println("Login attempt was blocked by event listeners")
+		return nil, ErrNotAuthorized
+	}
+
+	// Proceed with login if allowed
 	now := time.Now()
 	token, err := helper.GenerateJWT(user.User.Id)
 	if err != nil {
@@ -166,8 +185,7 @@ func (s *AuthService) Login(req *LoginRequest) (*AuthResponse, error) {
 		Avatar:      user.Avatar,
 		Email:       user.Email,
 		Name:        user.Name,
-
-		LastLogin: now.Format(time.RFC3339),
+		LastLogin:   now.Format(time.RFC3339),
 	}, nil
 }
 

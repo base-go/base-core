@@ -17,6 +17,10 @@ func (AuthUser) TableName() string {
 	return "users"
 }
 
+type LoginEvent struct {
+	User         *AuthUser
+	LoginAllowed *bool
+}
 type RegisterRequest struct {
 	Name     string `json:"name" gorm:"column:name"`
 	Username string `json:"username" gorm:"column:username"`

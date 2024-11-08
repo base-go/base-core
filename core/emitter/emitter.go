@@ -26,10 +26,12 @@ func (e *Emitter) Emit(event string, data interface{}) {
 	e.mutex.RLock()
 	defer e.mutex.RUnlock()
 
-	// Loop through all listeners for the specified event
+	// Use a WaitGroup to wait for all listeners to finish
+	var wg sync.WaitGroup
 	for _, listener := range e.listeners[event] {
-		// Wrap in a go-routine to prevent blocking
+		wg.Add(1)
 		go func(listener func(interface{})) {
+			defer wg.Done()
 			defer func() {
 				if r := recover(); r != nil {
 					fmt.Printf("Recovered from panic in listener for event %s: %v\n", event, r)
@@ -38,6 +40,7 @@ func (e *Emitter) Emit(event string, data interface{}) {
 			listener(data)
 		}(listener)
 	}
+	wg.Wait() // Block until all listeners complete
 }
 
 func (e *Emitter) Clear() {
