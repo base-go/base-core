@@ -2,11 +2,15 @@ package oauth
 
 import (
 	"base/core/app/users"
+	"base/core/storage"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -15,14 +19,16 @@ import (
 )
 
 type OAuthService struct {
-	DB     *gorm.DB
-	Config *OAuthConfig
+	DB            *gorm.DB
+	Config        *OAuthConfig
+	ActiveStorage *storage.ActiveStorage
 }
 
-func NewOAuthService(db *gorm.DB, config *OAuthConfig) *OAuthService {
+func NewOAuthService(db *gorm.DB, config *OAuthConfig, activeStorage *storage.ActiveStorage) *OAuthService {
 	return &OAuthService{
-		DB:     db,
-		Config: config,
+		DB:            db,
+		Config:        config,
+		ActiveStorage: activeStorage,
 	}
 }
 
@@ -92,9 +98,11 @@ func (s *OAuthService) handleFacebookOAuth(accessToken string) (email, name, use
 	return email, name, username, picture, providerID, nil
 }
 
-func (s *OAuthService) processUser(email, name, username, picture, provider, providerID, token string) (*OAuthUser, error) {
+func (s *OAuthService) processUser(email, name, username, pictureURL, provider, providerID, token string) (*OAuthUser, error) {
 	var user OAuthUser
-	if err := s.DB.Where("email = ?", email).First(&user).Error; err != nil {
+	err := s.DB.Where("email = ?", email).First(&user).Error
+
+	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			// Create new user
 			user = OAuthUser{
@@ -102,7 +110,6 @@ func (s *OAuthService) processUser(email, name, username, picture, provider, pro
 					Email:    email,
 					Name:     name,
 					Username: s.generateUniqueUsername(username),
-					Avatar:   picture,
 				},
 				Provider:       provider,
 				ProviderID:     providerID,
@@ -110,7 +117,18 @@ func (s *OAuthService) processUser(email, name, username, picture, provider, pro
 				OAuthLastLogin: time.Now(),
 			}
 
+			// Fetch and attach avatar if URL is provided
+			if pictureURL != "" {
+				attachment, err := s.fetchAndAttachAvatar(&user, pictureURL)
+				if err == nil {
+					user.User.Avatar = attachment
+				} else {
+					// Log this failure but proceed with user creation
+					fmt.Printf("failed to fetch and attach avatar: %v\n", err)
+				}
+			}
 
+			// Create the user in the database
 			if err := s.DB.Create(&user).Error; err != nil {
 				return nil, fmt.Errorf("failed to create user: %w", err)
 			}
@@ -120,11 +138,21 @@ func (s *OAuthService) processUser(email, name, username, picture, provider, pro
 	} else {
 		// Update existing user
 		user.Name = name
-		user.Avatar = picture
 		user.Provider = provider
 		user.ProviderID = providerID
 		user.AccessToken = token
 		user.OAuthLastLogin = time.Now()
+
+		// Update avatar if a new URL is provided
+		if pictureURL != "" {
+			attachment, err := s.fetchAndAttachAvatar(&user, pictureURL)
+			if err == nil {
+				user.User.Avatar = attachment
+			} else {
+				fmt.Printf("failed to fetch and attach avatar: %v\n", err)
+			}
+		}
+
 		if err := s.DB.Save(&user).Error; err != nil {
 			return nil, fmt.Errorf("failed to update user: %w", err)
 		}
@@ -145,6 +173,63 @@ func (s *OAuthService) processUser(email, name, username, picture, provider, pro
 	}
 
 	return &user, nil
+}
+
+// fetchAndAttachAvatar downloads the avatar from the URL and attaches it to the user using ActiveStorage.
+
+func (s *OAuthService) fetchAndAttachAvatar(user *OAuthUser, avatarURL string) (*storage.Attachment, error) {
+	// Download the avatar from the URL
+	resp, err := http.Get(avatarURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to download avatar: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Read the avatar data
+	avatarData, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read avatar data: %w", err)
+	}
+
+	// Create a multipart.FileHeader from the avatar data
+	fileName := filepath.Base(avatarURL)
+	fileType := http.DetectContentType(avatarData)
+	fileBuffer := bytes.NewBuffer(avatarData)
+
+	// Create a new multipart writer
+	form := multipart.NewWriter(fileBuffer)
+	part, err := form.CreateFormFile("avatar", fileName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create form file: %w", err)
+	}
+
+	// Write avatar data into the form file
+	if _, err = part.Write(avatarData); err != nil {
+		return nil, fmt.Errorf("failed to write avatar data to form: %w", err)
+	}
+
+	// Close the form to finalize
+	if err := form.Close(); err != nil {
+		return nil, fmt.Errorf("failed to close form: %w", err)
+	}
+
+	// Emulate a *multipart.FileHeader for ActiveStorage
+	header := make(map[string][]string)
+	header["Content-Disposition"] = []string{`form-data; name="avatar"; filename="` + fileName + `"`}
+	header["Content-Type"] = []string{fileType}
+	fileHeader := &multipart.FileHeader{
+		Filename: fileName,
+		Header:   header,
+		Size:     int64(fileBuffer.Len()),
+	}
+
+	// Attach the avatar to ActiveStorage
+	attachment, err := s.ActiveStorage.Attach(&user.User, "avatar", fileHeader)
+	if err != nil {
+		return nil, fmt.Errorf("failed to attach avatar: %w", err)
+	}
+
+	return attachment, nil
 }
 
 func (s *OAuthService) generateUniqueUsername(baseUsername string) string {

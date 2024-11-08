@@ -10,6 +10,7 @@ import (
 	"base/core/app/auth"
 	"base/core/app/users"
 	"base/core/email"
+	"base/core/emitter"
 	"base/core/event"
 	"base/core/module"
 	"base/core/storage"
@@ -29,6 +30,7 @@ type ModuleInitializer struct {
 	Logger         *zap.Logger
 	EventService   *event.EventService
 	StorageService *storage.ActiveStorage
+	Emitter        *emitter.Emitter
 }
 
 // InitializeLogger sets up Zap as the global logger
@@ -194,6 +196,7 @@ func InitializeCoreModules(init ModuleInitializer) map[string]module.Module {
 				init.EmailSender,
 				init.Logger,
 				init.EventService,
+				init.Emitter,
 			)
 			if m == nil {
 				return nil, fmt.Errorf("failed to create auth module")

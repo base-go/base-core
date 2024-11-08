@@ -1,11 +1,13 @@
 package app
 
 import (
+	"base/core"
 	"base/core/app/auth"
 	"base/core/app/users"
 	"base/core/email"
 	"base/core/event"
 	"base/core/module"
+	"base/core/storage"
 	"context"
 
 	"github.com/gin-gonic/gin"
@@ -39,16 +41,16 @@ func InitializeCoreModules(db *gorm.DB, router *gin.RouterGroup, emailSender ema
 		Description: "Starting core modules initialization",
 	})
 
-	// Define the module initializers directly
+	// Define module initializers
 	moduleInitializers := map[string]func() module.Module{
 		"users": func() module.Module {
-			userModule := users.NewUserModule(
+			return users.NewUserModule(
 				db,
 				router,
 				logger,
 				eventService,
+				&storage.ActiveStorage{}, // Ensure this instance is correctly configured
 			)
-			return userModule
 		},
 		"auth": func() module.Module {
 			return auth.NewAuthModule(
@@ -57,6 +59,7 @@ func InitializeCoreModules(db *gorm.DB, router *gin.RouterGroup, emailSender ema
 				emailSender,
 				logger,
 				eventService,
+				core.Emitter,
 			)
 		},
 	}
@@ -79,8 +82,7 @@ func InitializeCoreModules(db *gorm.DB, router *gin.RouterGroup, emailSender ema
 		module := initializer()
 		modules[name] = module
 
-		logger.Info("Core module initialized",
-			zap.String("module", name))
+		logger.Info("Core module initialized", zap.String("module", name))
 
 		// Track successful module initialization
 		eventService.Track(ctx, event.EventOptions{

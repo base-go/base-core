@@ -2,6 +2,7 @@ package auth
 
 import (
 	"base/core/email"
+	"base/core/emitter"
 	"base/core/event"
 	"base/core/module"
 
@@ -18,8 +19,8 @@ type AuthModule struct {
 	EmailSender email.Sender
 }
 
-func NewAuthModule(db *gorm.DB, router *gin.RouterGroup, emailSender email.Sender, logger *zap.Logger, eventService *event.EventService) module.Module {
-	service := NewAuthService(db, emailSender)
+func NewAuthModule(db *gorm.DB, router *gin.RouterGroup, emailSender email.Sender, logger *zap.Logger, eventService *event.EventService, emitter *emitter.Emitter) module.Module {
+	service := NewAuthService(db, emailSender, emitter)
 	controller := NewAuthController(service, emailSender, logger, eventService)
 
 	authModule := &AuthModule{

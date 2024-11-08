@@ -12,6 +12,7 @@ import (
 
 	"base/core/app/users"
 	"base/core/email"
+	"base/core/emitter"
 	"base/core/helper"
 
 	"github.com/stripe/stripe-go"
@@ -33,12 +34,14 @@ var (
 type AuthService struct {
 	DB          *gorm.DB
 	EmailSender email.Sender
+	Emitter     *emitter.Emitter
 }
 
-func NewAuthService(db *gorm.DB, emailSender email.Sender) *AuthService {
+func NewAuthService(db *gorm.DB, emailSender email.Sender, emitter *emitter.Emitter) *AuthService {
 	return &AuthService{
 		DB:          db,
 		EmailSender: emailSender,
+		Emitter:     emitter,
 	}
 }
 
@@ -106,7 +109,8 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
-
+	// Emit registration event
+	s.Emitter.Emit("user.registered", &user.User)
 	// Send welcome email asynchronously
 	go func() {
 		if err := s.sendWelcomeEmail(&user); err != nil {

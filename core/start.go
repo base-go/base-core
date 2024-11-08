@@ -5,6 +5,7 @@ import (
 	"base/core/config"
 	"base/core/database"
 	"base/core/email"
+	"base/core/emitter"
 	"base/core/event"
 	"base/core/storage"
 
@@ -30,7 +31,10 @@ type Application struct {
 	Modules      map[string]module.Module
 	Logger       *zap.Logger
 	EventService *event.EventService
+	Emitter      *emitter.Emitter
 }
+
+var Emitter *emitter.Emitter
 
 func StartApplication() (*Application, error) {
 	ctx := context.Background()
@@ -54,7 +58,8 @@ func StartApplication() (*Application, error) {
 	}
 
 	logger.Info("Database initialized successfully")
-
+	// Initialize emitter
+	Emitter = emitter.New()
 	// Initialize and verify event service
 	logger.Info("Initializing event service")
 
@@ -225,6 +230,7 @@ func StartApplication() (*Application, error) {
 		Modules:      modules,
 		Logger:       logger,
 		EventService: eventService,
+		Emitter:      Emitter,
 	}
 
 	// Track successful startup
