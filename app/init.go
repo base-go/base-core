@@ -1,6 +1,7 @@
 package app
 
 import (
+	"base/core/emitter"
 	"base/core/module"
 
 	"github.com/gin-gonic/gin"
@@ -9,8 +10,9 @@ import (
 )
 
 type AppModuleInitializer struct {
-	Router *gin.RouterGroup
-	Logger *zap.Logger
+	Router  *gin.RouterGroup
+	Logger  *zap.Logger
+	Emitter *emitter.Emitter
 }
 
 func (a *AppModuleInitializer) InitializeModules(db *gorm.DB) []module.Module {

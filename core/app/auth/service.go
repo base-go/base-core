@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"os"
 	"sync"
 	"text/template"
 	"time"
@@ -15,7 +14,6 @@ import (
 	"base/core/emitter"
 	"base/core/helper"
 
-	"github.com/stripe/stripe-go"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"pgregory.net/rand"
@@ -66,9 +64,6 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 		return nil, err
 	}
 
-	// Set Stripe API key
-	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
-
 	// Hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -110,13 +105,18 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
 	// Emit registration event
-	s.Emitter.Emit("user.registered", &user.User)
+	if s.Emitter != nil {
+		s.Emitter.Emit("user.registered", &user)
+	} else {
+		fmt.Printf("Emitter is nil in AuthService.Register; cannot emit 'user.registered' event")
+	}
+
 	// Send welcome email asynchronously
-	go func() {
-		if err := s.sendWelcomeEmail(&user); err != nil {
-			fmt.Printf("Failed to send welcome email: %v", err)
-		}
-	}()
+	// go func() {
+	// 	if err := s.sendWelcomeEmail(&user); err != nil {
+	// 		fmt.Printf("Failed to send welcome email: %v", err)
+	// 	}
+	// }()
 
 	return &AuthResponse{
 		AccessToken: token,

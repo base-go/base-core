@@ -1,6 +1,9 @@
 package emitter
 
-import "sync"
+import (
+	"fmt"
+	"sync"
+)
 
 type Emitter struct {
 	listeners map[string][]func(interface{})
@@ -19,22 +22,21 @@ func (e *Emitter) On(event string, listener func(interface{})) {
 	e.listeners[event] = append(e.listeners[event], listener)
 }
 
-func (e *Emitter) Off(event string, listener func(interface{})) {
-	e.mutex.Lock()
-	defer e.mutex.Unlock()
-	for i, l := range e.listeners[event] {
-		if funcEqual(l, listener) {
-			e.listeners[event] = append(e.listeners[event][:i], e.listeners[event][i+1:]...)
-			break
-		}
-	}
-}
-
 func (e *Emitter) Emit(event string, data interface{}) {
 	e.mutex.RLock()
 	defer e.mutex.RUnlock()
+
+	// Loop through all listeners for the specified event
 	for _, listener := range e.listeners[event] {
-		listener(data)
+		// Wrap in a go-routine to prevent blocking
+		go func(listener func(interface{})) {
+			defer func() {
+				if r := recover(); r != nil {
+					fmt.Printf("Recovered from panic in listener for event %s: %v\n", event, r)
+				}
+			}()
+			listener(data)
+		}(listener)
 	}
 }
 
@@ -42,8 +44,4 @@ func (e *Emitter) Clear() {
 	e.mutex.Lock()
 	defer e.mutex.Unlock()
 	e.listeners = make(map[string][]func(interface{}))
-}
-
-func funcEqual(a, b interface{}) bool {
-	return &a == &b
 }

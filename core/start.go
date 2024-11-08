@@ -34,7 +34,7 @@ type Application struct {
 	Emitter      *emitter.Emitter
 }
 
-var Emitter *emitter.Emitter
+var Emitter = emitter.New() // This ensures Emitter is created once
 
 func StartApplication() (*Application, error) {
 	ctx := context.Background()
@@ -58,8 +58,7 @@ func StartApplication() (*Application, error) {
 	}
 
 	logger.Info("Database initialized successfully")
-	// Initialize emitter
-	Emitter = emitter.New()
+
 	// Initialize and verify event service
 	logger.Info("Initializing event service")
 
@@ -147,6 +146,7 @@ func StartApplication() (*Application, error) {
 		EmailSender:  emailSender,
 		Logger:       logger,
 		EventService: eventService,
+		Emitter:      Emitter,
 	}
 
 	modules := InitializeCoreModules(moduleInit)
@@ -155,8 +155,9 @@ func StartApplication() (*Application, error) {
 	// Initialize application modules
 	logger.Info("Initializing application modules")
 	appInitializer := &app.AppModuleInitializer{
-		Router: apiGroup,
-		Logger: logger,
+		Router:  apiGroup,
+		Logger:  logger,
+		Emitter: Emitter,
 	}
 	appInitializer.InitializeModules(db.DB)
 

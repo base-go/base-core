@@ -1,14 +1,15 @@
 package app
 
 import (
-	"base/core"
 	"base/core/app/auth"
 	"base/core/app/users"
 	"base/core/email"
+	"base/core/emitter"
 	"base/core/event"
 	"base/core/module"
 	"base/core/storage"
 	"context"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -22,12 +23,22 @@ type CoreModuleInitializer struct {
 	EmailSender  email.Sender
 	Logger       *zap.Logger
 	EventService *event.EventService
+	Emitter      *emitter.Emitter
 }
 
 // InitializeCoreModules loads and initializes all core modules
-func InitializeCoreModules(db *gorm.DB, router *gin.RouterGroup, emailSender email.Sender, logger *zap.Logger, eventService *event.EventService) map[string]module.Module {
+func InitializeCoreModules(db *gorm.DB, router *gin.RouterGroup, emailSender email.Sender, logger *zap.Logger, eventService *event.EventService, emitter *emitter.Emitter) map[string]module.Module {
 	modules := make(map[string]module.Module)
 	ctx := context.Background()
+
+	// Check if emitter is nil
+	if emitter == nil {
+		logger.Error("Emitter is nil in InitializeCoreModules; cannot register event listeners")
+		fmt.Println("Emitter is nil in InitializeCoreModules; cannot register event listeners")
+	} else {
+		fmt.Println("WE GOT EMITTER IN INITIALIZECOREMODULES")
+		logger.Info("WE GOT EMITTER IN INITIALIZECOREMODULES")
+	}
 
 	// Track module initialization start
 	eventService.Track(ctx, event.EventOptions{
@@ -59,7 +70,7 @@ func InitializeCoreModules(db *gorm.DB, router *gin.RouterGroup, emailSender ema
 				emailSender,
 				logger,
 				eventService,
-				core.Emitter,
+				emitter,
 			)
 		},
 	}
@@ -124,6 +135,7 @@ func NewCoreModuleInitializer(
 	emailSender email.Sender,
 	logger *zap.Logger,
 	eventService *event.EventService,
+	emitter *emitter.Emitter,
 ) *CoreModuleInitializer {
 	return &CoreModuleInitializer{
 		DB:           db,
@@ -131,6 +143,7 @@ func NewCoreModuleInitializer(
 		EmailSender:  emailSender,
 		Logger:       logger,
 		EventService: eventService,
+		Emitter:      emitter,
 	}
 }
 
@@ -151,5 +164,6 @@ func (cmi *CoreModuleInitializer) Initialize() map[string]module.Module {
 		cmi.EmailSender,
 		cmi.Logger,
 		cmi.EventService,
+		cmi.Emitter,
 	)
 }

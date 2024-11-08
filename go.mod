@@ -88,7 +88,6 @@ require (
 	github.com/keighl/postmark v0.0.0-20190821160221-28358b1a94e3
 	github.com/sendgrid/sendgrid-go v3.16.0+incompatible
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stripe/stripe-go v70.15.0+incompatible
 	github.com/swaggo/gin-swagger v1.6.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/text v0.19.0 // indirect
