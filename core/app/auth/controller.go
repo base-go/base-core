@@ -42,6 +42,7 @@ func (c *AuthController) Routes(router *gin.RouterGroup) {
 
 // @Summary Register
 // @Description Register user
+// @Security ApiKeyAuth
 // @Tags Core/Auth
 // @Accept json
 // @Produce json
@@ -100,6 +101,7 @@ func (c *AuthController) Register(ctx *gin.Context) {
 
 // @Summary Login
 // @Description Login user
+// @Security ApiKeyAuth
 // @Tags Core/Auth
 // @Accept json
 // @Produce json
@@ -137,10 +139,10 @@ func (c *AuthController) Login(ctx *gin.Context) {
 
 // @Summary Logout
 // @Description Logout user
+// @Security ApiKeyAuth
 // @Tags Core/Auth
 // @Accept json
 // @Produce json
-// @Security ApiKeyAuth
 // @Success 200 {object} SuccessResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
@@ -160,6 +162,7 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 
 // @Summary Forgot Password
 // @Description Request to reset password
+// @Security ApiKeyAuth
 // @Tags Core/Auth
 // @Accept json
 // @Produce json
@@ -203,6 +206,7 @@ func (c *AuthController) ForgotPassword(ctx *gin.Context) {
 
 // @Summary Reset Password
 // @Description Reset user password
+// @Security ApiKeyAuth
 // @Tags Core/Auth
 // @Accept json
 // @Produce json

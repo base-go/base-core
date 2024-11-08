@@ -195,6 +195,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/auth.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
       summary: Forgot Password
       tags:
       - Core/Auth
@@ -233,6 +235,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/auth.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
       summary: Login
       tags:
       - Core/Auth
@@ -292,6 +296,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/auth.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
       summary: Register
       tags:
       - Core/Auth
@@ -330,6 +336,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/auth.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
       summary: Reset Password
       tags:
       - Core/Auth
@@ -360,6 +368,8 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/oauth.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
       summary: Facebook OAuth callback
       tags:
       - Core/OAuth
@@ -390,6 +400,8 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/oauth.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
       summary: Google OAuth callback
       tags:
       - Core/OAuth
@@ -423,6 +435,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/users.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
       summary: Get user by ID
       tags:
       - Core/Users
@@ -461,6 +475,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/users.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
       summary: Update user
       tags:
       - Core/Users
@@ -499,6 +515,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/users.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
       summary: Update user avatar
       tags:
       - Core/Users
@@ -538,6 +556,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/users.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
       summary: Update user password
       tags:
       - Core/Users
@@ -545,7 +565,6 @@ paths:
     get:
       consumes:
       - application/json
-      description: Establishes a WebSocket connection
       parameters:
       - description: Client ID
         in: query
@@ -562,11 +581,6 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/websocket.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Connect to WebSocket
-      tags:
-      - Core/Websocket
 schemes:
 - http
 - https

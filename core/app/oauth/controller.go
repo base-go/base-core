@@ -29,6 +29,7 @@ func (c *OAuthController) Routes(router *gin.RouterGroup) {
 // GoogleCallback godoc
 // @Summary Google OAuth callback
 // @Description Handle the OAuth callback from Google
+// @Security ApiKeyAuth
 // @Tags Core/OAuth
 // @Accept json
 // @Produce json
@@ -61,6 +62,7 @@ func (c *OAuthController) GoogleCallback(ctx *gin.Context) {
 // FacebookCallback godoc
 // @Summary Facebook OAuth callback
 // @Description Handle the OAuth callback from Facebook
+// @Security ApiKeyAuth
 // @Tags Core/OAuth
 // @Accept json
 // @Produce json

@@ -36,6 +36,7 @@ func (c *UserController) Routes(router *gin.RouterGroup) {
 
 // @Summary Get user by ID
 // @Description Get user by ID
+// @Security ApiKeyAuth
 // @Tags Core/Users
 // @Accept json
 // @Produce json
@@ -68,6 +69,7 @@ func (c *UserController) Get(ctx *gin.Context) {
 
 // @Summary Update user
 // @Description Update user
+// @Security ApiKeyAuth
 // @Tags Core/Users
 // @Accept json
 // @Produce json
@@ -118,6 +120,7 @@ func (c *UserController) Update(ctx *gin.Context) {
 
 // @Summary Update user avatar
 // @Description Update user avatar
+// @Security ApiKeyAuth
 // @Tags Core/Users
 // @Accept multipart/form-data
 // @Produce json
@@ -160,6 +163,7 @@ func (c *UserController) UpdateAvatar(ctx *gin.Context) {
 
 // @Summary Update user password
 // @Description Update user password
+// @Security ApiKeyAuth
 // @Tags Core/Users
 // @Accept json
 // @Produce json

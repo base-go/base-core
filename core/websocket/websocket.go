@@ -169,8 +169,10 @@ func SetupWebSocketRoutes(router *gin.RouterGroup, hub *Hub) {
 // WebSocketHandler returns a gin.HandlerFunc for handling WebSocket connections
 // @Summary Connect to WebSocket
 // @Description Establishes a WebSocket connection
-// @Tags Core/Websocket
 // @Security ApiKeyAuth
+// @Tags Core/Websocket
+// @Tags
+
 // @Accept  json
 // @Produce  json
 // @Param id query string false "Client ID"

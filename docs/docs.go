@@ -17,6 +17,11 @@ const docTemplate = `{
     "paths": {
         "/auth/forgot-password": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Request to reset password",
                 "consumes": [
                     "application/json"
@@ -69,6 +74,11 @@ const docTemplate = `{
         },
         "/auth/login": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Login user",
                 "consumes": [
                     "application/json"
@@ -173,6 +183,11 @@ const docTemplate = `{
         },
         "/auth/register": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Register user",
                 "consumes": [
                     "application/json"
@@ -219,6 +234,11 @@ const docTemplate = `{
         },
         "/auth/reset-password": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Reset user password",
                 "consumes": [
                     "application/json"
@@ -277,6 +297,11 @@ const docTemplate = `{
         },
         "/oauth/facebook/callback": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Handle the OAuth callback from Facebook",
                 "consumes": [
                     "application/json"
@@ -323,6 +348,11 @@ const docTemplate = `{
         },
         "/oauth/google/callback": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Handle the OAuth callback from Google",
                 "consumes": [
                     "application/json"
@@ -369,6 +399,11 @@ const docTemplate = `{
         },
         "/users/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get user by ID",
                 "consumes": [
                     "application/json"
@@ -417,6 +452,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Update user",
                 "consumes": [
                     "application/json"
@@ -476,6 +516,11 @@ const docTemplate = `{
         },
         "/users/{id}/avatar": {
             "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Update user avatar",
                 "consumes": [
                     "multipart/form-data"
@@ -533,6 +578,11 @@ const docTemplate = `{
         },
         "/users/{id}/password": {
             "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Update user password",
                 "consumes": [
                     "application/json"
@@ -592,22 +642,12 @@ const docTemplate = `{
         },
         "/ws": {
             "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Establishes a WebSocket connection",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "Core/Websocket"
-                ],
-                "summary": "Connect to WebSocket",
                 "parameters": [
                     {
                         "type": "string",
