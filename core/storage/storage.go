@@ -4,10 +4,20 @@ import (
 	"fmt"
 	"mime/multipart"
 	"path/filepath"
+	"regexp"
 	"strings"
+	"time"
+
+	"gorm.io/gorm"
 )
 
-// Attachment represents a file attachment for a model
+// Constants and Patterns
+var (
+	illegalCharsPattern = regexp.MustCompile(`[^a-zA-Z0-9\-\.]`)
+	multiDashPattern    = regexp.MustCompile(`-+`)
+)
+
+// Core Types
 type Attachment struct {
 	Id        uint   `json:"id" gorm:"primaryKey"`
 	ModelType string `json:"model_type" gorm:"index"`
@@ -19,7 +29,6 @@ type Attachment struct {
 	URL       string `json:"url"`
 }
 
-// AttachmentConfig defines configuration for file attachments
 type AttachmentConfig struct {
 	Field             string
 	Path              string
@@ -28,14 +37,45 @@ type AttachmentConfig struct {
 	Multiple          bool
 }
 
-// Attachable interface should be implemented by models that can have attachments
+type Config struct {
+	Provider  string
+	Path      string
+	BaseURL   string
+	APIKey    string
+	APISecret string
+	Endpoint  string
+	Bucket    string
+	CDN       string
+}
+
+// Interfaces
 type Attachable interface {
 	GetId() uint
 	GetModelName() string
 }
 
-// ActiveStorage handles file attachments for models
+type Provider interface {
+	Upload(file *multipart.FileHeader, config UploadConfig) (*UploadResult, error)
+	Delete(path string) error
+	GetURL(path string) string
+}
+
+// Upload Types
+type UploadConfig struct {
+	AllowedExtensions []string
+	MaxFileSize       int64
+	UploadPath        string
+}
+
+type UploadResult struct {
+	Filename string
+	Path     string
+	Size     int64
+}
+
+// ActiveStorage Implementation
 type ActiveStorage struct {
+	db          *gorm.DB
 	provider    Provider
 	defaultPath string
 	maxFileSize int64
@@ -43,8 +83,7 @@ type ActiveStorage struct {
 	configs     map[string]AttachmentConfig
 }
 
-// NewActiveStorage creates a new ActiveStorage instance
-func NewActiveStorage(config Config) (*ActiveStorage, error) {
+func NewActiveStorage(db *gorm.DB, config Config) (*ActiveStorage, error) {
 	var provider Provider
 	var err error
 
@@ -56,6 +95,15 @@ func NewActiveStorage(config Config) (*ActiveStorage, error) {
 			Endpoint:  config.Endpoint,
 			Bucket:    config.Bucket,
 			BaseURL:   config.BaseURL,
+		})
+	case "r2":
+		provider, err = NewR2Provider(R2Config{
+			AccessKeyID:     config.APIKey,
+			AccessKeySecret: config.APISecret,
+			AccountID:       config.Endpoint,
+			Bucket:          config.Bucket,
+			BaseURL:         config.BaseURL,
+			CDN:             config.CDN,
 		})
 	case "local":
 		provider, err = NewLocalProvider(LocalConfig{
@@ -70,22 +118,26 @@ func NewActiveStorage(config Config) (*ActiveStorage, error) {
 		return nil, err
 	}
 
+	if err := db.AutoMigrate(&Attachment{}); err != nil {
+		return nil, fmt.Errorf("failed to migrate attachments table: %w", err)
+	}
+
 	return &ActiveStorage{
+		db:          db,
 		provider:    provider,
 		defaultPath: "uploads",
-		maxFileSize: 10 << 20, // 10MB default
+		maxFileSize: 10 << 20,
 		allowedExts: []string{".jpg", ".jpeg", ".png", ".gif", ".pdf"},
 		configs:     make(map[string]AttachmentConfig),
 	}, nil
 }
 
-// RegisterAttachment configures attachment settings for a model field
 func (as *ActiveStorage) RegisterAttachment(modelName string, config AttachmentConfig) {
 	key := fmt.Sprintf("%s.%s", modelName, config.Field)
 	as.configs[key] = config
 }
 
-// Attach handles file attachment for a model
+// Simplified Attach method
 func (as *ActiveStorage) Attach(model Attachable, field string, file *multipart.FileHeader) (*Attachment, error) {
 	config, err := as.getConfig(model.GetModelName(), field)
 	if err != nil {
@@ -96,14 +148,27 @@ func (as *ActiveStorage) Attach(model Attachable, field string, file *multipart.
 		return nil, err
 	}
 
-	// Check if multiple attachments are allowed
-	if !config.Multiple {
-		if err := as.deleteExisting(model, field); err != nil {
-			return nil, err
+	// First, delete any existing attachments
+	var existingAttachments []Attachment
+	if err := as.db.Where(&Attachment{
+		ModelType: model.GetModelName(),
+		ModelId:   model.GetId(),
+		Field:     field,
+	}).Find(&existingAttachments).Error; err != nil {
+		return nil, fmt.Errorf("failed to query existing attachments: %w", err)
+	}
+
+	// Delete existing attachments
+	for _, existing := range existingAttachments {
+		// Delete from storage
+		_ = as.provider.Delete(existing.Path) // Ignore storage delete errors
+		// Delete from database
+		if err := as.db.Unscoped().Delete(&existing).Error; err != nil {
+			return nil, fmt.Errorf("failed to delete existing attachment: %w", err)
 		}
 	}
 
-	// Upload file
+	// Upload new file
 	uploadPath := filepath.Join(config.Path, model.GetModelName(), field)
 	result, err := as.provider.Upload(file, UploadConfig{
 		AllowedExtensions: config.AllowedExtensions,
@@ -111,10 +176,10 @@ func (as *ActiveStorage) Attach(model Attachable, field string, file *multipart.
 		UploadPath:        uploadPath,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to upload file: %w", err)
 	}
 
-	// Create attachment record
+	// Create new attachment record
 	attachment := &Attachment{
 		ModelType: model.GetModelName(),
 		ModelId:   model.GetId(),
@@ -125,25 +190,27 @@ func (as *ActiveStorage) Attach(model Attachable, field string, file *multipart.
 		URL:       as.provider.GetURL(result.Path),
 	}
 
+	if err := as.db.Create(attachment).Error; err != nil {
+		// If we fail to create the record, clean up the uploaded file
+		_ = as.provider.Delete(result.Path)
+		return nil, fmt.Errorf("failed to save attachment: %w", err)
+	}
+
 	return attachment, nil
 }
 
-// Delete removes an attachment
 func (as *ActiveStorage) Delete(attachment *Attachment) error {
 	if err := as.provider.Delete(attachment.Path); err != nil {
-		return err
+		return fmt.Errorf("failed to delete file: %w", err)
 	}
+
+	if err := as.db.Delete(attachment).Error; err != nil {
+		return fmt.Errorf("failed to delete record: %w", err)
+	}
+
 	return nil
 }
 
-// GetAttachments retrieves all attachments for a model field
-func (as *ActiveStorage) GetAttachments(model Attachable, field string) ([]*Attachment, error) {
-	// This would typically involve a database query
-	// Implementation depends on your database setup
-	return nil, nil
-}
-
-// Helper functions
 func (as *ActiveStorage) getConfig(modelName, field string) (AttachmentConfig, error) {
 	key := fmt.Sprintf("%s.%s", modelName, field)
 	config, exists := as.configs[key]
@@ -166,51 +233,22 @@ func (as *ActiveStorage) validateFile(file *multipart.FileHeader, config Attachm
 	return nil
 }
 
-func (as *ActiveStorage) deleteExisting(model Attachable, field string) error {
-	attachments, err := as.GetAttachments(model, field)
-	if err != nil {
-		return err
-	}
-
-	for _, attachment := range attachments {
-		if err := as.Delete(attachment); err != nil {
-			return err
-		}
-	}
-
-	return nil
+func slugify(s string) string {
+	s = strings.ToLower(s)
+	ext := filepath.Ext(s)
+	name := strings.TrimSuffix(s, ext)
+	name = illegalCharsPattern.ReplaceAllString(name, "-")
+	name = multiDashPattern.ReplaceAllString(name, "-")
+	name = strings.Trim(name, "-")
+	return name + ext
 }
 
-// Config holds the configuration for ActiveStorage
-type Config struct {
-	Provider  string
-	Path      string
-	BaseURL   string
-	APIKey    string
-	APISecret string
-	Endpoint  string
-	Bucket    string
-}
-
-// Provider interface defines the storage provider contract
-type Provider interface {
-	Upload(file *multipart.FileHeader, config UploadConfig) (*UploadResult, error)
-	Delete(path string) error
-	GetURL(path string) string
-}
-
-// UploadConfig defines configuration for file uploads
-type UploadConfig struct {
-	AllowedExtensions []string
-	MaxFileSize       int64
-	UploadPath        string
-}
-
-// UploadResult represents the result of a file upload
-type UploadResult struct {
-	Filename string
-	Path     string
-	Size     int64
+func generateUniqueFilename(originalName string) string {
+	sluggedName := slugify(originalName)
+	ext := filepath.Ext(sluggedName)
+	name := sluggedName[:len(sluggedName)-len(ext)]
+	timestamp := fmt.Sprintf("%d", time.Now().UnixNano())
+	return fmt.Sprintf("%s-%s%s", name, timestamp, ext)
 }
 
 func contains(arr []string, val string) bool {

@@ -140,10 +140,10 @@ func (s *EventService) Track(ctx context.Context, opts EventOptions) (*Event, er
 		return nil, err
 	}
 
-	s.logger.Info("Event tracked successfully",
-		zap.String("type", event.Type),
-		zap.String("action", event.Action),
-		zap.Uint("event_id", event.ID))
+	// s.logger.Info("Event tracked successfully",
+	// 	zap.String("type", event.Type),
+	// 	zap.String("action", event.Action),
+	// 	zap.Uint("event_id", event.ID))
 
 	return event, nil
 }

@@ -6,7 +6,6 @@ import (
 	"mime/multipart"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 // LocalConfig holds configuration for local storage
@@ -78,12 +77,4 @@ func (p *localProvider) Delete(path string) error {
 
 func (p *localProvider) GetURL(path string) string {
 	return fmt.Sprintf("%s/%s", p.baseURL, path)
-}
-
-// Helper functions
-func generateUniqueFilename(originalName string) string {
-	ext := filepath.Ext(originalName)
-	name := originalName[:len(originalName)-len(ext)]
-	timestamp := fmt.Sprintf("%d", time.Now().UnixNano())
-	return fmt.Sprintf("%s-%s%s", name, timestamp, ext)
 }

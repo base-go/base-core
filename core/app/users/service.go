@@ -19,6 +19,15 @@ type UserService struct {
 }
 
 func NewUserService(db *gorm.DB, logger *zap.Logger, activeStorage *storage.ActiveStorage) *UserService {
+	// Register avatar attachment configuration
+	activeStorage.RegisterAttachment("users", storage.AttachmentConfig{
+		Field:             "avatar",
+		Path:              "avatars",
+		AllowedExtensions: []string{".jpg", ".jpeg", ".png", ".gif"},
+		MaxFileSize:       5 << 20, // 5MB
+		Multiple:          false,
+	})
+
 	return &UserService{
 		db:            db,
 		logger:        logger,
@@ -28,13 +37,7 @@ func NewUserService(db *gorm.DB, logger *zap.Logger, activeStorage *storage.Acti
 
 // Helper method to convert user to response
 func (s *UserService) toResponse(user *User) *UserResponse {
-	return &UserResponse{
-		Id:       user.Id,
-		Name:     user.Name,
-		Username: user.Username,
-		Email:    user.Email,
-		Avatar:   user.Avatar,
-	}
+	return ToResponse(user)
 }
 
 func (s *UserService) GetByID(id uint) (*UserResponse, error) {
@@ -62,7 +65,6 @@ func (s *UserService) Update(id uint, req *UpdateRequest) (*UserResponse, error)
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 
-	// Update fields only if they are provided
 	if req.Name != "" {
 		user.Name = req.Name
 	}
@@ -83,61 +85,24 @@ func (s *UserService) Update(id uint, req *UpdateRequest) (*UserResponse, error)
 	return s.toResponse(&user), nil
 }
 
-func (s *UserService) UpdateAvatar(ctx context.Context, id uint, avatarFile *multipart.FileHeader) (*UserResponse, error) {
-	tx := s.db.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
+// Remove CleanupOldAttachments method completely
 
+func (s *UserService) UpdateAvatar(ctx context.Context, id uint, avatarFile *multipart.FileHeader) (*UserResponse, error) {
 	var user User
-	if err := tx.Preload("Avatar").First(&user, id).Error; err != nil {
-		tx.Rollback()
-		s.logger.Error("Failed to find user for avatar update",
-			zap.Error(err),
-			zap.Uint("user_id", id))
+	if err := s.db.First(&user, id).Error; err != nil {
 		return nil, err
 	}
 
-	// Delete existing avatar if exists
-	if user.Avatar != nil {
-		if err := s.activeStorage.Delete(user.Avatar); err != nil {
-			tx.Rollback()
-			s.logger.Error("Failed to delete existing avatar",
-				zap.Error(err),
-				zap.Uint("user_id", id))
-			return nil, fmt.Errorf("failed to delete existing avatar: %w", err)
-		}
-	}
-
-	// Upload new avatar
+	// Just attach the new file - cleanup is handled inside Attach
 	attachment, err := s.activeStorage.Attach(&user, "avatar", avatarFile)
 	if err != nil {
-		tx.Rollback()
-		s.logger.Error("Failed to upload avatar",
-			zap.Error(err),
-			zap.Uint("user_id", id),
-			zap.String("filename", avatarFile.Filename))
 		return nil, fmt.Errorf("failed to upload avatar: %w", err)
 	}
 
 	// Update user's avatar
 	user.Avatar = attachment
-
-	if err := tx.Save(&user).Error; err != nil {
-		tx.Rollback()
-		s.logger.Error("Failed to save user with new avatar",
-			zap.Error(err),
-			zap.Uint("user_id", id))
-		return nil, fmt.Errorf("failed to update avatar: %w", err)
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		s.logger.Error("Failed to commit transaction",
-			zap.Error(err),
-			zap.Uint("user_id", id))
-		return nil, fmt.Errorf("failed to update avatar: %w", err)
+	if err := s.db.Save(&user).Error; err != nil {
+		return nil, fmt.Errorf("failed to update user: %w", err)
 	}
 
 	return s.toResponse(&user), nil

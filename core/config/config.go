@@ -11,6 +11,7 @@ import (
 // Config holds the application configuration.
 type Config struct {
 	BaseURL              string
+	CDN                  string
 	Env                  string
 	DBDriver             string
 	DBUser               string
@@ -50,7 +51,8 @@ type Config struct {
 func NewConfig() *Config {
 	config := &Config{
 		BaseURL:            getEnvWithLog("APPHOST", "http://localhost"),
-		Env:                getEnvWithLog("ENV", "development"),
+		CDN:                getEnvWithLog("CDN", ""),
+		Env:                getEnvWithLog("ENV", "debug"),
 		DBDriver:           getEnvWithLog("DB_DRIVER", "mysql"),
 		DBUser:             getEnvWithLog("DB_USER", "root"),
 		DBPassword:         getEnvWithLog("DB_PASSWORD", "RockeT"),

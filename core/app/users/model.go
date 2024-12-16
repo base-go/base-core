@@ -52,9 +52,36 @@ func (u *User) GetModelName() string {
 
 // UserResponse represents the API response structure
 type UserResponse struct {
-	Id       uint                `json:"id"`
-	Name     string              `json:"name"`
-	Username string              `json:"username"`
-	Email    string              `json:"email"`
-	Avatar   *storage.Attachment `json:"avatar,omitempty"`
+	Id       uint            `json:"id"`
+	Name     string          `json:"name"`
+	Username string          `json:"username"`
+	Email    string          `json:"email"`
+	Avatar   *AvatarResponse `json:"avatar,omitempty"`
+}
+
+// AvatarResponse represents the avatar in API responses
+type AvatarResponse struct {
+	Id       uint   `json:"id"`
+	Filename string `json:"filename"`
+	URL      string `json:"url"`
+}
+
+// Helper function to convert User to UserResponse
+func ToResponse(user *User) *UserResponse {
+	response := &UserResponse{
+		Id:       user.Id,
+		Name:     user.Name,
+		Username: user.Username,
+		Email:    user.Email,
+	}
+
+	if user.Avatar != nil {
+		response.Avatar = &AvatarResponse{
+			Id:       user.Avatar.Id,
+			Filename: user.Avatar.Filename,
+			URL:      user.Avatar.URL,
+		}
+	}
+
+	return response
 }

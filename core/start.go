@@ -35,7 +35,6 @@ type Application struct {
 }
 
 var Emitter = emitter.New() // This ensures Emitter is created once
-
 func StartApplication() (*Application, error) {
 	ctx := context.Background()
 
@@ -56,28 +55,23 @@ func StartApplication() (*Application, error) {
 		logger.Error("Failed to initialize database", zap.Error(err))
 		return nil, fmt.Errorf("database initialization failed: %w", err)
 	}
-
 	logger.Info("Database initialized successfully")
 
 	// Initialize and verify event service
 	logger.Info("Initializing event service")
-
-	// First, migrate the events table
 	if err := db.DB.AutoMigrate(&event.Event{}); err != nil {
 		logger.Error("Failed to migrate events table", zap.Error(err))
 		return nil, fmt.Errorf("events table migration failed: %w", err)
 	}
 
-	// Verify the events table exists
 	if !db.DB.Migrator().HasTable(&event.Event{}) {
 		logger.Error("Events table does not exist after migration")
 		return nil, fmt.Errorf("events table creation failed")
 	}
 
-	// Initialize event service
 	eventService := event.NewEventService(db.DB, logger)
 
-	// Test event tracking
+	// Track initialization start
 	_, err = eventService.Track(ctx, event.EventOptions{
 		Type:        "system",
 		Category:    "startup",
@@ -94,7 +88,6 @@ func StartApplication() (*Application, error) {
 		logger.Error("Failed to track initial event", zap.Error(err))
 		return nil, fmt.Errorf("event tracking failed: %w", err)
 	}
-
 	logger.Info("Event service initialized successfully")
 
 	// Initialize email sender
@@ -103,15 +96,53 @@ func StartApplication() (*Application, error) {
 		logger.Error("Failed to initialize email sender", zap.Error(err))
 		return nil, fmt.Errorf("email sender initialization failed: %w", err)
 	}
-
 	logger.Info("Email sender initialized successfully")
 
+	// Initialize storage service
+	logger.Info("Initializing storage service")
+	storageConfig := storage.Config{
+		Provider:  cfg.StorageProvider,
+		Path:      cfg.StoragePath,
+		BaseURL:   cfg.BaseURL,
+		APIKey:    cfg.StorageAPIKey,
+		APISecret: cfg.StorageAPISecret,
+		Endpoint:  cfg.StorageEndpoint,
+		Bucket:    cfg.StorageBucket,
+		CDN:       cfg.CDN,
+	}
+
+	activeStorage, err := storage.NewActiveStorage(db.DB, storageConfig)
+	if err != nil {
+		logger.Error("Failed to initialize storage service", zap.Error(err))
+		return nil, fmt.Errorf("storage service initialization failed: %w", err)
+	}
+
+	// Register attachments configuration
+	activeStorage.RegisterAttachment("users", storage.AttachmentConfig{
+		Field:             "avatar",
+		Path:              "users",
+		AllowedExtensions: []string{".jpg", ".jpeg", ".png"},
+		MaxFileSize:       2 << 20, // 2MB
+		Multiple:          false,
+	})
+
+	activeStorage.RegisterAttachment("users", storage.AttachmentConfig{
+		Field:             "documents",
+		Path:              "users",
+		AllowedExtensions: []string{".pdf", ".doc", ".docx"},
+		MaxFileSize:       10 << 20, // 10MB
+		Multiple:          true,
+	})
+
+	logger.Info("Storage service initialized successfully",
+		zap.String("provider", cfg.StorageProvider),
+		zap.String("path", cfg.StoragePath))
+
 	// Set up Gin
-	gin.SetMode(cfg.Env)
 	router := gin.New()
 	router.Use(gin.Recovery())
 
-	// Set up middleware in proper order
+	// Set up middleware
 	router.Use(middleware.EventTrackingMiddleware(eventService))
 	router.Use(middleware.ZapLogger(logger))
 
@@ -127,18 +158,16 @@ func StartApplication() (*Application, error) {
 	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Api-Key"}
 	router.Use(cors.New(corsConfig))
 
-	// Set up Swagger if in debug mode
-	if cfg.Env == "debug" {
-		router.GET("/swagger/*any",
-			ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.PersistAuthorization(true)))
-		logger.Info("Swagger documentation enabled")
-	}
+	// Set up Swagger
+	router.GET("/swagger/*any",
+		ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.PersistAuthorization(true)))
+	logger.Info("Swagger documentation enabled")
 
 	// Create API router group
 	apiGroup := router.Group("/api")
 	apiGroup.Use(middleware.APIKeyMiddleware())
 
-	// Initialize core modules with dependencies
+	// Initialize core modules with all dependencies
 	logger.Info("Initializing core modules")
 	moduleInit := ModuleInitializer{
 		DB:           db.DB,
@@ -147,6 +176,7 @@ func StartApplication() (*Application, error) {
 		Logger:       logger,
 		EventService: eventService,
 		Emitter:      Emitter,
+		Storage:      activeStorage,
 	}
 
 	modules := InitializeCoreModules(moduleInit)
@@ -181,46 +211,6 @@ func StartApplication() (*Application, error) {
 	// Initialize WebSocket module
 	logger.Info("Initializing WebSocket module")
 	wsHub := websocket.InitWebSocketModule(apiGroup)
-
-	// Initialize storage service
-	logger.Info("Initializing storage service")
-
-	// Create storage config from application config
-	storageConfig := storage.Config{
-		Provider:  cfg.StorageProvider,
-		Path:      cfg.StoragePath,
-		BaseURL:   cfg.BaseURL,
-		APIKey:    cfg.StorageAPIKey,
-		APISecret: cfg.StorageAPISecret,
-		Endpoint:  cfg.StorageEndpoint,
-		Bucket:    cfg.StorageBucket,
-	}
-
-	// Initialize active storage
-	activeStorage, err := storage.NewActiveStorage(storageConfig)
-	if err != nil {
-		logger.Error("Failed to initialize storage service", zap.Error(err))
-		return nil, fmt.Errorf("storage service initialization failed: %w", err)
-	}
-
-	activeStorage.RegisterAttachment("users", storage.AttachmentConfig{
-		Field:             "avatar",
-		Path:              "avatars",
-		AllowedExtensions: []string{".jpg", ".jpeg", ".png"},
-		MaxFileSize:       2 << 20, // 2MB
-		Multiple:          false,
-	})
-
-	activeStorage.RegisterAttachment("users", storage.AttachmentConfig{
-		Field:             "documents",
-		Path:              "documents",
-		AllowedExtensions: []string{".pdf", ".doc", ".docx"},
-		MaxFileSize:       10 << 20, // 10MB
-		Multiple:          true,
-	})
-	logger.Info("Storage service initialized successfully",
-		zap.String("provider", cfg.StorageProvider),
-		zap.String("path", cfg.StoragePath))
 
 	// Create application instance
 	application := &Application{
@@ -258,5 +248,6 @@ func StartApplication() (*Application, error) {
 		zap.String("environment", cfg.Env),
 		zap.Int("module_count", len(modules)))
 
+	fmt.Println(cfg)
 	return application, nil
 }

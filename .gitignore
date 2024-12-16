@@ -24,3 +24,5 @@ logs/error.log
 logs/info.log
 logs/requests.log
 /storage/uploads/*.*
+core/app/.DS_Store
+.DS_Store
