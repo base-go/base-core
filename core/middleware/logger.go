@@ -1,55 +1,69 @@
 package middleware
 
 import (
+	"bytes"
+	"encoding/json"
+	"io"
 	"time"
 
+	"base/core/logger"
+	"base/core/types"
+
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 )
 
-// ZapLogger returns a gin.HandlerFunc (middleware) that logs requests using Zap.
-func ZapLogger(logger *zap.Logger) gin.HandlerFunc {
+type responseBodyWriter struct {
+	gin.ResponseWriter
+	body *bytes.Buffer
+}
+
+func (r responseBodyWriter) Write(b []byte) (int, error) {
+	r.body.Write(b)
+	return r.ResponseWriter.Write(b)
+}
+
+// Logger middleware for logging requests and responses
+func Logger(log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Start timer
 		start := time.Now()
-		path := c.Request.URL.Path
-		query := c.Request.URL.RawQuery
+
+		// Read the request body
+		var requestBody []byte
+		if c.Request.Body != nil {
+			requestBody, _ = io.ReadAll(c.Request.Body)
+			c.Request.Body = io.NopCloser(bytes.NewBuffer(requestBody))
+		}
+
+		// Create a new response body writer
+		w := &responseBodyWriter{body: bytes.NewBufferString(""), ResponseWriter: c.Writer}
+		c.Writer = w
 
 		// Process request
 		c.Next()
 
-		// Log only when path is not being skipped
-		if path != "/ping" && path != "/health" {
-			end := time.Now()
-			latency := end.Sub(start)
+		// Get response status and body
+		status := c.Writer.Status()
+		responseBody := w.body.String()
 
-			if len(c.Errors) > 0 {
-				// Collect all error messages
-				errorMessages := make([]string, len(c.Errors))
-				for i, err := range c.Errors {
-					errorMessages[i] = err.Error()
-				}
-
-				logger.Error("Request failed",
-					zap.String("path", path),
-					zap.Int("status", c.Writer.Status()),
-					zap.String("method", c.Request.Method),
-					zap.Duration("latency", latency),
-					zap.String("ip", c.ClientIP()),
-					zap.String("query", query),
-					zap.Strings("errors", errorMessages),
-					zap.String("user-agent", c.Request.UserAgent()),
-				)
-			} else {
-				logger.Info("Request processed",
-					zap.String("path", path),
-					zap.Int("status", c.Writer.Status()),
-					zap.String("method", c.Request.Method),
-					zap.Duration("latency", latency),
-					zap.String("ip", c.ClientIP()),
-					zap.String("query", query),
-					zap.String("user-agent", c.Request.UserAgent()),
-				)
+		// Parse response body to get error message if it exists
+		var errorMsg string
+		if status >= 400 {
+			var errResp types.ErrorResponse
+			if err := json.Unmarshal([]byte(responseBody), &errResp); err == nil {
+				errorMsg = errResp.Error
 			}
 		}
+
+		// Log the request details
+		log.Info("HTTP Request",
+			logger.String("method", c.Request.Method),
+			logger.String("path", c.Request.URL.Path),
+			logger.Int("status", status),
+			logger.String("latency", time.Since(start).String()),
+			logger.String("request", string(requestBody)),
+			logger.String("response", responseBody),
+			logger.String("error", errorMsg),
+		)
 	}
 }

@@ -6,114 +6,87 @@ import (
 	"base/core/database"
 	"base/core/email"
 	"base/core/emitter"
-	"base/core/event"
-	"base/core/storage"
-
+	"base/core/logger"
 	"base/core/middleware"
 	"base/core/module"
+	"base/core/storage"
 	"base/core/websocket"
 	_ "base/docs" // Import for Swagger docs
-	"context"
 	"fmt"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"go.uber.org/zap"
 )
 
 type Application struct {
-	Config       *config.Config
-	DB           *database.Database
-	Router       *gin.Engine
-	WSHub        *websocket.Hub
-	Modules      map[string]module.Module
-	Logger       *zap.Logger
-	EventService *event.EventService
-	Emitter      *emitter.Emitter
+	Config  *config.Config
+	DB      *database.Database
+	Router  *gin.Engine
+	WSHub   *websocket.Hub
+	Modules map[string]module.Module
+	Logger  logger.Logger
+	Emitter *emitter.Emitter
 }
 
 var Emitter = emitter.New() // This ensures Emitter is created once
-func StartApplication() (*Application, error) {
-	ctx := context.Background()
 
+// StartApplication initializes and starts the application
+func StartApplication() (*Application, error) {
 	// Initialize config
 	cfg := config.NewConfig()
 
-	// Initialize Zap logger first
-	logger := InitializeLogger()
-	defer logger.Sync()
+	// Initialize logger first
+	logConfig := logger.Config{
+		Environment: cfg.Env,
+		LogPath:     "logs",
+		Level:       "debug",
+	}
+	appLogger, err := logger.NewLogger(logConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize logger: %w", err)
+	}
 
-	logger.Info("Starting application initialization",
-		zap.String("version", cfg.Version),
-		zap.String("environment", cfg.Env))
+	appLogger.Info("Starting application initialization",
+		logger.String("version", cfg.Version),
+		logger.String("environment", cfg.Env))
 
 	// Initialize the database
 	db, err := database.InitDB(cfg)
 	if err != nil {
-		logger.Error("Failed to initialize database", zap.Error(err))
+		appLogger.Error("Failed to initialize database",
+			logger.String("error", err.Error()))
 		return nil, fmt.Errorf("database initialization failed: %w", err)
 	}
-	logger.Info("Database initialized successfully")
-
-	// Initialize and verify event service
-	logger.Info("Initializing event service")
-	if err := db.DB.AutoMigrate(&event.Event{}); err != nil {
-		logger.Error("Failed to migrate events table", zap.Error(err))
-		return nil, fmt.Errorf("events table migration failed: %w", err)
-	}
-
-	if !db.DB.Migrator().HasTable(&event.Event{}) {
-		logger.Error("Events table does not exist after migration")
-		return nil, fmt.Errorf("events table creation failed")
-	}
-
-	eventService := event.NewEventService(db.DB, logger)
-
-	// Track initialization start
-	_, err = eventService.Track(ctx, event.EventOptions{
-		Type:        "system",
-		Category:    "startup",
-		Actor:       "system",
-		Action:      "start",
-		Status:      "started",
-		Description: "Application initialization started",
-		Metadata: map[string]interface{}{
-			"version": cfg.Version,
-			"env":     cfg.Env,
-		},
-	})
-	if err != nil {
-		logger.Error("Failed to track initial event", zap.Error(err))
-		return nil, fmt.Errorf("event tracking failed: %w", err)
-	}
-	logger.Info("Event service initialized successfully")
+	appLogger.Info("Database initialized successfully")
 
 	// Initialize email sender
 	emailSender, err := email.NewSender(cfg)
 	if err != nil {
-		logger.Error("Failed to initialize email sender", zap.Error(err))
+		appLogger.Error("Failed to initialize email sender",
+			logger.String("error", err.Error()))
 		return nil, fmt.Errorf("email sender initialization failed: %w", err)
 	}
-	logger.Info("Email sender initialized successfully")
+	appLogger.Info("Email sender initialized successfully")
 
 	// Initialize storage service
-	logger.Info("Initializing storage service")
+	appLogger.Info("Initializing storage service")
 	storageConfig := storage.Config{
 		Provider:  cfg.StorageProvider,
 		Path:      cfg.StoragePath,
-		BaseURL:   cfg.BaseURL,
+		BaseURL:   cfg.StorageBaseURL,
 		APIKey:    cfg.StorageAPIKey,
 		APISecret: cfg.StorageAPISecret,
 		Endpoint:  cfg.StorageEndpoint,
 		Bucket:    cfg.StorageBucket,
-		CDN:       cfg.CDN,
+		CDN:      cfg.CDN,
 	}
 
 	activeStorage, err := storage.NewActiveStorage(db.DB, storageConfig)
 	if err != nil {
-		logger.Error("Failed to initialize storage service", zap.Error(err))
+		appLogger.Error("Failed to initialize storage service",
+			logger.String("error", err.Error()))
 		return nil, fmt.Errorf("storage service initialization failed: %w", err)
 	}
 
@@ -134,21 +107,19 @@ func StartApplication() (*Application, error) {
 		Multiple:          true,
 	})
 
-	logger.Info("Storage service initialized successfully",
-		zap.String("provider", cfg.StorageProvider),
-		zap.String("path", cfg.StoragePath))
+	appLogger.Info("Storage service initialized successfully",
+		logger.String("provider", cfg.StorageProvider),
+		logger.String("path", cfg.StoragePath))
 
 	// Set up Gin
 	router := gin.New()
 	router.Use(gin.Recovery())
 
 	// Set up middleware
-	router.Use(middleware.EventTrackingMiddleware(eventService))
-	router.Use(middleware.ZapLogger(logger))
+	router.Use(middleware.Logger(appLogger))
 
 	// Set up static file serving
 	router.Static("/static", "./static")
-	router.Static("/admin", "./admin")
 	router.Static("/storage", "./storage")
 
 	// Set up CORS
@@ -161,33 +132,33 @@ func StartApplication() (*Application, error) {
 	// Set up Swagger
 	router.GET("/swagger/*any",
 		ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.PersistAuthorization(true)))
-	logger.Info("Swagger documentation enabled")
+	appLogger.Info("Swagger documentation enabled")
 
 	// Create API router group
 	apiGroup := router.Group("/api")
 	apiGroup.Use(middleware.APIKeyMiddleware())
 
 	// Initialize core modules with all dependencies
-	logger.Info("Initializing core modules")
+	appLogger.Info("Initializing core modules")
 	moduleInit := ModuleInitializer{
-		DB:           db.DB,
-		Router:       apiGroup,
-		EmailSender:  emailSender,
-		Logger:       logger,
-		EventService: eventService,
-		Emitter:      Emitter,
-		Storage:      activeStorage,
+		DB:          db.DB,
+		Router:      apiGroup,
+		EmailSender: emailSender,
+		Logger:      appLogger,
+		Emitter:     Emitter,
+		Storage:     activeStorage,
 	}
 
 	modules := InitializeCoreModules(moduleInit)
-	logger.Info("Core modules initialized", zap.Int("count", len(modules)))
+	appLogger.Info("Core modules initialized", logger.Int("count", len(modules)))
 
 	// Initialize application modules
-	logger.Info("Initializing application modules")
+	appLogger.Info("Initializing application modules")
 	appInitializer := &app.AppModuleInitializer{
 		Router:  apiGroup,
-		Logger:  logger,
+		Logger:  appLogger,
 		Emitter: Emitter,
+		Storage: activeStorage,
 	}
 	appInitializer.InitializeModules(db.DB)
 
@@ -209,45 +180,30 @@ func StartApplication() (*Application, error) {
 	})
 
 	// Initialize WebSocket module
-	logger.Info("Initializing WebSocket module")
+	appLogger.Info("Initializing WebSocket module")
 	wsHub := websocket.InitWebSocketModule(apiGroup)
 
 	// Create application instance
 	application := &Application{
-		Config:       cfg,
-		DB:           db,
-		Router:       router,
-		WSHub:        wsHub,
-		Modules:      modules,
-		Logger:       logger,
-		EventService: eventService,
-		Emitter:      Emitter,
+		Config:  cfg,
+		DB:      db,
+		Router:  router,
+		WSHub:   wsHub,
+		Modules: modules,
+		Logger:  appLogger,
+		Emitter: Emitter,
 	}
 
-	// Track successful startup
-	_, err = eventService.Track(ctx, event.EventOptions{
-		Type:        "system",
-		Category:    "startup",
-		Actor:       "system",
-		Action:      "start",
-		Status:      "completed",
-		Description: "Application started successfully",
-		Metadata: map[string]interface{}{
-			"version":      cfg.Version,
-			"environment":  cfg.Env,
-			"module_count": len(modules),
-		},
-	})
-	if err != nil {
-		logger.Error("Failed to track startup completion", zap.Error(err))
-		// Don't fail the startup for this error
-	}
+	appLogger.Info("Application Started Successfully!\n" +
+		"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+		"🔖 Version:      " + cfg.Version + "\n" +
+		"🌍 Environment:  " + cfg.Env + "\n" +
+		"🔌 Server:       " + cfg.ServerAddress + "\n" +
+		"🌐 App URL:      " + cfg.BaseURL + "\n" +
+		"🔗 API URL:      " + cfg.BaseURL + "/api\n" +
+		"📚 Swagger Docs: " + cfg.BaseURL + "/swagger/index.html\n" +
+		"📦 Modules:      " + fmt.Sprintf("%d", len(modules)) + "\n" +
+		"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
-	logger.Info("Application started successfully",
-		zap.String("version", cfg.Version),
-		zap.String("environment", cfg.Env),
-		zap.Int("module_count", len(modules)))
-
-	fmt.Println(cfg)
 	return application, nil
 }

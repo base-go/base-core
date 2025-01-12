@@ -5,10 +5,8 @@ import (
 	"base/core/app/users"
 	"base/core/email"
 	"base/core/emitter"
-	"base/core/event"
 	"base/core/module"
 	"base/core/storage"
-	"context"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
@@ -18,18 +16,17 @@ import (
 
 // CoreModuleInitializer holds dependencies for core module initialization
 type CoreModuleInitializer struct {
-	DB           *gorm.DB
-	Router       *gin.RouterGroup
-	EmailSender  email.Sender
-	Logger       *zap.Logger
-	EventService *event.EventService
-	Emitter      *emitter.Emitter
+	DB          *gorm.DB
+	Router      *gin.RouterGroup
+	EmailSender email.Sender
+	Logger      *zap.Logger
+	Storage     *storage.ActiveStorage
+	Emitter     *emitter.Emitter
 }
 
 // InitializeCoreModules loads and initializes all core modules
-func InitializeCoreModules(db *gorm.DB, router *gin.RouterGroup, emailSender email.Sender, logger *zap.Logger, eventService *event.EventService, emitter *emitter.Emitter) map[string]module.Module {
+func InitializeCoreModules(db *gorm.DB, router *gin.RouterGroup, emailSender email.Sender, logger *zap.Logger, storage *storage.ActiveStorage, emitter *emitter.Emitter) map[string]module.Module {
 	modules := make(map[string]module.Module)
-	ctx := context.Background()
 
 	// Check if emitter is nil
 	if emitter == nil {
@@ -40,17 +37,8 @@ func InitializeCoreModules(db *gorm.DB, router *gin.RouterGroup, emailSender ema
 		logger.Info("WE GOT EMITTER IN INITIALIZECOREMODULES")
 	}
 
-	// Track module initialization start
-	eventService.Track(ctx, event.EventOptions{
-		Type:        "system_event",
-		Category:    "initialization",
-		Actor:       "system",
-		ActorID:     "system",
-		Target:      "core_modules",
-		Action:      "initialize",
-		Status:      "started",
-		Description: "Starting core modules initialization",
-	})
+	// Log initialization start
+	logger.Info("Starting core modules initialization")
 
 	// Define module initializers
 	moduleInitializers := map[string]func() module.Module{
@@ -59,8 +47,7 @@ func InitializeCoreModules(db *gorm.DB, router *gin.RouterGroup, emailSender ema
 				db,
 				router,
 				logger,
-				eventService,
-				&storage.ActiveStorage{}, // Ensure this instance is correctly configured
+				storage,
 			)
 		},
 		"auth": func() module.Module {
@@ -69,7 +56,6 @@ func InitializeCoreModules(db *gorm.DB, router *gin.RouterGroup, emailSender ema
 				router,
 				emailSender,
 				logger,
-				eventService,
 				emitter,
 			)
 		},
@@ -77,54 +63,15 @@ func InitializeCoreModules(db *gorm.DB, router *gin.RouterGroup, emailSender ema
 
 	// Initialize and register each module
 	for name, initializer := range moduleInitializers {
-		// Track individual module initialization
-		eventService.Track(ctx, event.EventOptions{
-			Type:        "system_event",
-			Category:    "initialization",
-			Actor:       "system",
-			ActorID:     "system",
-			Target:      "module",
-			TargetID:    name,
-			Action:      "initialize",
-			Status:      "started",
-			Description: "Initializing module: " + name,
-		})
+		logger.Info("Initializing module", zap.String("module", name))
 
 		module := initializer()
 		modules[name] = module
 
 		logger.Info("Core module initialized", zap.String("module", name))
-
-		// Track successful module initialization
-		eventService.Track(ctx, event.EventOptions{
-			Type:        "system_event",
-			Category:    "initialization",
-			Actor:       "system",
-			ActorID:     "system",
-			Target:      "module",
-			TargetID:    name,
-			Action:      "initialize",
-			Status:      "completed",
-			Description: "Successfully initialized module: " + name,
-		})
 	}
 
-	// Track module initialization completion
-	eventService.Track(ctx, event.EventOptions{
-		Type:        "system_event",
-		Category:    "initialization",
-		Actor:       "system",
-		ActorID:     "system",
-		Target:      "core_modules",
-		Action:      "initialize",
-		Status:      "completed",
-		Description: "Core modules initialization completed",
-		Metadata: map[string]interface{}{
-			"module_count": len(modules),
-			"modules":      getModuleNames(modules),
-		},
-	})
-
+	logger.Info("Core modules initialization completed", zap.Strings("modules", getModuleNames(modules)))
 	return modules
 }
 
@@ -134,16 +81,16 @@ func NewCoreModuleInitializer(
 	router *gin.RouterGroup,
 	emailSender email.Sender,
 	logger *zap.Logger,
-	eventService *event.EventService,
+	storage *storage.ActiveStorage,
 	emitter *emitter.Emitter,
 ) *CoreModuleInitializer {
 	return &CoreModuleInitializer{
-		DB:           db,
-		Router:       router,
-		EmailSender:  emailSender,
-		Logger:       logger,
-		EventService: eventService,
-		Emitter:      emitter,
+		DB:          db,
+		Router:      router,
+		EmailSender: emailSender,
+		Logger:      logger,
+		Storage:     storage,
+		Emitter:     emitter,
 	}
 }
 
@@ -157,13 +104,13 @@ func getModuleNames(modules map[string]module.Module) []string {
 }
 
 // Initialize initializes all core modules using the initializer's dependencies
-func (cmi *CoreModuleInitializer) Initialize() map[string]module.Module {
+func (i *CoreModuleInitializer) Initialize() map[string]module.Module {
 	return InitializeCoreModules(
-		cmi.DB,
-		cmi.Router,
-		cmi.EmailSender,
-		cmi.Logger,
-		cmi.EventService,
-		cmi.Emitter,
+		i.DB,
+		i.Router,
+		i.EmailSender,
+		i.Logger,
+		i.Storage,
+		i.Emitter,
 	)
 }

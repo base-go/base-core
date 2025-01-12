@@ -36,6 +36,8 @@ type Config struct {
 	PostmarkServerToken  string
 	PostmarkAccountToken string
 	StorageProvider      string   `json:"storage_provider"`
+	StoragePath          string   `json:"storage_path"`
+	StorageBaseURL       string   `json:"storage_base_url"`
 	StorageAPIKey        string   `json:"storage_api_key"`
 	StorageAPISecret     string   `json:"storage_api_secret"`
 	StorageEndpoint      string   `json:"storage_endpoint"`
@@ -44,13 +46,24 @@ type Config struct {
 	StoragePublicURL     string   `json:"storage_public_url"`
 	StorageMaxSize       int64    `json:"storage_max_size"`
 	StorageAllowedExt    []string `json:"storage_allowed_ext"`
-	StoragePath          string   `json:"storage_path"`
 }
 
 // NewConfig returns a new Config instance with default values.
 func NewConfig() *Config {
+	serverAddr := getEnvWithLog("SERVER_ADDRESS", ":8001")
+	baseURL := getEnvWithLog("APPHOST", "http://localhost")
+
+	// Extract port from serverAddr and append to baseURL if not already present
+	if serverAddr != "" && serverAddr[0] == ':' {
+		port := serverAddr[1:]
+		if !strings.HasSuffix(baseURL, port) {
+			baseURL = strings.TrimSuffix(baseURL, ":8080") // Remove default port if present
+			baseURL = baseURL + ":" + port
+		}
+	}
+
 	config := &Config{
-		BaseURL:            getEnvWithLog("APPHOST", "http://localhost"),
+		BaseURL:            baseURL,
 		CDN:                getEnvWithLog("CDN", ""),
 		Env:                getEnvWithLog("ENV", "debug"),
 		DBDriver:           getEnvWithLog("DB_DRIVER", "mysql"),
@@ -63,7 +76,7 @@ func NewConfig() *Config {
 		DBURL:              getEnvWithLog("DB_URL", ""),
 		ApiKey:             getEnvWithLog("API_KEY", "test_api_key"),
 		JWTSecret:          getEnvWithLog("JWT_SECRET", "secret"),
-		ServerAddress:      getEnvWithLog("SERVER_ADDRESS", ":8080"),
+		ServerAddress:      serverAddr,
 		CORSAllowedOrigins: []string{"https://admin.albafone.net", "http://localhost:3000"},
 		Version:            getEnvWithLog("APP_VERSION", "0.0.1"),
 
@@ -76,13 +89,14 @@ func NewConfig() *Config {
 		PostmarkServerToken:  getEnvWithLog("POSTMARK_SERVER_TOKEN", ""),
 		PostmarkAccountToken: getEnvWithLog("POSTMARK_ACCOUNT_TOKEN", ""),
 		StorageProvider:      getEnvWithLog("STORAGE_PROVIDER", "local"),
+		StoragePath:          getEnvWithLog("STORAGE_PATH", "storage/uploads"),
+		StorageBaseURL:       getEnvWithLog("STORAGE_BASE_URL", ""),
 		StorageAPIKey:        getEnvWithLog("STORAGE_API_KEY", ""),
 		StorageAPISecret:     getEnvWithLog("STORAGE_API_SECRET", ""),
 		StorageEndpoint:      getEnvWithLog("STORAGE_ENDPOINT", ""),
 		StorageRegion:        getEnvWithLog("STORAGE_REGION", "eu-central-1"),
 		StorageBucket:        getEnvWithLog("STORAGE_BUCKET", "default"),
 		StoragePublicURL:     getEnvWithLog("STORAGE_PUBLIC_URL", ""),
-		StoragePath:          getEnvWithLog("STORAGE_PATH", "storage/uploads"),
 		StorageAllowedExt: strings.Split(
 			getEnvWithLog("STORAGE_ALLOWED_EXT", ".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx"),
 			",",
@@ -117,6 +131,7 @@ func (c *Config) GetStorageConfig() map[string]interface{} {
 		"region":      c.StorageRegion,
 		"bucket":      c.StorageBucket,
 		"public_url":  c.StoragePublicURL,
+		"base_url":    c.StorageBaseURL,
 		"max_size":    c.StorageMaxSize,
 		"allowed_ext": c.StorageAllowedExt,
 		"path":        c.StoragePath,

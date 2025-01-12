@@ -1,49 +1,164 @@
 package app
 
 import (
+	"base/app/categories"
+	"base/app/posts"
+	"base/core/config"
+	"base/core/database"
 	"base/core/emitter"
+	"base/core/logger"
 	"base/core/module"
+	"base/core/storage"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
-type AppModuleInitializer struct {
-	Router  *gin.RouterGroup
-	Logger  *zap.Logger
+// App represents the main application structure
+type App struct {
+	DB      *gorm.DB
+	Router  *gin.Engine
+	Log     logger.Logger
 	Emitter *emitter.Emitter
+	Storage *storage.ActiveStorage
+	Modules []module.Module
 }
 
-func (a *AppModuleInitializer) InitializeModules(db *gorm.DB) []module.Module {
-	modules := make([]module.Module, 0)
-
-	// Define the module initializers directly
-	moduleInitializers := map[string]func(*gorm.DB, *gin.RouterGroup) module.Module{
-		// Example:
-		// "user": user.NewUserModule,
-		// "product": product.NewProductModule,
-
-		// MODULE_INITIALIZER_MARKER - Do not remove this comment because it's used by the CLI to add new module initializers
+// NewApp creates and initializes a new App instance
+func NewApp(cfg *config.Config) (*App, error) {
+	// Initialize logger
+	logConfig := logger.Config{
+		Environment: "development",
+		LogPath:     "logs",
+		Level:       "debug",
+	}
+	log, err := logger.NewLogger(logConfig)
+	if err != nil {
+		return nil, err
 	}
 
-	// Initialize and register each module
-	for name, initializer := range moduleInitializers {
-		mod := initializer(db, a.Router)
+	// Initialize router
+	router := gin.Default()
+
+	// Initialize emitter
+	emitter := &emitter.Emitter{}
+
+	// Initialize database (you'll need to implement this)
+	db, err := initDB(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	// Initialize storage
+	storageConfig := storage.Config{
+		Provider:  cfg.StorageProvider,
+		Path:      cfg.StoragePath,
+		BaseURL:   cfg.StorageBaseURL,
+		APIKey:    cfg.StorageAPIKey,
+		APISecret: cfg.StorageAPISecret,
+		Endpoint:  cfg.StorageEndpoint,
+		Bucket:    cfg.StorageBucket,
+		CDN:      cfg.CDN,
+	}
+
+	activeStorage, err := storage.NewActiveStorage(db, storageConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	app := &App{
+		DB:      db,
+		Router:  router,
+		Log:     log,
+		Emitter: emitter,
+		Storage: activeStorage,
+		Modules: make([]module.Module, 0),
+	}
+
+	// Initialize modules
+	moduleInitializer := &AppModuleInitializer{
+		DB:      db,
+		Router:  router.Group("/api"),
+		Logger:  log,
+		Emitter: emitter,
+		Storage: activeStorage,
+	}
+	app.Modules = moduleInitializer.InitializeModules(db)
+
+	return app, nil
+}
+
+// AppModuleInitializer holds all dependencies needed for app module initialization
+type AppModuleInitializer struct {
+	DB      *gorm.DB
+	Router  *gin.RouterGroup
+	Logger  logger.Logger
+	Emitter *emitter.Emitter
+	Storage *storage.ActiveStorage
+}
+
+// InitializeModules initializes all application modules
+func (a *AppModuleInitializer) InitializeModules(db *gorm.DB) []module.Module {
+	var modules []module.Module
+
+	// Initialize modules
+	moduleMap := a.getModules(db)
+
+	// Register and initialize each module
+	for name, mod := range moduleMap {
 		if err := module.RegisterModule(name, mod); err != nil {
-			// Handle error (e.g., log it)
+			a.Logger.Error("Failed to register module",
+				logger.String("module", name),
+				logger.String("error", err.Error()))
 			continue
 		}
 		if err := mod.Init(); err != nil {
-			// Handle initialization error
+			a.Logger.Error("Failed to initialize module",
+				logger.String("module", name),
+				logger.String("error", err.Error()))
 			continue
 		}
 		if err := mod.Migrate(); err != nil {
-			// Handle migration error
+			a.Logger.Error("Failed to migrate module",
+				logger.String("module", name),
+				logger.String("error", err.Error()))
 			continue
 		}
 		modules = append(modules, mod)
 	}
 
 	return modules
+}
+
+// getModules returns a map of module name to module instance
+func (a *AppModuleInitializer) getModules(db *gorm.DB) map[string]module.Module {
+	modules := make(map[string]module.Module)
+
+	// Define the module initializers directly
+	moduleInitializers := map[string]func(*gorm.DB, *gin.RouterGroup, logger.Logger, *emitter.Emitter, *storage.ActiveStorage) module.Module{
+
+		"posts": func(db *gorm.DB, router *gin.RouterGroup, log logger.Logger, emitter *emitter.Emitter, activeStorage *storage.ActiveStorage) module.Module { 
+            return posts.NewPostModule(db, router, log, emitter, activeStorage)
+        },
+		"categories": func(db *gorm.DB, router *gin.RouterGroup, log logger.Logger, emitter *emitter.Emitter, activeStorage *storage.ActiveStorage) module.Module { 
+            return categories.NewCategoryModule(db, router, log, emitter, activeStorage)
+        },
+						// MODULE_INITIALIZER_MARKER - Do not remove this comment because it's used by the CLI to add new module initializers
+	}
+
+	// Initialize and register each module
+	for name, initializer := range moduleInitializers {
+		modules[name] = initializer(db, a.Router, a.Logger, a.Emitter, a.Storage)
+	}
+
+	return modules
+}
+
+// initDB initializes the database connection
+func initDB(cfg *config.Config) (*gorm.DB, error) {
+	db, err := database.InitDB(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return db.DB, nil
 }

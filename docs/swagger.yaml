@@ -75,6 +75,16 @@ definitions:
       message:
         type: string
     type: object
+  categories.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  categories.SuccessResponse:
+    properties:
+      message:
+        type: string
+    type: object
   gorm.DeletedAt:
     properties:
       time:
@@ -83,13 +93,106 @@ definitions:
         description: Valid is true if Time is not NULL
         type: boolean
     type: object
+  models.CategoryResponse:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      image:
+        $ref: '#/definitions/storage.Attachment'
+      posts:
+        items:
+          $ref: '#/definitions/models.PostResponse'
+        type: array
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.CreateCategoryRequest:
+    properties:
+      content:
+        type: string
+      title:
+        type: string
+    required:
+    - content
+    - title
+    type: object
+  models.CreatePostRequest:
+    properties:
+      category_id_id:
+        type: integer
+      content:
+        type: string
+      title:
+        type: string
+    required:
+    - category_id_id
+    - content
+    - title
+    type: object
+  models.PostResponse:
+    properties:
+      category_id:
+        $ref: '#/definitions/models.CategoryResponse'
+      category_id_id:
+        type: integer
+      content:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      image:
+        $ref: '#/definitions/storage.Attachment'
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.UpdateCategoryRequest:
+    properties:
+      content:
+        type: string
+      title:
+        type: string
+    type: object
+  models.UpdatePostRequest:
+    properties:
+      category_id_id:
+        type: integer
+      content:
+        type: string
+      title:
+        type: string
+    type: object
   oauth.ErrorResponse:
     properties:
       error:
         type: string
     type: object
+  posts.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  posts.SuccessResponse:
+    properties:
+      message:
+        type: string
+    type: object
   storage.Attachment:
     properties:
+      created_at:
+        type: string
       field:
         type: string
       filename:
@@ -104,8 +207,27 @@ definitions:
         type: string
       size:
         type: integer
+      updated_at:
+        type: string
       url:
         type: string
+    type: object
+  types.PaginatedResponse:
+    properties:
+      data: {}
+      pagination:
+        $ref: '#/definitions/types.Pagination'
+    type: object
+  types.Pagination:
+    properties:
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
     type: object
   users.ErrorResponse:
     properties:
@@ -256,12 +378,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/auth.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/auth.ErrorResponse'
-        "500":
-          description: Internal Server Error
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/auth.ErrorResponse'
       security:
@@ -305,7 +423,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Reset user password
+      description: Reset user password using token
       parameters:
       - description: Reset Password Request
         in: body
@@ -341,6 +459,233 @@ paths:
       summary: Reset Password
       tags:
       - Core/Auth
+  /categories:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of categories
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Number of items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search term for filtering results
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.PaginatedResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/categories.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/categories.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: List categories
+      tags:
+      - Category
+    post:
+      consumes:
+      - application/json
+      description: Create a new Category with the input payload
+      parameters:
+      - description: Create Category request
+        in: body
+        name: categories
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.CategoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/categories.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/categories.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new Category
+      tags:
+      - Category
+  /categories/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a Category by its id
+      parameters:
+      - description: Category id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/categories.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/categories.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/categories.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a Category
+      tags:
+      - Category
+    get:
+      consumes:
+      - application/json
+      description: Get a Category by its id
+      parameters:
+      - description: Category id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CategoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/categories.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/categories.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get a Category
+      tags:
+      - Category
+    put:
+      consumes:
+      - application/json
+      description: Update a Category by its id
+      parameters:
+      - description: Category id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Category request
+        in: body
+        name: categories
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CategoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/categories.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/categories.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/categories.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update a Category
+      tags:
+      - Category
+  /categories/{id}/image:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Upload Image for a Category by its id
+      parameters:
+      - description: Category id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Image file to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/categories.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/categories.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/categories.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Upload Image for a Category
+      tags:
+      - Category
+  /categories/all:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all categories without pagination
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.PaginatedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/categories.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: List all categories
+      tags:
+      - Category
   /oauth/facebook/callback:
     post:
       consumes:
@@ -405,6 +750,233 @@ paths:
       summary: Google OAuth callback
       tags:
       - Core/OAuth
+  /posts:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of posts
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Number of items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search term for filtering results
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.PaginatedResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/posts.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/posts.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: List posts
+      tags:
+      - Post
+    post:
+      consumes:
+      - application/json
+      description: Create a new Post with the input payload
+      parameters:
+      - description: Create Post request
+        in: body
+        name: posts
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreatePostRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.PostResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/posts.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/posts.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new Post
+      tags:
+      - Post
+  /posts/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a Post by its id
+      parameters:
+      - description: Post id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/posts.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/posts.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/posts.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a Post
+      tags:
+      - Post
+    get:
+      consumes:
+      - application/json
+      description: Get a Post by its id
+      parameters:
+      - description: Post id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PostResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/posts.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/posts.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get a Post
+      tags:
+      - Post
+    put:
+      consumes:
+      - application/json
+      description: Update a Post by its id
+      parameters:
+      - description: Post id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Post request
+        in: body
+        name: posts
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdatePostRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PostResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/posts.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/posts.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/posts.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update a Post
+      tags:
+      - Post
+  /posts/{id}/image:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Upload Image for a Post by its id
+      parameters:
+      - description: Post id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Image file to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/posts.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/posts.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/posts.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Upload Image for a Post
+      tags:
+      - Post
+  /posts/all:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all posts without pagination
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.PaginatedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/posts.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: List all posts
+      tags:
+      - Post
   /users/{id}:
     get:
       consumes:

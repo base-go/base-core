@@ -47,8 +47,7 @@ func main() {
 	}
 
 	// Start the server
-	log.Infof("Server starting on %s%s", app.Config.BaseURL, app.Config.ServerAddress)
 	if err := app.Router.Run(app.Config.ServerAddress); err != nil {
-		log.Fatalf("Failed to run server: %v", err)
+		log.Fatalf("Failed to start server: %v", err)
 	}
 }

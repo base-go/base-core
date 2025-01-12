@@ -1,10 +1,8 @@
 package users
 
 import (
-	"base/core/event"
 	"base/core/module"
 	"base/core/storage"
-	"context"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -17,7 +15,6 @@ type UserModule struct {
 	Controller    *UserController
 	Service       *UserService
 	Logger        *zap.Logger
-	EventService  *event.EventService
 	ActiveStorage *storage.ActiveStorage
 }
 
@@ -25,21 +22,19 @@ func NewUserModule(
 	db *gorm.DB,
 	router *gin.RouterGroup,
 	logger *zap.Logger,
-	eventService *event.EventService,
 	activeStorage *storage.ActiveStorage,
 ) module.Module {
 	// Initialize service with active storage
 	service := NewUserService(db, logger, activeStorage)
 
-	// Initialize controller with event tracking
-	controller := NewUserController(service, logger, eventService)
+	// Initialize controller
+	controller := NewUserController(service, logger)
 
 	usersModule := &UserModule{
 		DB:            db,
 		Controller:    controller,
 		Service:       service,
 		Logger:        logger,
-		EventService:  eventService,
 		ActiveStorage: activeStorage,
 	}
 
@@ -50,19 +45,6 @@ func NewUserModule(
 	if err := usersModule.Migrate(); err != nil {
 		logger.Error("Failed to migrate user module",
 			zap.Error(err))
-		// Track only critical failures
-		eventService.Track(context.Background(), event.EventOptions{
-			Type:        "system_event",
-			Category:    "migration",
-			Actor:       "system",
-			Target:      "user_module",
-			Action:      "migrate",
-			Status:      "failed",
-			Description: "Failed to migrate user module",
-			Metadata: map[string]interface{}{
-				"error": err.Error(),
-			},
-		})
 	}
 
 	return usersModule

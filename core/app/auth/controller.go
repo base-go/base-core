@@ -2,7 +2,6 @@ package auth
 
 import (
 	"base/core/email"
-	"base/core/event"
 	"errors"
 	"net/http"
 	"strings"
@@ -12,23 +11,16 @@ import (
 )
 
 type AuthController struct {
-	AuthService  *AuthService
-	EmailSender  email.Sender
-	Logger       *zap.Logger
-	EventService *event.EventService
+	service     *AuthService
+	emailSender email.Sender
+	logger      *zap.Logger
 }
 
-func NewAuthController(
-	service *AuthService,
-	emailSender email.Sender,
-	logger *zap.Logger,
-	eventService *event.EventService,
-) *AuthController {
+func NewAuthController(service *AuthService, emailSender email.Sender, logger *zap.Logger) *AuthController {
 	return &AuthController{
-		AuthService:  service,
-		EmailSender:  emailSender,
-		Logger:       logger,
-		EventService: eventService,
+		service:     service,
+		emailSender: emailSender,
+		logger:      logger,
 	}
 }
 
@@ -54,16 +46,12 @@ func (c *AuthController) Routes(router *gin.RouterGroup) {
 func (c *AuthController) Register(ctx *gin.Context) {
 	var req RegisterRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		c.trackEvent(ctx, "registration", "failed", "validation_error", req.Email, nil)
 		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 		return
 	}
 
-	user, err := c.AuthService.Register(&req)
+	user, err := c.service.Register(&req)
 	if err != nil {
-		c.trackEvent(ctx, "registration", "failed", "system_error", req.Email, map[string]interface{}{
-			"error": err.Error(),
-		})
 		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to register user"})
 		return
 	}
@@ -79,22 +67,13 @@ func (c *AuthController) Register(ctx *gin.Context) {
 
 	err = email.Send(msg)
 	if err != nil {
-		c.Logger.Error("Failed to send welcome email",
+		c.logger.Error("Failed to send welcome email",
 			zap.Error(err),
 			zap.String("email", user.Email))
-		c.trackEvent(ctx, "welcome_email", "failed", "email_error", user.Email, map[string]interface{}{
-			"error": err.Error(),
-		})
 	} else {
-		c.Logger.Info("Welcome email sent",
+		c.logger.Info("Welcome email sent",
 			zap.String("email", user.Email))
-		c.trackEvent(ctx, "welcome_email", "success", "sent", user.Email, nil)
 	}
-
-	c.trackEvent(ctx, "registration", "success", "completed", user.Email, map[string]interface{}{
-		"user_id": user.ID,
-		"name":    user.Name,
-	})
 
 	ctx.JSON(http.StatusCreated, user)
 }
@@ -115,28 +94,20 @@ func (c *AuthController) Register(ctx *gin.Context) {
 func (c *AuthController) Login(ctx *gin.Context) {
 	var req LoginRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		c.trackEvent(ctx, "login", "failed", "validation_error", req.Email, nil)
 		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 		return
 	}
 
-	response, err := c.AuthService.Login(&req)
+	response, err := c.service.Login(&req)
 	if err != nil {
-		c.trackEvent(ctx, "login", "failed", "invalid_credentials", req.Email, map[string]interface{}{
-			"ip_address": ctx.ClientIP(),
-		})
 		ctx.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Invalid credentials"})
 		return
 	}
 
-	c.trackEvent(ctx, "login", "success", "authenticated", req.Email, map[string]interface{}{
-		"user_id":    response.ID,
-		"ip_address": ctx.ClientIP(),
-	})
-
 	ctx.JSON(http.StatusOK, response)
 }
 
+// Logout handles user logout
 // @Summary Logout
 // @Description Logout user
 // @Security ApiKeyAuth
@@ -145,18 +116,9 @@ func (c *AuthController) Login(ctx *gin.Context) {
 // @Produce json
 // @Success 200 {object} SuccessResponse
 // @Failure 400 {object} ErrorResponse
-// @Failure 404 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
 // @Router /auth/logout [post]
 func (c *AuthController) Logout(ctx *gin.Context) {
-	userID := ctx.GetString("user_id")
-	userEmail := ctx.GetString("user_email")
-
-	c.trackEvent(ctx, "logout", "success", "logged_out", userEmail, map[string]interface{}{
-		"user_id":    userID,
-		"ip_address": ctx.ClientIP(),
-	})
-
 	ctx.JSON(http.StatusOK, SuccessResponse{Message: "Logout successful"})
 }
 
@@ -175,37 +137,29 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 func (c *AuthController) ForgotPassword(ctx *gin.Context) {
 	var req ForgotPasswordRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		c.trackEvent(ctx, "forgot_password", "failed", "validation_error", req.Email, nil)
-		c.Logger.Error("Failed to bind JSON in ForgotPassword", zap.Error(err))
+		c.logger.Error("Failed to bind JSON in ForgotPassword", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 		return
 	}
 
-	c.Logger.Info("Processing forgot password request", zap.String("email", req.Email))
+	c.logger.Info("Processing forgot password request", zap.String("email", req.Email))
 
-	err := c.AuthService.ForgotPassword(req.Email)
+	err := c.service.ForgotPassword(req.Email)
 	if err != nil {
 		if strings.Contains(err.Error(), "user not found") {
-			c.trackEvent(ctx, "forgot_password", "failed", "user_not_found", req.Email, nil)
 			ctx.JSON(http.StatusNotFound, ErrorResponse{Error: "User not found"})
 		} else {
-			c.trackEvent(ctx, "forgot_password", "failed", "system_error", req.Email, map[string]interface{}{
-				"error": err.Error(),
-			})
 			ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "An error occurred while processing your request"})
 		}
 		return
 	}
 
-	c.trackEvent(ctx, "forgot_password", "success", "reset_requested", req.Email, map[string]interface{}{
-		"ip_address": ctx.ClientIP(),
-	})
-
 	ctx.JSON(http.StatusOK, SuccessResponse{Message: "Password reset email sent"})
 }
 
+// ResetPassword handles password reset requests
 // @Summary Reset Password
-// @Description Reset user password
+// @Description Reset user password using token
 // @Security ApiKeyAuth
 // @Tags Core/Auth
 // @Accept json
@@ -220,69 +174,24 @@ func (c *AuthController) ForgotPassword(ctx *gin.Context) {
 func (c *AuthController) ResetPassword(ctx *gin.Context) {
 	var req ResetPasswordRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		c.trackEvent(ctx, "reset_password", "failed", "validation_error", req.Email, nil)
 		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid request format"})
 		return
 	}
 
-	err := c.AuthService.ResetPassword(req.Email, req.Token, req.NewPassword)
+	err := c.service.ResetPassword(req.Email, req.Token, req.NewPassword)
 	if err != nil {
-		var eventReason string
 		switch {
 		case errors.Is(err, ErrInvalidToken):
-			eventReason = "invalid_token"
-			ctx.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Invalid reset token"})
-		case errors.Is(err, ErrTokenExpired):
-			eventReason = "token_expired"
-			ctx.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Reset token has expired"})
+			ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid or expired token"})
+		case errors.Is(err, ErrUserNotFound):
+			ctx.JSON(http.StatusNotFound, ErrorResponse{Error: "User not found"})
 		default:
-			eventReason = "system_error"
 			ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to reset password"})
 		}
-
-		c.trackEvent(ctx, "reset_password", "failed", eventReason, req.Email, map[string]interface{}{
-			"error":      err.Error(),
-			"ip_address": ctx.ClientIP(),
-		})
 		return
 	}
 
-	c.trackEvent(ctx, "reset_password", "success", "password_changed", req.Email, map[string]interface{}{
-		"ip_address": ctx.ClientIP(),
-	})
-
 	ctx.JSON(http.StatusOK, SuccessResponse{Message: "Password reset successful"})
-}
-
-// trackEvent is a helper function to track authentication events
-func (c *AuthController) trackEvent(ctx *gin.Context, eventType, status, reason, userEmail string, metadata map[string]interface{}) {
-	if metadata == nil {
-		metadata = make(map[string]interface{})
-	}
-
-	// Add common metadata
-	metadata["ip_address"] = ctx.ClientIP()
-	metadata["user_agent"] = ctx.Request.UserAgent()
-	metadata["reason"] = reason
-
-	_, err := c.EventService.Track(ctx.Request.Context(), event.EventOptions{
-		Type:     eventType,
-		Category: "authentication",
-		Actor:    "user",
-		ActorID:  userEmail,
-		Target:   "auth_system",
-		Action:   ctx.Request.Method,
-		Status:   status,
-		Metadata: metadata,
-	})
-
-	if err != nil {
-		c.Logger.Error("Failed to track auth event",
-			zap.Error(err),
-			zap.String("type", eventType),
-			zap.String("status", status),
-			zap.String("user", userEmail))
-	}
 }
 
 func (c *AuthController) getWelcomeEmailBody(name string) string {

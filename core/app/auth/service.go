@@ -2,6 +2,7 @@ package auth
 
 import (
 	"bytes"
+	"crypto/rand"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -16,45 +17,40 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
-	"pgregory.net/rand"
 )
 
 var (
-	ErrInvalidToken  = errors.New("invalid reset token")
-	ErrTokenExpired  = errors.New("reset token expired")
-	ErrUserExists    = errors.New("user already exists")
-	ErrInvalidTime   = errors.New("invalid time value")
-	ErrNotAuthorized = errors.New("not authorized")
-
 	emailTemplateMutex sync.RWMutex
 	emailTemplateCache *template.Template
 )
 
+// AuthService handles authentication related operations
 type AuthService struct {
-	DB          *gorm.DB
-	EmailSender email.Sender
-	Emitter     *emitter.Emitter
+	db          *gorm.DB
+	emailSender email.Sender
+	emitter     *emitter.Emitter
 }
 
+// NewAuthService creates a new authentication service
 func NewAuthService(db *gorm.DB, emailSender email.Sender, emitter *emitter.Emitter) *AuthService {
 	return &AuthService{
-		DB:          db,
-		EmailSender: emailSender,
-		Emitter:     emitter,
+		db:          db,
+		emailSender: emailSender,
+		emitter:     emitter,
 	}
 }
 
 // validateUser checks if username or email already exists
 func (s *AuthService) validateUser(email, username string) error {
 	var count int64
-	if err := s.DB.Model(&AuthUser{}).
+	if err := s.db.Model(&AuthUser{}).
 		Where("email = ? OR username = ?", email, username).
 		Count(&count).Error; err != nil {
 		return fmt.Errorf("database error: %w", err)
 	}
 
 	if count > 0 {
-		return ErrUserExists
+		return errors.New("user already exists")
 	}
 	return nil
 }
@@ -83,7 +79,7 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 	}
 
 	// Start transaction
-	tx := s.DB.Begin()
+	tx := s.db.Begin()
 	if tx.Error != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", tx.Error)
 	}
@@ -91,7 +87,7 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 	if err := tx.Create(&user).Error; err != nil {
 		tx.Rollback()
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
-			return nil, ErrUserExists
+			return nil, errors.New("user already exists")
 		}
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
@@ -106,8 +102,8 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
 	// Emit registration event
-	if s.Emitter != nil {
-		s.Emitter.Emit("user.registered", &user)
+	if s.emitter != nil {
+		s.emitter.Emit("user.registered", &user)
 	} else {
 		fmt.Printf("Emitter is nil in AuthService.Register; cannot emit 'user.registered' event")
 	}
@@ -131,17 +127,18 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 		LastLogin: now.Format(time.RFC3339),
 	}, nil
 }
+
 func (s *AuthService) Login(req *LoginRequest) (*AuthResponse, error) {
 	var user AuthUser
-	if err := s.DB.Where("email = ?", req.Email).First(&user).Error; err != nil {
+	if err := s.db.Where("email = ?", req.Email).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrInvalidToken
+			return nil, errors.New("invalid credentials")
 		}
 		return nil, fmt.Errorf("database error: %w", err)
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		return nil, ErrInvalidToken
+		return nil, errors.New("invalid credentials")
 	}
 
 	// Prepare the login event
@@ -152,14 +149,14 @@ func (s *AuthService) Login(req *LoginRequest) (*AuthResponse, error) {
 	}
 
 	// Emit the login attempt event
-	s.Emitter.Emit("user.login_attempt", &event)
+	s.emitter.Emit("user.login_attempt", &event)
 	// Debug statement to confirm loginAllowed status after event processing
 	fmt.Printf("Login allowed after event processing: %v\n", loginAllowed)
 
 	// Check if login was allowed after event listeners have processed it
 	if !loginAllowed {
 		fmt.Println("Login attempt was blocked by event listeners")
-		return nil, ErrNotAuthorized
+		return nil, errors.New("not authorized")
 	}
 
 	// Proceed with login if allowed
@@ -170,7 +167,7 @@ func (s *AuthService) Login(req *LoginRequest) (*AuthResponse, error) {
 	}
 
 	// Update last login with proper time handling
-	if err := s.DB.Model(&user).Update("last_login", sql.NullTime{
+	if err := s.db.Model(&user).Update("last_login", sql.NullTime{
 		Time:  now,
 		Valid: true,
 	}).Error; err != nil {
@@ -191,18 +188,21 @@ func (s *AuthService) Login(req *LoginRequest) (*AuthResponse, error) {
 
 func (s *AuthService) ForgotPassword(email string) error {
 	var user AuthUser
-	if err := s.DB.Where("email = ?", email).First(&user).Error; err != nil {
+	if err := s.db.Where("email = ?", email).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fmt.Errorf("user not found: %w", err)
 		}
 		return fmt.Errorf("database error: %w", err)
 	}
 
-	token := generateToken(6)
+	token, err := generateToken()
+	if err != nil {
+		return fmt.Errorf("failed to generate token: %w", err)
+	}
 	expiry := time.Now().Add(15 * time.Minute)
 
 	// Update reset token fields in transaction
-	tx := s.DB.Begin()
+	tx := s.db.Begin()
 	if tx.Error != nil {
 		return fmt.Errorf("failed to begin transaction: %w", tx.Error)
 	}
@@ -230,7 +230,7 @@ func (s *AuthService) ForgotPassword(email string) error {
 
 func (s *AuthService) ResetPassword(email, token, newPassword string) error {
 	var user AuthUser
-	if err := s.DB.Where("email = ?", email).First(&user).Error; err != nil {
+	if err := s.db.Where("email = ?", email).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fmt.Errorf("user not found: %w", err)
 		}
@@ -238,11 +238,11 @@ func (s *AuthService) ResetPassword(email, token, newPassword string) error {
 	}
 
 	if user.ResetToken != token {
-		return ErrInvalidToken
+		return errors.New("invalid token")
 	}
 
 	if user.ResetTokenExpiry == nil || time.Now().After(*user.ResetTokenExpiry) {
-		return ErrTokenExpired
+		return errors.New("token expired")
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
@@ -251,7 +251,7 @@ func (s *AuthService) ResetPassword(email, token, newPassword string) error {
 	}
 
 	// Update password and clear reset token in transaction
-	tx := s.DB.Begin()
+	tx := s.db.Begin()
 	if tx.Error != nil {
 		return fmt.Errorf("failed to begin transaction: %w", tx.Error)
 	}
@@ -281,13 +281,12 @@ func (s *AuthService) ResetPassword(email, token, newPassword string) error {
 	return nil
 }
 
-func generateToken(length int) string {
-	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	b := make([]byte, length)
-	for i := range b {
-		b[i] = charset[rand.Intn(len(charset))]
+func generateToken() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", fmt.Errorf("failed to generate random bytes: %w", err)
 	}
-	return string(b)
+	return fmt.Sprintf("%x", b), nil
 }
 
 // Email sending functions
@@ -327,13 +326,7 @@ func (s *AuthService) sendEmail(to, subject, title, content string) error {
 		Body:    body.String(),
 		IsHTML:  true,
 	}
-	return s.EmailSender.Send(msg)
-}
-
-func (s *AuthService) sendWelcomeEmail(user *AuthUser) error {
-	title := "Welcome to Albafone"
-	content := fmt.Sprintf("<p>Hi %s,</p><p>Thank you for registering with Albafone.</p>", user.Name)
-	return s.sendEmail(user.Email, title, title, content)
+	return s.emailSender.Send(msg)
 }
 
 func (s *AuthService) sendPasswordResetEmail(user *AuthUser, token string) error {

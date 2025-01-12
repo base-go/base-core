@@ -1,28 +1,25 @@
 package users
 
 import (
-	"base/core/event"
 	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserController struct {
-	UserService  *UserService
-	Logger       *zap.Logger
-	EventService *event.EventService
+	service *UserService
+	logger  *zap.Logger
 }
 
-func NewUserController(service *UserService, logger *zap.Logger, eventService *event.EventService) *UserController {
+func NewUserController(service *UserService, logger *zap.Logger) *UserController {
 	return &UserController{
-		UserService:  service,
-		Logger:       logger,
-		EventService: eventService,
+		service: service,
+		logger:  logger,
 	}
 }
 
@@ -53,13 +50,13 @@ func (c *UserController) Get(ctx *gin.Context) {
 		return
 	}
 
-	item, err := c.UserService.GetByID(uint(id))
+	item, err := c.service.GetByID(uint(id))
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			ctx.JSON(http.StatusNotFound, ErrorResponse{Error: "User not found"})
 			return
 		}
-		c.Logger.Error("Failed to get user", zap.Error(err), zap.Int("user_id", id))
+		c.logger.Error("Failed to get user", zap.Error(err), zap.Int("user_id", id))
 		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to fetch user"})
 		return
 	}
@@ -93,23 +90,11 @@ func (c *UserController) Update(ctx *gin.Context) {
 		return
 	}
 
-	item, err := c.UserService.Update(uint(id), &req)
+	item, err := c.service.Update(uint(id), &req)
 	if err != nil {
-		c.Logger.Error("Failed to update user",
+		c.logger.Error("Failed to update user",
 			zap.Error(err),
 			zap.Uint64("user_id", id))
-
-		// Track failed updates
-		c.EventService.Track(ctx.Request.Context(), event.EventOptions{
-			Type:     "user_update",
-			Category: "users",
-			Action:   "update",
-			Status:   "failed",
-			Metadata: map[string]interface{}{
-				"error":   err.Error(),
-				"user_id": id,
-			},
-		})
 
 		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to update user: " + err.Error()})
 		return
@@ -144,9 +129,9 @@ func (c *UserController) UpdateAvatar(ctx *gin.Context) {
 		return
 	}
 
-	updatedUser, err := c.UserService.UpdateAvatar(ctx, uint(id), file)
+	updatedUser, err := c.service.UpdateAvatar(ctx, uint(id), file)
 	if err != nil {
-		c.Logger.Error("Failed to update avatar",
+		c.logger.Error("Failed to update avatar",
 			zap.Error(err),
 			zap.Uint64("user_id", id))
 
@@ -183,7 +168,7 @@ func (c *UserController) UpdatePassword(ctx *gin.Context) {
 
 	var req UpdatePasswordRequest
 	if err := ctx.ShouldBind(&req); err != nil {
-		c.Logger.Error("Failed to bind password update request", zap.Error(err))
+		c.logger.Error("Failed to bind password update request", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid input: " + err.Error()})
 		return
 	}
@@ -193,23 +178,11 @@ func (c *UserController) UpdatePassword(ctx *gin.Context) {
 		return
 	}
 
-	err = c.UserService.UpdatePassword(uint(id), &req)
+	err = c.service.UpdatePassword(uint(id), &req)
 	if err != nil {
-		c.Logger.Error("Failed to update password",
+		c.logger.Error("Failed to update password",
 			zap.Error(err),
 			zap.Uint64("user_id", id))
-
-		// Track failed password updates
-		c.EventService.Track(ctx.Request.Context(), event.EventOptions{
-			Type:     "password_update",
-			Category: "security",
-			Action:   "update_password",
-			Status:   "failed",
-			Metadata: map[string]interface{}{
-				"user_id": id,
-				"reason":  getPasswordUpdateErrorReason(err),
-			},
-		})
 
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
@@ -223,18 +196,6 @@ func (c *UserController) UpdatePassword(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, SuccessResponse{Message: "Password updated successfully"})
-}
-
-// Helper function to categorize password update errors
-func getPasswordUpdateErrorReason(err error) string {
-	switch {
-	case errors.Is(err, gorm.ErrRecordNotFound):
-		return "user_not_found"
-	case errors.Is(err, bcrypt.ErrMismatchedHashAndPassword):
-		return "invalid_current_password"
-	default:
-		return "system_error"
-	}
 }
 
 type ErrorResponse struct {
