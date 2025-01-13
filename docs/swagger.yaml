@@ -118,30 +118,36 @@ definitions:
     properties:
       content:
         type: string
+      image:
+        $ref: '#/definitions/storage.Attachment'
       title:
         type: string
     required:
     - content
+    - image
     - title
     type: object
   models.CreatePostRequest:
     properties:
-      category_id_id:
+      category_id_id_id:
         type: integer
       content:
         type: string
+      image:
+        $ref: '#/definitions/storage.Attachment'
       title:
         type: string
     required:
-    - category_id_id
+    - category_id_id_id
     - content
+    - image
     - title
     type: object
   models.PostResponse:
     properties:
-      category_id:
-        $ref: '#/definitions/models.CategoryResponse'
       category_id_id:
+        $ref: '#/definitions/models.CategoryResponse'
+      category_id_id_id:
         type: integer
       content:
         type: string
@@ -162,15 +168,19 @@ definitions:
     properties:
       content:
         type: string
+      image:
+        $ref: '#/definitions/storage.Attachment'
       title:
         type: string
     type: object
   models.UpdatePostRequest:
     properties:
-      category_id_id:
+      category_id_id_id:
         type: integer
       content:
         type: string
+      image:
+        $ref: '#/definitions/storage.Attachment'
       title:
         type: string
     type: object

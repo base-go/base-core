@@ -1559,11 +1559,15 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "content",
+                "image",
                 "title"
             ],
             "properties": {
                 "content": {
                     "type": "string"
+                },
+                "image": {
+                    "$ref": "#/definitions/storage.Attachment"
                 },
                 "title": {
                     "type": "string"
@@ -1573,16 +1577,20 @@ const docTemplate = `{
         "models.CreatePostRequest": {
             "type": "object",
             "required": [
-                "category_id_id",
+                "category_id_id_id",
                 "content",
+                "image",
                 "title"
             ],
             "properties": {
-                "category_id_id": {
+                "category_id_id_id": {
                     "type": "integer"
                 },
                 "content": {
                     "type": "string"
+                },
+                "image": {
+                    "$ref": "#/definitions/storage.Attachment"
                 },
                 "title": {
                     "type": "string"
@@ -1592,10 +1600,10 @@ const docTemplate = `{
         "models.PostResponse": {
             "type": "object",
             "properties": {
-                "category_id": {
+                "category_id_id": {
                     "$ref": "#/definitions/models.CategoryResponse"
                 },
-                "category_id_id": {
+                "category_id_id_id": {
                     "type": "integer"
                 },
                 "content": {
@@ -1627,6 +1635,9 @@ const docTemplate = `{
                 "content": {
                     "type": "string"
                 },
+                "image": {
+                    "$ref": "#/definitions/storage.Attachment"
+                },
                 "title": {
                     "type": "string"
                 }
@@ -1635,11 +1646,14 @@ const docTemplate = `{
         "models.UpdatePostRequest": {
             "type": "object",
             "properties": {
-                "category_id_id": {
+                "category_id_id_id": {
                     "type": "integer"
                 },
                 "content": {
                     "type": "string"
+                },
+                "image": {
+                    "$ref": "#/definitions/storage.Attachment"
                 },
                 "title": {
                     "type": "string"
