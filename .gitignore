@@ -27,3 +27,5 @@ logs/requests.log
 core/app/.DS_Store
 .DS_Store
 .DS_Store
+.env
+logs/app.log

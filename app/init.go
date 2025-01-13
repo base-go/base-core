@@ -123,6 +123,7 @@ func (a *AppModuleInitializer) getModules(db *gorm.DB) map[string]module.Module 
 	modules := make(map[string]module.Module)
 	// Define the module initializers directly
 	moduleInitializers := map[string]func(*gorm.DB, *gin.RouterGroup, logger.Logger, *emitter.Emitter, *storage.ActiveStorage) module.Module{
+
 		// MODULE_INITIALIZER_MARKER - Do not remove this comment because it's used by the CLI to add new module initializers
 	}
 
