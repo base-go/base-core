@@ -29,11 +29,11 @@ func (dt *DateTime) UnmarshalJSON(b []byte) error {
 
 	// Try other formats if RFC3339 fails
 	formats := []string{
-		"2006-01-02T15:04:05-0700",  // Without colon in timezone
-		"2006-01-02T15:04:05Z",      // UTC
-		"2006-01-02T15:04:05",       // No timezone
-		"2006-01-02 15:04:05",       // MySQL format
-		"2006-01-02",                // Just date
+		"2006-01-02T15:04:05-0700", // Without colon in timezone
+		"2006-01-02T15:04:05Z",     // UTC
+		"2006-01-02T15:04:05",      // No timezone
+		"2006-01-02 15:04:05",      // MySQL format
+		"2006-01-02",               // Just date
 	}
 
 	for _, format := range formats {

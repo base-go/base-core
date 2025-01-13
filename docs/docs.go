@@ -584,6 +584,68 @@ const docTemplate = `{
                 }
             }
         },
+        "/categories/{id}/image": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Upload or update the Image of a Category",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Category"
+                ],
+                "summary": "Upload Image for a Category",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Category id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "File to upload",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.CategoryResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/categories.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/categories.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/categories.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/comments": {
             "get": {
                 "security": [
@@ -1276,276 +1338,99 @@ const docTemplate = `{
                 }
             }
         },
-        "/profiles": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get a list of profiles",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Profile"
-                ],
-                "summary": "List profiles",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Number of items per page",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/types.PaginatedResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/profiles.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/profiles.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Create a new Profile with the input payload",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Profile"
-                ],
-                "summary": "Create a new Profile",
-                "parameters": [
-                    {
-                        "description": "Create Profile request",
-                        "name": "profiles",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.CreateProfileRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/models.ProfileResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/profiles.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/profiles.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/profiles/all": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get a list of all profiles without pagination",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Profile"
-                ],
-                "summary": "List all profiles without pagination",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/types.PaginatedResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/profiles.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/profiles/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get a Profile by its id",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Profile"
-                ],
-                "summary": "Get a Profile",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Profile id",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.ProfileResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/profiles.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/profiles.ErrorResponse"
-                        }
-                    }
-                }
-            },
+        "/posts/{id}/featuredimage": {
             "put": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Update a Profile by its id",
+                "description": "Upload or update the FeaturedImage of a Post",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Profile"
+                    "Post"
                 ],
-                "summary": "Update a Profile",
+                "summary": "Upload FeaturedImage for a Post",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Profile id",
+                        "description": "Post id",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Update Profile request",
-                        "name": "profiles",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.UpdateProfileRequest"
-                        }
+                        "type": "file",
+                        "description": "File to upload",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.ProfileResponse"
+                            "$ref": "#/definitions/models.PostResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/profiles.ErrorResponse"
+                            "$ref": "#/definitions/posts.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/profiles.ErrorResponse"
+                            "$ref": "#/definitions/posts.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/profiles.ErrorResponse"
+                            "$ref": "#/definitions/posts.ErrorResponse"
                         }
                     }
                 }
-            },
-            "delete": {
+            }
+        },
+        "/posts/{id}/gallery": {
+            "put": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Delete a Profile by its id",
+                "description": "Upload or update the Gallery of a Post",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Profile"
+                    "Post"
                 ],
-                "summary": "Delete a Profile",
+                "summary": "Upload Gallery for a Post",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Profile id",
+                        "description": "Post id",
                         "name": "id",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "File to upload",
+                        "name": "file",
+                        "in": "formData",
                         "required": true
                     }
                 ],
@@ -1553,19 +1438,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/profiles.SuccessResponse"
+                            "$ref": "#/definitions/models.PostResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/profiles.ErrorResponse"
+                            "$ref": "#/definitions/posts.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/posts.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/profiles.ErrorResponse"
+                            "$ref": "#/definitions/posts.ErrorResponse"
                         }
                     }
                 }
@@ -1866,143 +1757,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/users": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get a list of users",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "List users",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Number of items per page",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/types.PaginatedResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/base_app_users.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/base_app_users.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Create a new User with the input payload",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "Create a new User",
-                "parameters": [
-                    {
-                        "description": "Create User request",
-                        "name": "users",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.CreateUserRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/models.UserResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/base_app_users.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/base_app_users.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/users/all": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get a list of all users without pagination",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "List all users without pagination",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/types.PaginatedResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/base_app_users.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/users/{id}": {
             "get": {
                 "security": [
@@ -2040,19 +1794,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/base_core_app_users.ErrorResponse"
+                            "$ref": "#/definitions/users.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/base_core_app_users.ErrorResponse"
+                            "$ref": "#/definitions/users.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/base_core_app_users.ErrorResponse"
+                            "$ref": "#/definitions/users.ErrorResponse"
                         }
                     }
                 }
@@ -2102,66 +1856,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/base_core_app_users.ErrorResponse"
+                            "$ref": "#/definitions/users.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/base_core_app_users.ErrorResponse"
+                            "$ref": "#/definitions/users.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/base_core_app_users.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Delete a User by its id",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "Delete a User",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "User id",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/base_app_users.SuccessResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/base_app_users.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/base_app_users.ErrorResponse"
+                            "$ref": "#/definitions/users.ErrorResponse"
                         }
                     }
                 }
@@ -2211,19 +1918,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/base_core_app_users.ErrorResponse"
+                            "$ref": "#/definitions/users.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/base_core_app_users.ErrorResponse"
+                            "$ref": "#/definitions/users.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/base_core_app_users.ErrorResponse"
+                            "$ref": "#/definitions/users.ErrorResponse"
                         }
                     }
                 }
@@ -2275,19 +1982,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/base_core_app_users.ErrorResponse"
+                            "$ref": "#/definitions/users.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/base_core_app_users.ErrorResponse"
+                            "$ref": "#/definitions/users.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/base_core_app_users.ErrorResponse"
+                            "$ref": "#/definitions/users.ErrorResponse"
                         }
                     }
                 }
@@ -2391,6 +2098,7 @@ const docTemplate = `{
             }
         },
         "auth.RegisterRequest": {
+            "description": "Registration request payload",
             "type": "object",
             "required": [
                 "email",
@@ -2398,17 +2106,25 @@ const docTemplate = `{
             ],
             "properties": {
                 "email": {
-                    "type": "string"
+                    "description": "@Description User's email address",
+                    "type": "string",
+                    "example": "john@example.com"
                 },
                 "name": {
-                    "type": "string"
+                    "description": "@Description User's full name",
+                    "type": "string",
+                    "example": "John Doe"
                 },
                 "password": {
+                    "description": "@Description Password for the account (minimum 8 characters)",
                     "type": "string",
-                    "minLength": 8
+                    "minLength": 8,
+                    "example": "password123"
                 },
                 "username": {
-                    "type": "string"
+                    "description": "@Description Username for the account",
+                    "type": "string",
+                    "example": "johndoe"
                 }
             }
         },
@@ -2436,30 +2152,6 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "base_app_users.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                }
-            }
-        },
-        "base_app_users.SuccessResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "base_core_app_users.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
                     "type": "string"
                 }
             }
@@ -2526,17 +2218,24 @@ const docTemplate = `{
                 "image": {
                     "$ref": "#/definitions/storage.Attachment"
                 },
+                "image_id": {
+                    "type": "integer"
+                },
                 "name": {
                     "type": "string"
                 },
                 "parent": {
                     "$ref": "#/definitions/models.Category"
                 },
-                "posts": {
-                    "$ref": "#/definitions/models.Post"
+                "parent_id": {
+                    "type": "integer"
                 },
-                "subcategories": {
-                    "$ref": "#/definitions/models.Category"
+                "posts": {
+                    "description": "end range Fields",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Post"
+                    }
                 },
                 "updated_at": {
                     "type": "string"
@@ -2561,17 +2260,23 @@ const docTemplate = `{
                 "image": {
                     "$ref": "#/definitions/storage.Attachment"
                 },
+                "image_id": {
+                    "type": "integer"
+                },
                 "name": {
                     "type": "string"
                 },
                 "parent": {
                     "$ref": "#/definitions/models.Category"
                 },
-                "posts": {
-                    "$ref": "#/definitions/models.Post"
+                "parent_id": {
+                    "type": "integer"
                 },
-                "subcategories": {
-                    "$ref": "#/definitions/models.Category"
+                "posts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Post"
+                    }
                 },
                 "updated_at": {
                     "type": "string"
@@ -2582,7 +2287,10 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "author": {
-                    "$ref": "#/definitions/models.User"
+                    "$ref": "#/definitions/users.User"
+                },
+                "author_id": {
+                    "type": "integer"
                 },
                 "content": {
                     "type": "string"
@@ -2596,14 +2304,16 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "parent": {
-                    "$ref": "#/definitions/models.Comment"
-                },
                 "post": {
-                    "$ref": "#/definitions/models.Post"
+                    "description": "end range Fields",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.Post"
+                        }
+                    ]
                 },
-                "replies": {
-                    "$ref": "#/definitions/models.Comment"
+                "post_id": {
+                    "type": "integer"
                 },
                 "updated_at": {
                     "type": "string"
@@ -2614,7 +2324,10 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "author": {
-                    "$ref": "#/definitions/models.User"
+                    "$ref": "#/definitions/users.User"
+                },
+                "author_id": {
+                    "type": "integer"
                 },
                 "content": {
                     "type": "string"
@@ -2628,14 +2341,11 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "parent": {
-                    "$ref": "#/definitions/models.Comment"
-                },
                 "post": {
                     "$ref": "#/definitions/models.Post"
                 },
-                "replies": {
-                    "$ref": "#/definitions/models.Comment"
+                "post_id": {
+                    "type": "integer"
                 },
                 "updated_at": {
                     "type": "string"
@@ -2647,10 +2357,11 @@ const docTemplate = `{
             "required": [
                 "description",
                 "image",
+                "image_id",
                 "name",
                 "parent",
-                "posts",
-                "subcategories"
+                "parent_id",
+                "posts"
             ],
             "properties": {
                 "description": {
@@ -2659,17 +2370,23 @@ const docTemplate = `{
                 "image": {
                     "$ref": "#/definitions/storage.Attachment"
                 },
+                "image_id": {
+                    "type": "integer"
+                },
                 "name": {
                     "type": "string"
                 },
                 "parent": {
                     "$ref": "#/definitions/models.Category"
                 },
-                "posts": {
-                    "$ref": "#/definitions/models.Post"
+                "parent_id": {
+                    "type": "integer"
                 },
-                "subcategories": {
-                    "$ref": "#/definitions/models.Category"
+                "posts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Post"
+                    }
                 }
             }
         },
@@ -2677,26 +2394,26 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "author",
+                "author_id",
                 "content",
-                "parent",
                 "post",
-                "replies"
+                "post_id"
             ],
             "properties": {
                 "author": {
-                    "$ref": "#/definitions/models.User"
+                    "$ref": "#/definitions/users.User"
+                },
+                "author_id": {
+                    "type": "integer"
                 },
                 "content": {
                     "type": "string"
                 },
-                "parent": {
-                    "$ref": "#/definitions/models.Comment"
-                },
                 "post": {
                     "$ref": "#/definitions/models.Post"
                 },
-                "replies": {
-                    "$ref": "#/definitions/models.Comment"
+                "post_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -2704,24 +2421,37 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "author",
+                "author_id",
                 "category",
+                "category_id",
                 "comments",
                 "content",
                 "excerpt",
                 "featured_image",
+                "featured_image_id",
                 "gallery",
-                "tags",
+                "gallery_id",
+                "published_at",
                 "title"
             ],
             "properties": {
                 "author": {
-                    "$ref": "#/definitions/models.User"
+                    "$ref": "#/definitions/users.User"
+                },
+                "author_id": {
+                    "type": "integer"
                 },
                 "category": {
                     "$ref": "#/definitions/models.Category"
                 },
+                "category_id": {
+                    "type": "integer"
+                },
                 "comments": {
-                    "$ref": "#/definitions/models.Comment"
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Comment"
+                    }
                 },
                 "content": {
                     "type": "string"
@@ -2732,43 +2462,19 @@ const docTemplate = `{
                 "featured_image": {
                     "$ref": "#/definitions/storage.Attachment"
                 },
+                "featured_image_id": {
+                    "type": "integer"
+                },
                 "gallery": {
                     "$ref": "#/definitions/storage.Attachment"
                 },
-                "published_at": {
-                    "$ref": "#/definitions/types.DateTime"
+                "gallery_id": {
+                    "type": "integer"
                 },
-                "tags": {
-                    "$ref": "#/definitions/models.Tag"
+                "published_at": {
+                    "type": "string"
                 },
                 "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.CreateProfileRequest": {
-            "type": "object",
-            "required": [
-                "avatar",
-                "bio",
-                "social_links",
-                "user",
-                "website"
-            ],
-            "properties": {
-                "avatar": {
-                    "$ref": "#/definitions/storage.Attachment"
-                },
-                "bio": {
-                    "type": "string"
-                },
-                "social_links": {
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/models.User"
-                },
-                "website": {
                     "type": "string"
                 }
             }
@@ -2777,48 +2483,13 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "name",
-                "posts"
+                "slug"
             ],
             "properties": {
                 "name": {
                     "type": "string"
                 },
-                "posts": {
-                    "$ref": "#/definitions/models.Post"
-                }
-            }
-        },
-        "models.CreateUserRequest": {
-            "type": "object",
-            "required": [
-                "avatar",
-                "comments",
-                "email",
-                "password",
-                "posts",
-                "profile",
-                "username"
-            ],
-            "properties": {
-                "avatar": {
-                    "$ref": "#/definitions/storage.Attachment"
-                },
-                "comments": {
-                    "$ref": "#/definitions/models.Comment"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "posts": {
-                    "$ref": "#/definitions/models.Post"
-                },
-                "profile": {
-                    "$ref": "#/definitions/models.Profile"
-                },
-                "username": {
+                "slug": {
                     "type": "string"
                 }
             }
@@ -2827,13 +2498,23 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "author": {
-                    "$ref": "#/definitions/models.User"
+                    "$ref": "#/definitions/users.User"
+                },
+                "author_id": {
+                    "type": "integer"
                 },
                 "category": {
                     "$ref": "#/definitions/models.Category"
                 },
+                "category_id": {
+                    "type": "integer"
+                },
                 "comments": {
-                    "$ref": "#/definitions/models.Comment"
+                    "description": "end range Fields",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Comment"
+                    }
                 },
                 "content": {
                     "type": "string"
@@ -2850,17 +2531,20 @@ const docTemplate = `{
                 "featured_image": {
                     "$ref": "#/definitions/storage.Attachment"
                 },
+                "featured_image_id": {
+                    "type": "integer"
+                },
                 "gallery": {
                     "$ref": "#/definitions/storage.Attachment"
+                },
+                "gallery_id": {
+                    "type": "integer"
                 },
                 "id": {
                     "type": "integer"
                 },
                 "published_at": {
-                    "$ref": "#/definitions/types.DateTime"
-                },
-                "tags": {
-                    "$ref": "#/definitions/models.Tag"
+                    "type": "string"
                 },
                 "title": {
                     "type": "string"
@@ -2874,13 +2558,22 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "author": {
-                    "$ref": "#/definitions/models.User"
+                    "$ref": "#/definitions/users.User"
+                },
+                "author_id": {
+                    "type": "integer"
                 },
                 "category": {
                     "$ref": "#/definitions/models.Category"
                 },
+                "category_id": {
+                    "type": "integer"
+                },
                 "comments": {
-                    "$ref": "#/definitions/models.Comment"
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Comment"
+                    }
                 },
                 "content": {
                     "type": "string"
@@ -2897,107 +2590,23 @@ const docTemplate = `{
                 "featured_image": {
                     "$ref": "#/definitions/storage.Attachment"
                 },
+                "featured_image_id": {
+                    "type": "integer"
+                },
                 "gallery": {
                     "$ref": "#/definitions/storage.Attachment"
+                },
+                "gallery_id": {
+                    "type": "integer"
                 },
                 "id": {
                     "type": "integer"
                 },
                 "published_at": {
-                    "$ref": "#/definitions/types.DateTime"
-                },
-                "tags": {
-                    "$ref": "#/definitions/models.Tag"
+                    "type": "string"
                 },
                 "title": {
                     "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.Profile": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "$ref": "#/definitions/storage.Attachment"
-                },
-                "bio": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "deleted_at": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "social_links": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/models.User"
-                },
-                "website": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.ProfileResponse": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "$ref": "#/definitions/storage.Attachment"
-                },
-                "bio": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "deleted_at": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "social_links": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/models.User"
-                },
-                "website": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.Tag": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "deleted_at": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "posts": {
-                    "$ref": "#/definitions/models.Post"
                 },
                 "updated_at": {
                     "type": "string"
@@ -3019,8 +2628,8 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "posts": {
-                    "$ref": "#/definitions/models.Post"
+                "slug": {
+                    "type": "string"
                 },
                 "updated_at": {
                     "type": "string"
@@ -3036,17 +2645,23 @@ const docTemplate = `{
                 "image": {
                     "$ref": "#/definitions/storage.Attachment"
                 },
+                "image_id": {
+                    "type": "integer"
+                },
                 "name": {
                     "type": "string"
                 },
                 "parent": {
                     "$ref": "#/definitions/models.Category"
                 },
-                "posts": {
-                    "$ref": "#/definitions/models.Post"
+                "parent_id": {
+                    "type": "integer"
                 },
-                "subcategories": {
-                    "$ref": "#/definitions/models.Category"
+                "posts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Post"
+                    }
                 }
             }
         },
@@ -3054,19 +2669,19 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "author": {
-                    "$ref": "#/definitions/models.User"
+                    "$ref": "#/definitions/users.User"
+                },
+                "author_id": {
+                    "type": "integer"
                 },
                 "content": {
                     "type": "string"
                 },
-                "parent": {
-                    "$ref": "#/definitions/models.Comment"
-                },
                 "post": {
                     "$ref": "#/definitions/models.Post"
                 },
-                "replies": {
-                    "$ref": "#/definitions/models.Comment"
+                "post_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -3074,13 +2689,22 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "author": {
-                    "$ref": "#/definitions/models.User"
+                    "$ref": "#/definitions/users.User"
+                },
+                "author_id": {
+                    "type": "integer"
                 },
                 "category": {
                     "$ref": "#/definitions/models.Category"
                 },
+                "category_id": {
+                    "type": "integer"
+                },
                 "comments": {
-                    "$ref": "#/definitions/models.Comment"
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Comment"
+                    }
                 },
                 "content": {
                     "type": "string"
@@ -3091,36 +2715,19 @@ const docTemplate = `{
                 "featured_image": {
                     "$ref": "#/definitions/storage.Attachment"
                 },
+                "featured_image_id": {
+                    "type": "integer"
+                },
                 "gallery": {
                     "$ref": "#/definitions/storage.Attachment"
                 },
-                "published_at": {
-                    "$ref": "#/definitions/types.DateTime"
+                "gallery_id": {
+                    "type": "integer"
                 },
-                "tags": {
-                    "$ref": "#/definitions/models.Tag"
+                "published_at": {
+                    "type": "string"
                 },
                 "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.UpdateProfileRequest": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "$ref": "#/definitions/storage.Attachment"
-                },
-                "bio": {
-                    "type": "string"
-                },
-                "social_links": {
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/models.User"
-                },
-                "website": {
                     "type": "string"
                 }
             }
@@ -3131,109 +2738,7 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "posts": {
-                    "$ref": "#/definitions/models.Post"
-                }
-            }
-        },
-        "models.UpdateUserRequest": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "$ref": "#/definitions/storage.Attachment"
-                },
-                "comments": {
-                    "$ref": "#/definitions/models.Comment"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "posts": {
-                    "$ref": "#/definitions/models.Post"
-                },
-                "profile": {
-                    "$ref": "#/definitions/models.Profile"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.User": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "$ref": "#/definitions/storage.Attachment"
-                },
-                "comments": {
-                    "$ref": "#/definitions/models.Comment"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "deleted_at": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "posts": {
-                    "$ref": "#/definitions/models.Post"
-                },
-                "profile": {
-                    "$ref": "#/definitions/models.Profile"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.UserResponse": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "$ref": "#/definitions/storage.Attachment"
-                },
-                "comments": {
-                    "$ref": "#/definitions/models.Comment"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "deleted_at": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "posts": {
-                    "$ref": "#/definitions/models.Post"
-                },
-                "profile": {
-                    "$ref": "#/definitions/models.Profile"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "username": {
+                "slug": {
                     "type": "string"
                 }
             }
@@ -3255,22 +2760,6 @@ const docTemplate = `{
             }
         },
         "posts.SuccessResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "profiles.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                }
-            }
-        },
-        "profiles.SuccessResponse": {
             "type": "object",
             "properties": {
                 "message": {
@@ -3329,14 +2818,6 @@ const docTemplate = `{
                 }
             }
         },
-        "types.DateTime": {
-            "type": "object",
-            "properties": {
-                "time.Time": {
-                    "type": "string"
-                }
-            }
-        },
         "types.PaginatedResponse": {
             "type": "object",
             "properties": {
@@ -3360,6 +2841,14 @@ const docTemplate = `{
                 },
                 "total_pages": {
                     "type": "integer"
+                }
+            }
+        },
+        "users.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
                 }
             }
         },

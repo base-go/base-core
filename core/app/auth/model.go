@@ -21,11 +21,18 @@ type LoginEvent struct {
 	User         *AuthUser
 	LoginAllowed *bool
 }
+
+// RegisterRequest represents the payload for user registration
+// @Description Registration request payload
 type RegisterRequest struct {
-	Name     string `json:"name" gorm:"column:name"`
-	Username string `json:"username" gorm:"column:username"`
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=8"`
+	// @Description User's full name
+	Name string `json:"name" example:"John Doe" gorm:"column:name"`
+	// @Description Username for the account
+	Username string `json:"username" example:"johndoe" gorm:"column:username"`
+	// @Description User's email address
+	Email string `json:"email" binding:"required,email" example:"john@example.com"`
+	// @Description Password for the account (minimum 8 characters)
+	Password string `json:"password" binding:"required,min=8" example:"password123"`
 }
 
 type LoginRequest struct {

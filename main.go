@@ -2,13 +2,13 @@ package main
 
 import (
 	"base/core"
+	"base/docs"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
-
-	_ "base/docs" // Import for Swagger docs
 )
 
 // @title Base API
@@ -38,6 +38,16 @@ func main() {
 		if err := cmd.Run(); err != nil {
 			log.Fatalf("Failed to run swag init: %v", err)
 		}
+
+		// Give a small delay to ensure files are written
+		time.Sleep(100 * time.Millisecond)
+
+		// Force docs reload
+		docs.SwaggerInfo.Title = "Base API"
+		docs.SwaggerInfo.Description = "This is the API documentation for Albafone"
+		docs.SwaggerInfo.Version = "1.5"
+		docs.SwaggerInfo.BasePath = "/api"
+		docs.SwaggerInfo.Schemes = []string{"http", "https"}
 	}
 
 	// Bootstrap the application

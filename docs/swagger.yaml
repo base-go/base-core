@@ -42,15 +42,24 @@ definitions:
     - password
     type: object
   auth.RegisterRequest:
+    description: Registration request payload
     properties:
       email:
+        description: '@Description User''s email address'
+        example: john@example.com
         type: string
       name:
+        description: '@Description User''s full name'
+        example: John Doe
         type: string
       password:
+        description: '@Description Password for the account (minimum 8 characters)'
+        example: password123
         minLength: 8
         type: string
       username:
+        description: '@Description Username for the account'
+        example: johndoe
         type: string
     required:
     - email
@@ -73,21 +82,6 @@ definitions:
   auth.SuccessResponse:
     properties:
       message:
-        type: string
-    type: object
-  base_app_users.ErrorResponse:
-    properties:
-      error:
-        type: string
-    type: object
-  base_app_users.SuccessResponse:
-    properties:
-      message:
-        type: string
-    type: object
-  base_core_app_users.ErrorResponse:
-    properties:
-      error:
         type: string
     type: object
   categories.ErrorResponse:
@@ -130,14 +124,19 @@ definitions:
         type: integer
       image:
         $ref: '#/definitions/storage.Attachment'
+      image_id:
+        type: integer
       name:
         type: string
       parent:
         $ref: '#/definitions/models.Category'
+      parent_id:
+        type: integer
       posts:
-        $ref: '#/definitions/models.Post'
-      subcategories:
-        $ref: '#/definitions/models.Category'
+        description: end range Fields
+        items:
+          $ref: '#/definitions/models.Post'
+        type: array
       updated_at:
         type: string
     type: object
@@ -153,21 +152,27 @@ definitions:
         type: integer
       image:
         $ref: '#/definitions/storage.Attachment'
+      image_id:
+        type: integer
       name:
         type: string
       parent:
         $ref: '#/definitions/models.Category'
+      parent_id:
+        type: integer
       posts:
-        $ref: '#/definitions/models.Post'
-      subcategories:
-        $ref: '#/definitions/models.Category'
+        items:
+          $ref: '#/definitions/models.Post'
+        type: array
       updated_at:
         type: string
     type: object
   models.Comment:
     properties:
       author:
-        $ref: '#/definitions/models.User'
+        $ref: '#/definitions/users.User'
+      author_id:
+        type: integer
       content:
         type: string
       created_at:
@@ -176,19 +181,21 @@ definitions:
         $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: integer
-      parent:
-        $ref: '#/definitions/models.Comment'
       post:
-        $ref: '#/definitions/models.Post'
-      replies:
-        $ref: '#/definitions/models.Comment'
+        allOf:
+        - $ref: '#/definitions/models.Post'
+        description: end range Fields
+      post_id:
+        type: integer
       updated_at:
         type: string
     type: object
   models.CommentResponse:
     properties:
       author:
-        $ref: '#/definitions/models.User'
+        $ref: '#/definitions/users.User'
+      author_id:
+        type: integer
       content:
         type: string
       created_at:
@@ -197,12 +204,10 @@ definitions:
         $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: integer
-      parent:
-        $ref: '#/definitions/models.Comment'
       post:
         $ref: '#/definitions/models.Post'
-      replies:
-        $ref: '#/definitions/models.Comment'
+      post_id:
+        type: integer
       updated_at:
         type: string
     type: object
@@ -212,136 +217,116 @@ definitions:
         type: string
       image:
         $ref: '#/definitions/storage.Attachment'
+      image_id:
+        type: integer
       name:
         type: string
       parent:
         $ref: '#/definitions/models.Category'
+      parent_id:
+        type: integer
       posts:
-        $ref: '#/definitions/models.Post'
-      subcategories:
-        $ref: '#/definitions/models.Category'
+        items:
+          $ref: '#/definitions/models.Post'
+        type: array
     required:
     - description
     - image
+    - image_id
     - name
     - parent
+    - parent_id
     - posts
-    - subcategories
     type: object
   models.CreateCommentRequest:
     properties:
       author:
-        $ref: '#/definitions/models.User'
+        $ref: '#/definitions/users.User'
+      author_id:
+        type: integer
       content:
         type: string
-      parent:
-        $ref: '#/definitions/models.Comment'
       post:
         $ref: '#/definitions/models.Post'
-      replies:
-        $ref: '#/definitions/models.Comment'
+      post_id:
+        type: integer
     required:
     - author
+    - author_id
     - content
-    - parent
     - post
-    - replies
+    - post_id
     type: object
   models.CreatePostRequest:
     properties:
       author:
-        $ref: '#/definitions/models.User'
+        $ref: '#/definitions/users.User'
+      author_id:
+        type: integer
       category:
         $ref: '#/definitions/models.Category'
+      category_id:
+        type: integer
       comments:
-        $ref: '#/definitions/models.Comment'
+        items:
+          $ref: '#/definitions/models.Comment'
+        type: array
       content:
         type: string
       excerpt:
         type: string
       featured_image:
         $ref: '#/definitions/storage.Attachment'
+      featured_image_id:
+        type: integer
       gallery:
         $ref: '#/definitions/storage.Attachment'
+      gallery_id:
+        type: integer
       published_at:
-        $ref: '#/definitions/types.DateTime'
-      tags:
-        $ref: '#/definitions/models.Tag'
+        type: string
       title:
         type: string
     required:
     - author
+    - author_id
     - category
+    - category_id
     - comments
     - content
     - excerpt
     - featured_image
+    - featured_image_id
     - gallery
-    - tags
+    - gallery_id
+    - published_at
     - title
-    type: object
-  models.CreateProfileRequest:
-    properties:
-      avatar:
-        $ref: '#/definitions/storage.Attachment'
-      bio:
-        type: string
-      social_links:
-        type: string
-      user:
-        $ref: '#/definitions/models.User'
-      website:
-        type: string
-    required:
-    - avatar
-    - bio
-    - social_links
-    - user
-    - website
     type: object
   models.CreateTagRequest:
     properties:
       name:
         type: string
-      posts:
-        $ref: '#/definitions/models.Post'
+      slug:
+        type: string
     required:
     - name
-    - posts
-    type: object
-  models.CreateUserRequest:
-    properties:
-      avatar:
-        $ref: '#/definitions/storage.Attachment'
-      comments:
-        $ref: '#/definitions/models.Comment'
-      email:
-        type: string
-      password:
-        type: string
-      posts:
-        $ref: '#/definitions/models.Post'
-      profile:
-        $ref: '#/definitions/models.Profile'
-      username:
-        type: string
-    required:
-    - avatar
-    - comments
-    - email
-    - password
-    - posts
-    - profile
-    - username
+    - slug
     type: object
   models.Post:
     properties:
       author:
-        $ref: '#/definitions/models.User'
+        $ref: '#/definitions/users.User'
+      author_id:
+        type: integer
       category:
         $ref: '#/definitions/models.Category'
+      category_id:
+        type: integer
       comments:
-        $ref: '#/definitions/models.Comment'
+        description: end range Fields
+        items:
+          $ref: '#/definitions/models.Comment'
+        type: array
       content:
         type: string
       created_at:
@@ -352,14 +337,16 @@ definitions:
         type: string
       featured_image:
         $ref: '#/definitions/storage.Attachment'
+      featured_image_id:
+        type: integer
       gallery:
         $ref: '#/definitions/storage.Attachment'
+      gallery_id:
+        type: integer
       id:
         type: integer
       published_at:
-        $ref: '#/definitions/types.DateTime'
-      tags:
-        $ref: '#/definitions/models.Tag'
+        type: string
       title:
         type: string
       updated_at:
@@ -368,11 +355,17 @@ definitions:
   models.PostResponse:
     properties:
       author:
-        $ref: '#/definitions/models.User'
+        $ref: '#/definitions/users.User'
+      author_id:
+        type: integer
       category:
         $ref: '#/definitions/models.Category'
+      category_id:
+        type: integer
       comments:
-        $ref: '#/definitions/models.Comment'
+        items:
+          $ref: '#/definitions/models.Comment'
+        type: array
       content:
         type: string
       created_at:
@@ -383,73 +376,18 @@ definitions:
         type: string
       featured_image:
         $ref: '#/definitions/storage.Attachment'
+      featured_image_id:
+        type: integer
       gallery:
         $ref: '#/definitions/storage.Attachment'
+      gallery_id:
+        type: integer
       id:
         type: integer
       published_at:
-        $ref: '#/definitions/types.DateTime'
-      tags:
-        $ref: '#/definitions/models.Tag'
+        type: string
       title:
         type: string
-      updated_at:
-        type: string
-    type: object
-  models.Profile:
-    properties:
-      avatar:
-        $ref: '#/definitions/storage.Attachment'
-      bio:
-        type: string
-      created_at:
-        type: string
-      deleted_at:
-        $ref: '#/definitions/gorm.DeletedAt'
-      id:
-        type: integer
-      social_links:
-        type: string
-      updated_at:
-        type: string
-      user:
-        $ref: '#/definitions/models.User'
-      website:
-        type: string
-    type: object
-  models.ProfileResponse:
-    properties:
-      avatar:
-        $ref: '#/definitions/storage.Attachment'
-      bio:
-        type: string
-      created_at:
-        type: string
-      deleted_at:
-        $ref: '#/definitions/gorm.DeletedAt'
-      id:
-        type: integer
-      social_links:
-        type: string
-      updated_at:
-        type: string
-      user:
-        $ref: '#/definitions/models.User'
-      website:
-        type: string
-    type: object
-  models.Tag:
-    properties:
-      created_at:
-        type: string
-      deleted_at:
-        $ref: '#/definitions/gorm.DeletedAt'
-      id:
-        type: integer
-      name:
-        type: string
-      posts:
-        $ref: '#/definitions/models.Post'
       updated_at:
         type: string
     type: object
@@ -463,8 +401,8 @@ definitions:
         type: integer
       name:
         type: string
-      posts:
-        $ref: '#/definitions/models.Post'
+      slug:
+        type: string
       updated_at:
         type: string
     type: object
@@ -474,136 +412,68 @@ definitions:
         type: string
       image:
         $ref: '#/definitions/storage.Attachment'
+      image_id:
+        type: integer
       name:
         type: string
       parent:
         $ref: '#/definitions/models.Category'
+      parent_id:
+        type: integer
       posts:
-        $ref: '#/definitions/models.Post'
-      subcategories:
-        $ref: '#/definitions/models.Category'
+        items:
+          $ref: '#/definitions/models.Post'
+        type: array
     type: object
   models.UpdateCommentRequest:
     properties:
       author:
-        $ref: '#/definitions/models.User'
+        $ref: '#/definitions/users.User'
+      author_id:
+        type: integer
       content:
         type: string
-      parent:
-        $ref: '#/definitions/models.Comment'
       post:
         $ref: '#/definitions/models.Post'
-      replies:
-        $ref: '#/definitions/models.Comment'
+      post_id:
+        type: integer
     type: object
   models.UpdatePostRequest:
     properties:
       author:
-        $ref: '#/definitions/models.User'
+        $ref: '#/definitions/users.User'
+      author_id:
+        type: integer
       category:
         $ref: '#/definitions/models.Category'
+      category_id:
+        type: integer
       comments:
-        $ref: '#/definitions/models.Comment'
+        items:
+          $ref: '#/definitions/models.Comment'
+        type: array
       content:
         type: string
       excerpt:
         type: string
       featured_image:
         $ref: '#/definitions/storage.Attachment'
+      featured_image_id:
+        type: integer
       gallery:
         $ref: '#/definitions/storage.Attachment'
+      gallery_id:
+        type: integer
       published_at:
-        $ref: '#/definitions/types.DateTime'
-      tags:
-        $ref: '#/definitions/models.Tag'
+        type: string
       title:
-        type: string
-    type: object
-  models.UpdateProfileRequest:
-    properties:
-      avatar:
-        $ref: '#/definitions/storage.Attachment'
-      bio:
-        type: string
-      social_links:
-        type: string
-      user:
-        $ref: '#/definitions/models.User'
-      website:
         type: string
     type: object
   models.UpdateTagRequest:
     properties:
       name:
         type: string
-      posts:
-        $ref: '#/definitions/models.Post'
-    type: object
-  models.UpdateUserRequest:
-    properties:
-      avatar:
-        $ref: '#/definitions/storage.Attachment'
-      comments:
-        $ref: '#/definitions/models.Comment'
-      email:
-        type: string
-      password:
-        type: string
-      posts:
-        $ref: '#/definitions/models.Post'
-      profile:
-        $ref: '#/definitions/models.Profile'
-      username:
-        type: string
-    type: object
-  models.User:
-    properties:
-      avatar:
-        $ref: '#/definitions/storage.Attachment'
-      comments:
-        $ref: '#/definitions/models.Comment'
-      created_at:
-        type: string
-      deleted_at:
-        $ref: '#/definitions/gorm.DeletedAt'
-      email:
-        type: string
-      id:
-        type: integer
-      password:
-        type: string
-      posts:
-        $ref: '#/definitions/models.Post'
-      profile:
-        $ref: '#/definitions/models.Profile'
-      updated_at:
-        type: string
-      username:
-        type: string
-    type: object
-  models.UserResponse:
-    properties:
-      avatar:
-        $ref: '#/definitions/storage.Attachment'
-      comments:
-        $ref: '#/definitions/models.Comment'
-      created_at:
-        type: string
-      deleted_at:
-        $ref: '#/definitions/gorm.DeletedAt'
-      email:
-        type: string
-      id:
-        type: integer
-      password:
-        type: string
-      posts:
-        $ref: '#/definitions/models.Post'
-      profile:
-        $ref: '#/definitions/models.Profile'
-      updated_at:
-        type: string
-      username:
+      slug:
         type: string
     type: object
   oauth.ErrorResponse:
@@ -617,16 +487,6 @@ definitions:
         type: string
     type: object
   posts.SuccessResponse:
-    properties:
-      message:
-        type: string
-    type: object
-  profiles.ErrorResponse:
-    properties:
-      error:
-        type: string
-    type: object
-  profiles.SuccessResponse:
     properties:
       message:
         type: string
@@ -664,11 +524,6 @@ definitions:
       message:
         type: string
     type: object
-  types.DateTime:
-    properties:
-      time.Time:
-        type: string
-    type: object
   types.PaginatedResponse:
     properties:
       data: {}
@@ -685,6 +540,11 @@ definitions:
         type: integer
       total_pages:
         type: integer
+    type: object
+  users.ErrorResponse:
+    properties:
+      error:
+        type: string
     type: object
   users.UpdatePasswordRequest:
     properties:
@@ -1075,6 +935,46 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update a Category
+      tags:
+      - Category
+  /categories/{id}/image:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Upload or update the Image of a Category
+      parameters:
+      - description: Category id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CategoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/categories.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/categories.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/categories.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Upload Image for a Category
       tags:
       - Category
   /categories/all:
@@ -1515,6 +1415,86 @@ paths:
       summary: Update a Post
       tags:
       - Post
+  /posts/{id}/featuredimage:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Upload or update the FeaturedImage of a Post
+      parameters:
+      - description: Post id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PostResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/posts.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/posts.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/posts.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Upload FeaturedImage for a Post
+      tags:
+      - Post
+  /posts/{id}/gallery:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Upload or update the Gallery of a Post
+      parameters:
+      - description: Post id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PostResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/posts.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/posts.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/posts.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Upload Gallery for a Post
+      tags:
+      - Post
   /posts/all:
     get:
       consumes:
@@ -1536,193 +1516,6 @@ paths:
       summary: List all posts without pagination
       tags:
       - Post
-  /profiles:
-    get:
-      consumes:
-      - application/json
-      description: Get a list of profiles
-      parameters:
-      - description: Page number
-        in: query
-        name: page
-        type: integer
-      - description: Number of items per page
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/types.PaginatedResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/profiles.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/profiles.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: List profiles
-      tags:
-      - Profile
-    post:
-      consumes:
-      - application/json
-      description: Create a new Profile with the input payload
-      parameters:
-      - description: Create Profile request
-        in: body
-        name: profiles
-        required: true
-        schema:
-          $ref: '#/definitions/models.CreateProfileRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/models.ProfileResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/profiles.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/profiles.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Create a new Profile
-      tags:
-      - Profile
-  /profiles/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete a Profile by its id
-      parameters:
-      - description: Profile id
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/profiles.SuccessResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/profiles.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/profiles.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Delete a Profile
-      tags:
-      - Profile
-    get:
-      consumes:
-      - application/json
-      description: Get a Profile by its id
-      parameters:
-      - description: Profile id
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.ProfileResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/profiles.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/profiles.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Get a Profile
-      tags:
-      - Profile
-    put:
-      consumes:
-      - application/json
-      description: Update a Profile by its id
-      parameters:
-      - description: Profile id
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Update Profile request
-        in: body
-        name: profiles
-        required: true
-        schema:
-          $ref: '#/definitions/models.UpdateProfileRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.ProfileResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/profiles.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/profiles.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/profiles.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Update a Profile
-      tags:
-      - Profile
-  /profiles/all:
-    get:
-      consumes:
-      - application/json
-      description: Get a list of all profiles without pagination
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/types.PaginatedResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/profiles.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: List all profiles without pagination
-      tags:
-      - Profile
   /tags:
     get:
       consumes:
@@ -1910,102 +1703,7 @@ paths:
       summary: List all tags without pagination
       tags:
       - Tag
-  /users:
-    get:
-      consumes:
-      - application/json
-      description: Get a list of users
-      parameters:
-      - description: Page number
-        in: query
-        name: page
-        type: integer
-      - description: Number of items per page
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/types.PaginatedResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/base_app_users.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/base_app_users.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: List users
-      tags:
-      - User
-    post:
-      consumes:
-      - application/json
-      description: Create a new User with the input payload
-      parameters:
-      - description: Create User request
-        in: body
-        name: users
-        required: true
-        schema:
-          $ref: '#/definitions/models.CreateUserRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/models.UserResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/base_app_users.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/base_app_users.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Create a new User
-      tags:
-      - User
   /users/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete a User by its id
-      parameters:
-      - description: User id
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/base_app_users.SuccessResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/base_app_users.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/base_app_users.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Delete a User
-      tags:
-      - User
     get:
       consumes:
       - application/json
@@ -2026,15 +1724,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/base_core_app_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/base_core_app_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/base_core_app_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
       security:
       - ApiKeyAuth: []
       summary: Get user by ID
@@ -2066,15 +1764,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/base_core_app_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/base_core_app_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/base_core_app_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
       security:
       - ApiKeyAuth: []
       summary: Update user
@@ -2106,15 +1804,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/base_core_app_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/base_core_app_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/base_core_app_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
       security:
       - ApiKeyAuth: []
       summary: Update user avatar
@@ -2147,41 +1845,20 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/base_core_app_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/base_core_app_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/base_core_app_users.ErrorResponse'
+            $ref: '#/definitions/users.ErrorResponse'
       security:
       - ApiKeyAuth: []
       summary: Update user password
       tags:
       - Core/Users
-  /users/all:
-    get:
-      consumes:
-      - application/json
-      description: Get a list of all users without pagination
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/types.PaginatedResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/base_app_users.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: List all users without pagination
-      tags:
-      - User
   /ws:
     get:
       consumes:

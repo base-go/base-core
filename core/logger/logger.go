@@ -101,7 +101,7 @@ func NewLogger(config Config) (Logger, error) {
 	}
 	consoleConfig.ConsoleSeparator = "  "
 	consoleEncoder := zapcore.NewConsoleEncoder(consoleConfig)
-	
+
 	// Create multi-writer core
 	core := zapcore.NewTee(
 		zapcore.NewCore(

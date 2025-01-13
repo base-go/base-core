@@ -80,7 +80,7 @@ func StartApplication() (*Application, error) {
 		APISecret: cfg.StorageAPISecret,
 		Endpoint:  cfg.StorageEndpoint,
 		Bucket:    cfg.StorageBucket,
-		CDN:      cfg.CDN,
+		CDN:       cfg.CDN,
 	}
 
 	activeStorage, err := storage.NewActiveStorage(db.DB, storageConfig)
