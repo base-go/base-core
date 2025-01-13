@@ -1,267 +1,396 @@
 # Base Framework
 
-Base is a lightweight, modular framework for building RESTful APIs in Go. It provides a structured approach to developing web applications with a focus on simplicity, flexibility, and scalability.
+Base is a modern Go web framework designed for rapid development and maintainable code.
 
 ## Features
 
-- Modular architecture with support for multiple modules
-- Built-in support for CRUD operations
-- Automatic routing and request handling
-- Automatic runs swagger to generate API documentation if ENV=debug
-- Integrated logging and error handling
-- Configurable database connections 
-- Support for multiple database types (MySQL, PostgreSQL, SQLite)
-- JWT-based authentication and authorization
-- Environment-based configuration via `.env` files
-- Command-line tool for generating and removing modules via `bin/base` command
-- Customizable routes and middleware
-- Integrated Swagger documentation
-- Real-time with WebSockets module
-- Unified file upload module with custom configurations
-- Integrated CORS support
-- Integrated rate limiting
-- Integrated caching
-- Integrated email sending
+### Core Features
+- Built-in User Authentication & Authorization
+- Module System with Auto-Registration
+- Database Integration with GORM
+- File Storage System
+- Email Service Integration
+- WebSocket Support
+- Event-Driven Architecture with Emitter
+- Structured Logging
+- Environment-Based Configuration
 
-## Installation
+### Development Tools
+- Code Generation via `github.com/base-go/cmd`
+- Development Server with Auto-Reload
+- Module-Based Architecture
+- Dependency Injection
+- Custom Type System
+- Helper Functions
 
-To install Base, make sure you have Go installed on your system, then run:
+### Security Features
+- JWT Token Authentication
+- API Key Authentication
+- Rate Limiting Middleware
+- Request Logging
+- Security Headers
+- CORS Support
 
+### Storage & Files
+- Local File Storage
+- S3 Compatible Storage
+- Cloudflare R2 Support
+- Active Storage Pattern
+- File Type Validation
+- Image Processing
+- Custom Storage Providers
+
+### Email Features
+- Multiple Provider Support:
+  - SMTP
+  - SendGrid
+  - Postmark
+  - Custom Providers
+- Template Support
+- Attachment Handling
+- HTML/Text Email Support
+
+### Database Features
+- GORM Integration
+- Model Relationships
+- Auto-Migration
+- Query Building
+- Transaction Support
+- Connection Management
+- Type Safe Queries
+
+### API Features
+- RESTful API Support
+- Request/Response Handling
+- Error Management
+- Pagination
+- Sorting & Filtering
+- API Versioning
+- Swagger Documentation
+
+### Middleware System
+- Built-in Middlewares:
+  - Authentication
+  - API Key Validation
+  - Rate Limiting
+  - Request Logging
+  - Custom Middleware Support
+
+### WebSocket Features
+- Real-time Communication
+- Channel Management
+- Message Broadcasting
+- Connection Handling
+- Event Subscription
+
+## Installation & Usage
+
+First, install the Base CLI:
+
+```bash
+go install github.com/base-go/cmd@latest
 ```
-git clone github.com/base-api/base
+
+### Available Commands
+
+```bash
+# Create a new project
+base new myapp
+
+# Start development server with hot reload
+base start
+
+# Generate modules
+base g post title:string content:text        # Basic module
+base g post title:string author:belongsTo:User  # With relationships
+
+# Remove modules
+base d post
+
+# Update framework
+base update   # Update framework dependencies
+base upgrade  # Upgrade to latest version
+
+# Other commands
+base version  # Show version information
+base feed     # Show latest updates and news
 ```
 
-Install swag if not already installed:
-```
-go get -u github.com/swaggo/swag/cmd/swag
-```
+### Create a New Project
 
-## Usage
+```bash
+# Create a new project
+base new myapp
+cd myapp
 
-Run the following command to generate Swagger documentation:
-```
-swag init --parseDependency --parseInternal --parseVendor
-```
-
-Or add as alias in .bashrc or .zshrc:
-```
-alias swagg='swag init --parseDependency --parseInternal --parseVendor'
+# Start the development server with hot reload
+base start
 ```
 
-To start the application, run:
+Your API will be available at `http://localhost:8080`
 
+### Generate Modules
+
+```bash
+# Generate a module with fields
+base g post title:string content:text published:bool
+
+# Generate with relationships
+base g post title:string content:text author:belongsTo:User category:belongsTo:Category tags:hasMany:Tag
+
+# Remove a module
+base d post
 ```
-go run main.go
-```
 
-The application will start on port 8080 by default. You can access the Swagger documentation at `http://localhost:8080/swagger/index.html`.
+### Configuration
 
-## Configuration
+Base uses environment variables for configuration. A `.env` file is automatically created with your new project:
 
-Base uses environment variables for configuration. You can create a `.env` file in the root directory of your application to set the following variables:
-
-```
+```bash
 SERVER_ADDRESS=:8080
-JWT_SECRET=my_super_secret_key_123
-API_KEY=api
-ENV=debug
-DB_DRIVER=sqlite
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=XXX
-DB_NAME=base
-DB_PATH=storage/base.db
-LOG_LEVEL=info
-CORS_ALLOWED_ORIGINS=http://localhost:3000
+JWT_SECRET=your_jwt_secret
+API_KEY=your_api_key
+
+# Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=myapp
+DB_USER=postgres
+DB_PASSWORD=postgres
+
+# Storage
+STORAGE_DRIVER=local  # local, s3, r2
+STORAGE_PATH=storage
+
+# Email
+MAIL_DRIVER=smtp     # smtp, sendgrid, postmark
+MAIL_HOST=smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=username
+MAIL_PASSWORD=password
 ```
 
-# bin/base - Module Generator and Destroyer
+### Project Structure
 
-The `bin/base` command-line tool streamlines the process of creating and removing modules in your Base application.
-
-## Features
-
-- Generate new modules with a single command
-- Create standardized structure for models, controllers, and services
-- Automatically update the main application to include new modules
-- Destroy existing modules and clean up related code
-
-## Usage
-
-### Generating a New Module
-
-To generate a new module, use the `g` command followed by the module name and field definitions:
+Base follows the HMVC (Hierarchical Model View Controller) pattern with a centralized models directory to prevent circular imports:
 
 ```
-bin/base g [module_name] [field:type...]
+.
+├── app/
+│   ├── models/            # All models in one place to prevent circular imports
+│   │   ├── post.go
+│   │   ├── user.go
+│   │   └── comment.go
+│   ├── posts/            # Module implementation
+│   │   ├── controller.go # HTTP request handling
+│   │   ├── service.go    # Business logic
+│   │   └── module.go     # Module registration
+│   └── init.go           # Module registration
+├── core/                 # Framework core
+├── storage/              # File storage
+├── .env                  # Environment config
+└── main.go              # Entry point
 ```
+
+### Model Organization
+
+All models are kept in the `app/models` directory to:
+1. Prevent circular dependencies between modules
+2. Allow modules to reference each other's models
+3. Maintain a single source of truth for data structures
+4. Enable proper relationship definitions
 
 Example:
-```
-bin/base g user name:string age:int email:string
-```
-Example with relationships:
+```go
+// app/models/post.go
+package models
 
-Possible relationships are:
-- has_one : Reference to another model foreign key in the current model
-- has_many: Reference to another model foreign key in the other model
-- belongs_to : Reference to another model foreign key in the current model
-
-Example:
-department:belongs_to:Department
-
-This command will refer to the Department model and create a foreign key in the current model. Department model should be created before the user model.
-
-Example Department model:
-
-type Department struct {
-    ID        uint   `json:"id" gorm:"primary_key"`
-    Name      string `json:"name"`
-    CreatedAt time.Time
-    UpdatedAt time.Time
+type Post struct {
+    types.Model
+    Title     string     `json:"title" gorm:"not null"`
+    Content   string     `json:"content" gorm:"type:text"`
+    AuthorID  uint      `json:"author_id"`
+    Author    User      `json:"author" gorm:"foreignKey:AuthorID"`    // Can reference User model
+    Comments  []Comment `json:"comments" gorm:"foreignKey:PostID"`    // Can reference Comment model
 }
 
-Example User model:
+// app/posts/service.go
+package posts
 
-type User struct {
-    ID        uint   `json:"id" gorm:"primary_key"`
-    Name      string `json:"name"`
-    Age       int    `json:"age"`
-    Email     string `json:"email"`
-    CreatedAt time.Time
-    UpdatedAt time.Time
-    DepartmentID uint `json:"department_id"`
-    Department Department `json:"department" gorm:"foreignKey:DepartmentID"`
+import "base/app/models"  // Clean import, no circular dependency
+
+type PostService struct {
+    db      *gorm.DB
+    emitter *emitter.Emitter
 }
 
-Example command:
-
-```
-bin/base g Category name:string
-
-bin/base g Post name:string age:int email:string category:belongs_to:Category
-
+func (s *PostService) Create(post *models.Post) error {
+    return s.db.Create(post).Error
+}
 ```
 
-  
+This structure ensures clean dependencies while maintaining modularity.
 
-### Destroying an Existing Module
+### Module Structure
 
-To remove an existing module, use the `d` command followed by the module name:
+Each module in Base is self-contained and follows HMVC principles:
 
-```
-bin/base d [module_name]
-```
+1. **Controller Layer** (`controller.go`)
+   - Handles HTTP requests and responses
+   - Input validation
+   - Route definitions
+   - Response formatting
 
-Example:
-```
-bin/base d user
-```
+2. **Service Layer** (`service.go`)
+   - Contains business logic
+   - Database operations
+   - External service integration
+   - Data transformation
 
-This command will:
-1. Remove the `app/users/` directory and all its contents
-2. Update `app/init.go` to unregister the module
+3. **Module Registration** (`module.go`)
+   - Dependency injection
+   - Route group configuration
+   - Middleware setup
+   - Module initialization
 
-## Generated File Structure
+4. **Types** (`types.go`)
+   - Request/Response structs
+   - Module-specific types
+   - Data Transfer Objects (DTOs)
 
-For each module, the following files are generated:
+### Module Generation
 
-- `model.go`: Defines the data structure for the module
-- `controller.go`: Handles HTTP requests and responses
-- `service.go`: Contains business logic for the module
-- `mod.go`: Initializes the module and sets up routes
+When you generate a new module using `base g`, it creates this HMVC structure:
 
+```bash
+# Generate a new post module
+base g post title:string content:text
 
-## Todo
-- [ ] Add support for initial setup by cloning a template repository
-- [ ] Add support for custom modules non CRUD by passing endpoints and methods
-- [ ] Add support for custom templates
-- [ ] Add support for custom commands
-- [ ] Add support for custom configurations
-- [ ] Add support for custom middleware
-- [ ] Add support for custom error handling
-- [ ] Add support for custom logging
-- [ ] Add support for custom authentication and authorization
-- [ ] Add testing engine for unit and integration tests 
-- [ ] Add generate tests inside the module for CRUD operations test.go file that will be generated with the module 
-
-
-## Testing
-
-Even that there is no testing engine for now, you can test the generated code by running the application and sending requests to the API endpoints. 
-You can use swagger to test the endpoints.
- 
-
-
-## Customization
-
-You can customize the generated code by modifying the templates in the `templates/` directory. The templates use Go's `text/template` package, so you can use variables, loops, and conditionals to generate the desired output.
-
-> **Not Recommended:** : You can also modify the `cmd/main.go` to add new features or change the behavior of existing commands. However, this is not recommended as it may break compatibility with future versions of Base. Better to create a new command and add it to the `cmd/` directory.
- 
-
-## Deployment
-
-To deploy the application, you can build the binary and run it on your server. You can also use Docker to create a containerized version of the application.
-
-To build the binary, run:
-
-```
-go build -o base
+# Creates:
+app/
+└── post/
+    ├── controller.go  # RESTful endpoints
+    ├── service.go     # Business logic
+    ├── module.go      # Registration
+    └── types.go       # Types and DTOs
 ```
 
-To run the binary, use:
+The module is automatically registered in `app/init.go` and integrated with the dependency injection system.
 
-```
-./base
-```
+### Module Communication
 
-You can create Ubuntu service to run the binary on startup:
-```
-sudo nano /etc/systemd/system/base.service
-```
+Modules can communicate through:
+1. Direct Service Calls
+2. Event Emitter
+3. WebSocket Channels
+4. Shared Models
 
-Add the following content:
-```
-[Unit]
-Description=Base API
-After=network.target
-
-[Service]
-Type=simple
-User=root
-WorkingDirectory=/path/to/base
-ExecStart=/path/to/base/base
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
+Example of module interaction:
+```go
+// Post service using user service
+type PostService struct {
+    userService *user.Service    // Direct service injection
+    emitter     *emitter.Emitter // Event-based communication
+}
 ```
 
-Enable the service:
- 
-`sudo systemctl enable base` or 
+### HMVC Example
 
-`sudo service base enable`
- 
+Here's a complete example of a Post module following HMVC principles:
 
-Start the service:
+```go
+// app/models/post.go
+package models
 
-`sudo systemctl start base` or 
+type Post struct {
+    types.Model
+    Title     string     `json:"title" gorm:"not null"`
+    Content   string     `json:"content" gorm:"type:text"`
+    Published bool       `json:"published" gorm:"default:false"`
+    AuthorID  uint      `json:"author_id"`
+    Author    User      `json:"author" gorm:"foreignKey:AuthorID"`
+    Tags      []Tag     `json:"tags" gorm:"many2many:post_tags;"`
+    Comments  []Comment `json:"comments" gorm:"foreignKey:PostID"`
+}
 
-`sudo service base start`
- 
+// app/posts/controller.go
+package posts
 
+type PostController struct {
+    service *PostService
+    logger  logger.Logger
+}
 
+func (c *PostController) Routes(router *gin.RouterGroup) {
+    router.GET("", c.List)
+    router.GET("/:id", c.Get)
+    router.POST("", c.Create)
+    router.PUT("/:id", c.Update)
+    router.DELETE("/:id", c.Delete)
+}
+
+// app/posts/service.go
+package posts
+
+type PostService struct {
+    db          *gorm.DB
+    userService *user.Service
+    emitter     *emitter.Emitter
+}
+
+func (s *PostService) Create(post *models.Post) error {
+    if err := s.db.Create(post).Error; err != nil {
+        return err
+    }
+    s.emitter.Emit("post.created", post)
+    return nil
+}
+
+// app/posts/module.go
+package posts
+
+type PostModule struct {
+    controller *PostController
+    service    *PostService
+}
+
+func NewPostModule(db *gorm.DB, router *gin.RouterGroup, log logger.Logger, emitter *emitter.Emitter) module.Module {
+    service := &PostService{
+        db:      db,
+        emitter: emitter,
+    }
+    
+    controller := &PostController{
+        service: service,
+        logger:  log,
+    }
+
+    return &PostModule{
+        controller: controller,
+        service:    service,
+    }
+}
+```
+
+This structure provides:
+1. Clear separation of concerns
+2. Dependency injection
+3. Event-driven capabilities
+4. Clean routing
+5. Type safety
+6. Automatic model relationships
+
+## Documentation
+
+For detailed documentation, visit [docs.base-go.dev](https://docs.base-go.dev)
+
+## License
+
+MIT License - see LICENSE for more details.
 
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Support
 
