@@ -319,12 +319,6 @@ const docTemplate = `{
                         "description": "Number of items per page",
                         "name": "limit",
                         "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Search term for filtering results",
-                        "name": "search",
-                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -415,7 +409,7 @@ const docTemplate = `{
                 "tags": [
                     "Category"
                 ],
-                "summary": "List all categories",
+                "summary": "List all categories without pagination",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -590,37 +584,167 @@ const docTemplate = `{
                 }
             }
         },
-        "/categories/{id}/image": {
-            "put": {
+        "/comments": {
+            "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Upload Image for a Category by its id",
+                "description": "Get a list of comments",
                 "consumes": [
-                    "multipart/form-data"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Category"
+                    "Comment"
                 ],
-                "summary": "Upload Image for a Category",
+                "summary": "List comments",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Category id",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
                     },
                     {
-                        "type": "file",
-                        "description": "Image file to upload",
-                        "name": "file",
-                        "in": "formData",
+                        "type": "integer",
+                        "description": "Number of items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.PaginatedResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/comments.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/comments.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a new Comment with the input payload",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Comment"
+                ],
+                "summary": "Create a new Comment",
+                "parameters": [
+                    {
+                        "description": "Create Comment request",
+                        "name": "comments",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateCommentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.CommentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/comments.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/comments.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/comments/all": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a list of all comments without pagination",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Comment"
+                ],
+                "summary": "List all comments without pagination",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.PaginatedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/comments.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/comments/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a Comment by its id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Comment"
+                ],
+                "summary": "Get a Comment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Comment id",
+                        "name": "id",
+                        "in": "path",
                         "required": true
                     }
                 ],
@@ -628,19 +752,128 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/categories.SuccessResponse"
+                            "$ref": "#/definitions/models.CommentResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/categories.ErrorResponse"
+                            "$ref": "#/definitions/comments.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/comments.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update a Comment by its id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Comment"
+                ],
+                "summary": "Update a Comment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Comment id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Comment request",
+                        "name": "comments",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateCommentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.CommentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/comments.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/comments.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/categories.ErrorResponse"
+                            "$ref": "#/definitions/comments.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete a Comment by its id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Comment"
+                ],
+                "summary": "Delete a Comment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Comment id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/comments.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/comments.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/comments.ErrorResponse"
                         }
                     }
                 }
@@ -778,12 +1011,6 @@ const docTemplate = `{
                         "description": "Number of items per page",
                         "name": "limit",
                         "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Search term for filtering results",
-                        "name": "search",
-                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -874,7 +1101,7 @@ const docTemplate = `{
                 "tags": [
                     "Post"
                 ],
-                "summary": "List all posts",
+                "summary": "List all posts without pagination",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1049,37 +1276,167 @@ const docTemplate = `{
                 }
             }
         },
-        "/posts/{id}/image": {
-            "put": {
+        "/profiles": {
+            "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Upload Image for a Post by its id",
+                "description": "Get a list of profiles",
                 "consumes": [
-                    "multipart/form-data"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Post"
+                    "Profile"
                 ],
-                "summary": "Upload Image for a Post",
+                "summary": "List profiles",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Post id",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
                     },
                     {
-                        "type": "file",
-                        "description": "Image file to upload",
-                        "name": "file",
-                        "in": "formData",
+                        "type": "integer",
+                        "description": "Number of items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.PaginatedResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/profiles.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/profiles.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a new Profile with the input payload",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Create a new Profile",
+                "parameters": [
+                    {
+                        "description": "Create Profile request",
+                        "name": "profiles",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateProfileRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.ProfileResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/profiles.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/profiles.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/profiles/all": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a list of all profiles without pagination",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "List all profiles without pagination",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.PaginatedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/profiles.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/profiles/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a Profile by its id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Get a Profile",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Profile id",
+                        "name": "id",
+                        "in": "path",
                         "required": true
                     }
                 ],
@@ -1087,19 +1444,560 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/posts.SuccessResponse"
+                            "$ref": "#/definitions/models.ProfileResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/posts.ErrorResponse"
+                            "$ref": "#/definitions/profiles.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/profiles.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update a Profile by its id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Update a Profile",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Profile id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Profile request",
+                        "name": "profiles",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateProfileRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ProfileResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/profiles.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/profiles.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/posts.ErrorResponse"
+                            "$ref": "#/definitions/profiles.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete a Profile by its id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Delete a Profile",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Profile id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/profiles.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/profiles.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/profiles.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tags": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a list of tags",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tag"
+                ],
+                "summary": "List tags",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.PaginatedResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/tags.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/tags.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a new Tag with the input payload",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tag"
+                ],
+                "summary": "Create a new Tag",
+                "parameters": [
+                    {
+                        "description": "Create Tag request",
+                        "name": "tags",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateTagRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.TagResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/tags.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/tags.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tags/all": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a list of all tags without pagination",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tag"
+                ],
+                "summary": "List all tags without pagination",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.PaginatedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/tags.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tags/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a Tag by its id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tag"
+                ],
+                "summary": "Get a Tag",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Tag id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.TagResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/tags.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/tags.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update a Tag by its id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tag"
+                ],
+                "summary": "Update a Tag",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Tag id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Tag request",
+                        "name": "tags",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateTagRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.TagResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/tags.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/tags.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/tags.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete a Tag by its id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tag"
+                ],
+                "summary": "Delete a Tag",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Tag id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/tags.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/tags.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/tags.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a list of users",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "List users",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.PaginatedResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base_app_users.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/base_app_users.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a new User with the input payload",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Create a new User",
+                "parameters": [
+                    {
+                        "description": "Create User request",
+                        "name": "users",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.UserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base_app_users.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/base_app_users.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/all": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a list of all users without pagination",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "List all users without pagination",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.PaginatedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/base_app_users.ErrorResponse"
                         }
                     }
                 }
@@ -1142,19 +2040,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/users.ErrorResponse"
+                            "$ref": "#/definitions/base_core_app_users.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/users.ErrorResponse"
+                            "$ref": "#/definitions/base_core_app_users.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/users.ErrorResponse"
+                            "$ref": "#/definitions/base_core_app_users.ErrorResponse"
                         }
                     }
                 }
@@ -1204,19 +2102,66 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/users.ErrorResponse"
+                            "$ref": "#/definitions/base_core_app_users.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/users.ErrorResponse"
+                            "$ref": "#/definitions/base_core_app_users.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/users.ErrorResponse"
+                            "$ref": "#/definitions/base_core_app_users.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete a User by its id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Delete a User",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/base_app_users.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/base_app_users.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/base_app_users.ErrorResponse"
                         }
                     }
                 }
@@ -1266,19 +2211,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/users.ErrorResponse"
+                            "$ref": "#/definitions/base_core_app_users.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/users.ErrorResponse"
+                            "$ref": "#/definitions/base_core_app_users.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/users.ErrorResponse"
+                            "$ref": "#/definitions/base_core_app_users.ErrorResponse"
                         }
                     }
                 }
@@ -1330,19 +2275,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/users.ErrorResponse"
+                            "$ref": "#/definitions/base_core_app_users.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/users.ErrorResponse"
+                            "$ref": "#/definitions/base_core_app_users.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/users.ErrorResponse"
+                            "$ref": "#/definitions/base_core_app_users.ErrorResponse"
                         }
                     }
                 }
@@ -1495,6 +2440,30 @@ const docTemplate = `{
                 }
             }
         },
+        "base_app_users.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "base_app_users.SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "base_core_app_users.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
         "categories.ErrorResponse": {
             "type": "object",
             "properties": {
@@ -1504,6 +2473,22 @@ const docTemplate = `{
             }
         },
         "categories.SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "comments.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "comments.SuccessResponse": {
             "type": "object",
             "properties": {
                 "message": {
@@ -1523,9 +2508,82 @@ const docTemplate = `{
                 }
             }
         },
+        "models.Category": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "image": {
+                    "$ref": "#/definitions/storage.Attachment"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "parent": {
+                    "$ref": "#/definitions/models.Category"
+                },
+                "posts": {
+                    "$ref": "#/definitions/models.Post"
+                },
+                "subcategories": {
+                    "$ref": "#/definitions/models.Category"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "models.CategoryResponse": {
             "type": "object",
             "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "image": {
+                    "$ref": "#/definitions/storage.Attachment"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "parent": {
+                    "$ref": "#/definitions/models.Category"
+                },
+                "posts": {
+                    "$ref": "#/definitions/models.Post"
+                },
+                "subcategories": {
+                    "$ref": "#/definitions/models.Category"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Comment": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "$ref": "#/definitions/models.User"
+                },
                 "content": {
                     "type": "string"
                 },
@@ -1538,17 +2596,46 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "image": {
-                    "$ref": "#/definitions/storage.Attachment"
+                "parent": {
+                    "$ref": "#/definitions/models.Comment"
                 },
-                "posts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.PostResponse"
-                    }
+                "post": {
+                    "$ref": "#/definitions/models.Post"
                 },
-                "title": {
+                "replies": {
+                    "$ref": "#/definitions/models.Comment"
+                },
+                "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "models.CommentResponse": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "parent": {
+                    "$ref": "#/definitions/models.Comment"
+                },
+                "post": {
+                    "$ref": "#/definitions/models.Post"
+                },
+                "replies": {
+                    "$ref": "#/definitions/models.Comment"
                 },
                 "updated_at": {
                     "type": "string"
@@ -1558,41 +2645,227 @@ const docTemplate = `{
         "models.CreateCategoryRequest": {
             "type": "object",
             "required": [
-                "content",
+                "description",
                 "image",
-                "title"
+                "name",
+                "parent",
+                "posts",
+                "subcategories"
             ],
             "properties": {
-                "content": {
+                "description": {
                     "type": "string"
                 },
                 "image": {
                     "$ref": "#/definitions/storage.Attachment"
                 },
-                "title": {
+                "name": {
                     "type": "string"
+                },
+                "parent": {
+                    "$ref": "#/definitions/models.Category"
+                },
+                "posts": {
+                    "$ref": "#/definitions/models.Post"
+                },
+                "subcategories": {
+                    "$ref": "#/definitions/models.Category"
+                }
+            }
+        },
+        "models.CreateCommentRequest": {
+            "type": "object",
+            "required": [
+                "author",
+                "content",
+                "parent",
+                "post",
+                "replies"
+            ],
+            "properties": {
+                "author": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "parent": {
+                    "$ref": "#/definitions/models.Comment"
+                },
+                "post": {
+                    "$ref": "#/definitions/models.Post"
+                },
+                "replies": {
+                    "$ref": "#/definitions/models.Comment"
                 }
             }
         },
         "models.CreatePostRequest": {
             "type": "object",
             "required": [
-                "category_id_id_id",
+                "author",
+                "category",
+                "comments",
                 "content",
-                "image",
+                "excerpt",
+                "featured_image",
+                "gallery",
+                "tags",
                 "title"
             ],
             "properties": {
-                "category_id_id_id": {
-                    "type": "integer"
+                "author": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "category": {
+                    "$ref": "#/definitions/models.Category"
+                },
+                "comments": {
+                    "$ref": "#/definitions/models.Comment"
                 },
                 "content": {
                     "type": "string"
                 },
-                "image": {
+                "excerpt": {
+                    "type": "string"
+                },
+                "featured_image": {
                     "$ref": "#/definitions/storage.Attachment"
                 },
+                "gallery": {
+                    "$ref": "#/definitions/storage.Attachment"
+                },
+                "published_at": {
+                    "$ref": "#/definitions/types.DateTime"
+                },
+                "tags": {
+                    "$ref": "#/definitions/models.Tag"
+                },
                 "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.CreateProfileRequest": {
+            "type": "object",
+            "required": [
+                "avatar",
+                "bio",
+                "social_links",
+                "user",
+                "website"
+            ],
+            "properties": {
+                "avatar": {
+                    "$ref": "#/definitions/storage.Attachment"
+                },
+                "bio": {
+                    "type": "string"
+                },
+                "social_links": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "website": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.CreateTagRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "posts"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "posts": {
+                    "$ref": "#/definitions/models.Post"
+                }
+            }
+        },
+        "models.CreateUserRequest": {
+            "type": "object",
+            "required": [
+                "avatar",
+                "comments",
+                "email",
+                "password",
+                "posts",
+                "profile",
+                "username"
+            ],
+            "properties": {
+                "avatar": {
+                    "$ref": "#/definitions/storage.Attachment"
+                },
+                "comments": {
+                    "$ref": "#/definitions/models.Comment"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "posts": {
+                    "$ref": "#/definitions/models.Post"
+                },
+                "profile": {
+                    "$ref": "#/definitions/models.Profile"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Post": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "category": {
+                    "$ref": "#/definitions/models.Category"
+                },
+                "comments": {
+                    "$ref": "#/definitions/models.Comment"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "excerpt": {
+                    "type": "string"
+                },
+                "featured_image": {
+                    "$ref": "#/definitions/storage.Attachment"
+                },
+                "gallery": {
+                    "$ref": "#/definitions/storage.Attachment"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "published_at": {
+                    "$ref": "#/definitions/types.DateTime"
+                },
+                "tags": {
+                    "$ref": "#/definitions/models.Tag"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -1600,13 +2873,57 @@ const docTemplate = `{
         "models.PostResponse": {
             "type": "object",
             "properties": {
-                "category_id_id": {
-                    "$ref": "#/definitions/models.CategoryResponse"
+                "author": {
+                    "$ref": "#/definitions/models.User"
                 },
-                "category_id_id_id": {
-                    "type": "integer"
+                "category": {
+                    "$ref": "#/definitions/models.Category"
+                },
+                "comments": {
+                    "$ref": "#/definitions/models.Comment"
                 },
                 "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "excerpt": {
+                    "type": "string"
+                },
+                "featured_image": {
+                    "$ref": "#/definitions/storage.Attachment"
+                },
+                "gallery": {
+                    "$ref": "#/definitions/storage.Attachment"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "published_at": {
+                    "$ref": "#/definitions/types.DateTime"
+                },
+                "tags": {
+                    "$ref": "#/definitions/models.Tag"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Profile": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "$ref": "#/definitions/storage.Attachment"
+                },
+                "bio": {
                     "type": "string"
                 },
                 "created_at": {
@@ -1618,11 +2935,92 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "image": {
+                "social_links": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "website": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ProfileResponse": {
+            "type": "object",
+            "properties": {
+                "avatar": {
                     "$ref": "#/definitions/storage.Attachment"
                 },
-                "title": {
+                "bio": {
                     "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "social_links": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "website": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Tag": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "posts": {
+                    "$ref": "#/definitions/models.Post"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.TagResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "posts": {
+                    "$ref": "#/definitions/models.Post"
                 },
                 "updated_at": {
                     "type": "string"
@@ -1632,30 +3030,210 @@ const docTemplate = `{
         "models.UpdateCategoryRequest": {
             "type": "object",
             "properties": {
-                "content": {
+                "description": {
                     "type": "string"
                 },
                 "image": {
                     "$ref": "#/definitions/storage.Attachment"
                 },
-                "title": {
+                "name": {
                     "type": "string"
+                },
+                "parent": {
+                    "$ref": "#/definitions/models.Category"
+                },
+                "posts": {
+                    "$ref": "#/definitions/models.Post"
+                },
+                "subcategories": {
+                    "$ref": "#/definitions/models.Category"
+                }
+            }
+        },
+        "models.UpdateCommentRequest": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "parent": {
+                    "$ref": "#/definitions/models.Comment"
+                },
+                "post": {
+                    "$ref": "#/definitions/models.Post"
+                },
+                "replies": {
+                    "$ref": "#/definitions/models.Comment"
                 }
             }
         },
         "models.UpdatePostRequest": {
             "type": "object",
             "properties": {
-                "category_id_id_id": {
-                    "type": "integer"
+                "author": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "category": {
+                    "$ref": "#/definitions/models.Category"
+                },
+                "comments": {
+                    "$ref": "#/definitions/models.Comment"
                 },
                 "content": {
                     "type": "string"
                 },
-                "image": {
+                "excerpt": {
+                    "type": "string"
+                },
+                "featured_image": {
                     "$ref": "#/definitions/storage.Attachment"
                 },
+                "gallery": {
+                    "$ref": "#/definitions/storage.Attachment"
+                },
+                "published_at": {
+                    "$ref": "#/definitions/types.DateTime"
+                },
+                "tags": {
+                    "$ref": "#/definitions/models.Tag"
+                },
                 "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.UpdateProfileRequest": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "$ref": "#/definitions/storage.Attachment"
+                },
+                "bio": {
+                    "type": "string"
+                },
+                "social_links": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/models.User"
+                },
+                "website": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.UpdateTagRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "posts": {
+                    "$ref": "#/definitions/models.Post"
+                }
+            }
+        },
+        "models.UpdateUserRequest": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "$ref": "#/definitions/storage.Attachment"
+                },
+                "comments": {
+                    "$ref": "#/definitions/models.Comment"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "posts": {
+                    "$ref": "#/definitions/models.Post"
+                },
+                "profile": {
+                    "$ref": "#/definitions/models.Profile"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.User": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "$ref": "#/definitions/storage.Attachment"
+                },
+                "comments": {
+                    "$ref": "#/definitions/models.Comment"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "posts": {
+                    "$ref": "#/definitions/models.Post"
+                },
+                "profile": {
+                    "$ref": "#/definitions/models.Profile"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.UserResponse": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "$ref": "#/definitions/storage.Attachment"
+                },
+                "comments": {
+                    "$ref": "#/definitions/models.Comment"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "posts": {
+                    "$ref": "#/definitions/models.Post"
+                },
+                "profile": {
+                    "$ref": "#/definitions/models.Profile"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -1677,6 +3255,22 @@ const docTemplate = `{
             }
         },
         "posts.SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "profiles.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "profiles.SuccessResponse": {
             "type": "object",
             "properties": {
                 "message": {
@@ -1719,6 +3313,30 @@ const docTemplate = `{
                 }
             }
         },
+        "tags.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "tags.SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.DateTime": {
+            "type": "object",
+            "properties": {
+                "time.Time": {
+                    "type": "string"
+                }
+            }
+        },
         "types.PaginatedResponse": {
             "type": "object",
             "properties": {
@@ -1742,14 +3360,6 @@ const docTemplate = `{
                 },
                 "total_pages": {
                     "type": "integer"
-                }
-            }
-        },
-        "users.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
                 }
             }
         },
