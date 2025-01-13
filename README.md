@@ -85,10 +85,10 @@ Base is a modern Go web framework designed for rapid development and maintainabl
 
 ## Installation & Usage
 
-First, install the Base CLI:
+Install Base CLI with a single command:
 
 ```bash
-go install github.com/base-go/cmd@latest
+curl -sSL https://raw.githubusercontent.com/base-go/cmd/main/install.sh | bash
 ```
 
 ### Available Commands
