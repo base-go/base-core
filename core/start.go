@@ -11,7 +11,7 @@ import (
 	"base/core/module"
 	"base/core/storage"
 	"base/core/websocket"
-	_ "base/docs" // Import for Swagger docs
+
 	"fmt"
 
 	"github.com/gin-contrib/cors"
