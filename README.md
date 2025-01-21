@@ -2,6 +2,12 @@
 
 Base is a modern Go web framework designed for rapid development and maintainable code.
 
+## Quick Links
+
+- [Detailed Documentation](docs.md)
+- [CLI Tool Repository](https://github.com/base-go/cmd)
+- [CLI Documentation](https://github.com/base-go/cmd/blob/main/README.md)
+
 ## Features
 
 ### Core Features
@@ -33,12 +39,12 @@ Base is a modern Go web framework designed for rapid development and maintainabl
 
 ### Storage & Files
 - Local File Storage
-- S3 Compatible Storage
-- Cloudflare R2 Support
 - Active Storage Pattern
 - File Type Validation
+  - Image Attachments (5MB limit, image extensions)
+  - File Attachments (50MB limit, document extensions)
+  - Generic Attachments (10MB limit, mixed extensions)
 - Image Processing
-- Custom Storage Providers
 
 ### Email Features
 - Multiple Provider Support:
@@ -52,12 +58,13 @@ Base is a modern Go web framework designed for rapid development and maintainabl
 
 ### Database Features
 - GORM Integration
-- Model Relationships
+- Model Relationships:
+  - belongs_to (One-to-one with foreign key in this model)
+  - has_one (One-to-one with foreign key in other model)
+  - has_many (One-to-many)
 - Auto-Migration
-- Query Building
 - Transaction Support
 - Connection Management
-- Type Safe Queries
 
 ### API Features
 - RESTful API Support
@@ -83,6 +90,59 @@ Base is a modern Go web framework designed for rapid development and maintainabl
 - Connection Handling
 - Event Subscription
 
+### Event System
+- Thread-Safe Event Emitter
+- Asynchronous Event Handling
+- Panic Recovery in Listeners
+- Event Subscription with `On`
+- Event Broadcasting with `Emit`
+- Support for Any Data Type
+- Event Cleanup with `Clear`
+
+For detailed examples and usage patterns, see [docs.md](docs.md).
+
+Common Events:
+- `{module}.created`: Emitted when a record is created
+- `{module}.updated`: Emitted when a record is updated
+- `{module}.deleted`: Emitted when a record is deleted
+- `{module}.{field}.uploaded`: Emitted when a file is uploaded
+- `{module}.{field}.deleted`: Emitted when a file is deleted
+
+Example usage:
+```go
+// In your service
+type PostService struct {
+    DB      *gorm.DB
+    Emitter *emitter.Emitter
+    Logger  logger.Logger
+}
+
+// Register event listeners
+func (s *PostService) Init() {
+    // Listen for post creation events
+    s.Emitter.On("post.created", func(data interface{}) {
+        if post, ok := data.(*models.Post); ok {
+            s.Logger.Info("Post created", 
+                logger.Int("id", int(post.Id)),
+                logger.String("title", post.Title))
+        }
+    })
+}
+
+// Emit events in your methods
+func (s *PostService) Create(post *models.Post) error {
+    if err := s.DB.Create(post).Error; err != nil {
+        s.Logger.Error("Failed to create post", 
+            logger.String("error", err.Error()))
+        return err
+    }
+
+    // Emit event after successful creation
+    s.Emitter.Emit("post.created", post)
+    return nil
+}
+```
+
 ## Installation & Usage
 
 Install Base CLI with a single command:
@@ -101,8 +161,22 @@ base new myapp
 base start
 
 # Generate modules
-base g post title:string content:text        # Basic module
-base g post title:string author:belongsTo:User  # With relationships
+base g post title:string content:text published:bool
+
+# Generate with relationships and attachments
+base g post \
+  title:string \
+  content:text \
+  featured_image:image \
+  gallery:attachment \
+  author:belongsTo:User \
+  comments:hasMany:Comment
+
+# Generate with specialized attachments
+base g document \
+  title:string \
+  file:file          # Document attachment with validation
+  author:belongsTo:User
 
 # Remove modules
 base d post
@@ -128,19 +202,6 @@ base start
 ```
 
 Your API will be available at `http://localhost:8080`
-
-### Generate Modules
-
-```bash
-# Generate a module with fields
-base g post title:string content:text published:bool
-
-# Generate with relationships
-base g post title:string content:text author:belongsTo:User category:belongsTo:Category tags:hasMany:Tag
-
-# Remove a module
-base d post
-```
 
 ### Configuration
 
@@ -172,24 +233,47 @@ MAIL_PASSWORD=password
 
 ### Project Structure
 
-Base follows the HMVC (Hierarchical Model View Controller) pattern with a centralized models directory to prevent circular imports:
+Base follows a modular architecture with a centralized models directory:
 
 ```
 .
 ├── app/
-│   ├── models/            # All models in one place to prevent circular imports
-│   │   ├── post.go
-│   │   ├── user.go
-│   │   └── comment.go
-│   ├── posts/            # Module implementation
-│   │   ├── controller.go # HTTP request handling
-│   │   ├── service.go    # Business logic
+│   ├── models/            # All models in one place
+│   │   ├── post.go       # Post model with GORM tags
+│   │   ├── user.go       # User model
+│   │   └── comment.go    # Comment model
+│   ├── posts/            # Post module
+│   │   ├── controller.go # HTTP handlers & file upload
+│   │   ├── service.go    # Business logic & storage
 │   │   └── module.go     # Module registration
-│   └── init.go           # Module registration
+│   ├── users/            # User module
+│   │   ├── controller.go
+│   │   ├── service.go
+│   │   └── module.go
+│   └── init.go           # Module initialization
 ├── core/                 # Framework core
-├── storage/              # File storage
+│   ├── storage/         # File storage system
+│   ├── logger/          # Structured logging
+│   └── emitter/         # Event system
+├── storage/              # File storage directory
 ├── .env                  # Environment config
 └── main.go              # Entry point
+```
+
+When you generate a new module:
+
+```bash
+# Generate a post module
+base g post title:string content:text
+
+# Creates:
+app/
+├── models/
+│   └── post.go         # Post model with GORM tags
+└── posts/              # Post module
+    ├── controller.go   # HTTP handlers & validation
+    ├── service.go      # Business logic
+    └── module.go       # Module registration
 ```
 
 ### Model Organization
@@ -225,7 +309,11 @@ type PostService struct {
 }
 
 func (s *PostService) Create(post *models.Post) error {
-    return s.db.Create(post).Error
+    if err := s.db.Create(post).Error; err != nil {
+        return err
+    }
+    s.emitter.Emit("post.created", post)
+    return nil
 }
 ```
 
