@@ -95,23 +95,30 @@ func (a *AppModuleInitializer) InitializeModules(db *gorm.DB) []module.Module {
 	moduleMap := a.getModules(db)
 	// Register and initialize each module
 	for name, mod := range moduleMap {
+
 		if err := module.RegisterModule(name, mod); err != nil {
 			a.Logger.Error("Failed to register module",
 				logger.String("module", name),
 				logger.String("error", err.Error()))
 			continue
 		}
+		// Initialize the module
 		if err := mod.Init(); err != nil {
 			a.Logger.Error("Failed to initialize module",
 				logger.String("module", name),
 				logger.String("error", err.Error()))
 			continue
 		}
+		// Migrate the module
 		if err := mod.Migrate(); err != nil {
 			a.Logger.Error("Failed to migrate module",
 				logger.String("module", name),
 				logger.String("error", err.Error()))
 			continue
+		}
+		// Set up routes for the module
+		if routeModule, ok := mod.(interface{ Routes(*gin.RouterGroup) }); ok {
+			routeModule.Routes(a.Router)
 		}
 		modules = append(modules, mod)
 	}
@@ -123,6 +130,7 @@ func (a *AppModuleInitializer) getModules(db *gorm.DB) map[string]module.Module 
 	modules := make(map[string]module.Module)
 	// Define the module initializers directly
 	moduleInitializers := map[string]func(*gorm.DB, *gin.RouterGroup, logger.Logger, *emitter.Emitter, *storage.ActiveStorage) module.Module{
+
 		// MODULE_INITIALIZER_MARKER - Do not remove this comment because it's used by the CLI to add new module initializers
 	}
 
