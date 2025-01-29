@@ -141,6 +141,10 @@ func Int(key string, value int) Field {
 	return zap.Int(key, value)
 }
 
+func Uint(key string, value uint) Field {
+	return zap.Uint(key, value)
+}
+
 // Logger interface implementation
 func (l *ZapLogger) Info(msg string, fields ...Field) {
 	l.logger.Info(msg, fields...)
