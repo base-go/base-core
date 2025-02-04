@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// AuthMiddleware checks for Bearer token authentication
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
@@ -30,7 +31,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		userID, err := helper.ValidateJWT(parts[1])
+		userId, err := helper.ValidateJWT(parts[1])
 		if err != nil {
 			log.Warnf("Invalid or expired JWT: %s", err.Error())
 			c.AbortWithStatusJSON(http.StatusUnauthorized, types.ErrorResponse{
@@ -39,7 +40,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("user_id", userID)
+		c.Set("user_id", userId)
 		c.Next()
 	}
 }

@@ -147,8 +147,6 @@ definitions:
     type: object
   users.User:
     properties:
-      avatar:
-        $ref: '#/definitions/storage.Attachment'
       createdAt:
         type: string
       deletedAt:
@@ -276,6 +274,7 @@ paths:
             $ref: '#/definitions/auth.ErrorResponse'
       security:
       - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Logout
       tags:
       - Core/Auth
@@ -447,6 +446,7 @@ paths:
             $ref: '#/definitions/users.ErrorResponse'
       security:
       - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get user by ID
       tags:
       - Core/Users
@@ -487,6 +487,7 @@ paths:
             $ref: '#/definitions/users.ErrorResponse'
       security:
       - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Update user
       tags:
       - Core/Users
@@ -527,6 +528,7 @@ paths:
             $ref: '#/definitions/users.ErrorResponse'
       security:
       - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Update user avatar
       tags:
       - Core/Users
@@ -568,6 +570,7 @@ paths:
             $ref: '#/definitions/users.ErrorResponse'
       security:
       - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Update user password
       tags:
       - Core/Users
@@ -596,7 +599,13 @@ schemes:
 - https
 securityDefinitions:
   ApiKeyAuth:
+    description: API Key for authentication
     in: header
     name: X-Api-Key
+    type: apiKey
+  BearerAuth:
+    description: Enter your token with the prefix "Bearer "
+    in: header
+    name: Authorization
     type: apiKey
 swagger: "2.0"

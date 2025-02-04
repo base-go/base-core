@@ -22,9 +22,16 @@ import (
 // @schemes http https
 // @produces json
 // @consumes json
+
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
 // @name X-Api-Key
+// @description API Key for authentication
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Enter your token with the prefix "Bearer "
 
 // DeletedAt is a type definition for GORM's soft delete functionality
 type DeletedAt gorm.DeletedAt

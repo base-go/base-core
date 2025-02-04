@@ -170,6 +170,7 @@ func SetupWebSocketRoutes(router *gin.RouterGroup, hub *Hub) {
 // @Summary Connect to WebSocket
 // @Description Establishes a WebSocket connection
 // @Security ApiKeyAuth
+// @Security BearerAuth
 // @Tags Core/Websocket
 // @Tags
 

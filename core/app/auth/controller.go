@@ -111,6 +111,7 @@ func (c *AuthController) Login(ctx *gin.Context) {
 // @Summary Logout
 // @Description Logout user
 // @Security ApiKeyAuth
+// @Security BearerAuth
 // @Tags Core/Auth
 // @Accept json
 // @Produce json

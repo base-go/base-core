@@ -140,6 +140,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Logout user",
@@ -396,6 +399,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Get user by ID",
@@ -449,6 +455,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Update user",
@@ -513,6 +522,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Update user avatar",
@@ -575,6 +587,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Update user password",
@@ -886,9 +901,6 @@ const docTemplate = `{
         "users.User": {
             "type": "object",
             "properties": {
-                "avatar": {
-                    "$ref": "#/definitions/storage.Attachment"
-                },
                 "createdAt": {
                     "type": "string"
                 },
@@ -926,8 +938,15 @@ const docTemplate = `{
     },
     "securityDefinitions": {
         "ApiKeyAuth": {
+            "description": "API Key for authentication",
             "type": "apiKey",
             "name": "X-Api-Key",
+            "in": "header"
+        },
+        "BearerAuth": {
+            "description": "Enter your token with the prefix \"Bearer \"",
+            "type": "apiKey",
+            "name": "Authorization",
             "in": "header"
         }
     }

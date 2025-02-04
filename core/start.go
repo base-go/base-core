@@ -138,11 +138,15 @@ func StartApplication() (*Application, error) {
 	apiGroup := router.Group("/api")
 	apiGroup.Use(middleware.APIKeyMiddleware())
 
+	// Create a protected group that requires Bearer token
+	protectedGroup := apiGroup.Group("/")
+	protectedGroup.Use(middleware.AuthMiddleware())
+
 	// Initialize core modules with all dependencies
 	appLogger.Info("Initializing core modules")
 	moduleInit := ModuleInitializer{
 		DB:          db.DB,
-		Router:      apiGroup,
+		Router:      protectedGroup, // Use the protected group for core modules
 		EmailSender: emailSender,
 		Logger:      appLogger,
 		Emitter:     Emitter,

@@ -12,7 +12,7 @@ type User struct {
 	Name      string              `gorm:"column:name;not null"`
 	Username  string              `gorm:"column:username;unique;not null"`
 	Email     string              `gorm:"column:email;unique;not null"`
-	Avatar    *storage.Attachment `gorm:"foreignKey:ModelId;references:Id"`
+	Avatar    *storage.Attachment `json:"-" gorm:"-"`
 	Password  string              `gorm:"column:password"`
 	CreatedAt time.Time           `gorm:"column:created_at"`
 	UpdatedAt time.Time           `gorm:"column:updated_at"`
@@ -82,4 +82,37 @@ func ToResponse(user *User) *UserResponse {
 	}
 
 	return response
+}
+
+// AfterFind loads attachments after finding the model
+func (u *User) AfterFind(tx *gorm.DB) error {
+	var avatar storage.Attachment
+	err := tx.Model(&storage.Attachment{}).
+		Where("model_type = ? AND model_id = ? AND field = ?", "users", u.Id, "avatar").
+		First(&avatar).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return err
+	}
+	if err == nil {
+		u.Avatar = &avatar
+	}
+	return nil
+}
+
+// BeforeCreate hook
+func (u *User) BeforeCreate(tx *gorm.DB) error {
+	if u.Avatar != nil {
+		u.Avatar.ModelType = "users"
+		u.Avatar.Field = "avatar"
+	}
+	return nil
+}
+
+// BeforeUpdate hook
+func (u *User) BeforeUpdate(tx *gorm.DB) error {
+	if u.Avatar != nil {
+		u.Avatar.ModelType = "users"
+		u.Avatar.Field = "avatar"
+	}
+	return nil
 }
