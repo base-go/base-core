@@ -48,3 +48,19 @@ func InitializeCoreModules(init ModuleInitializer) map[string]module.Module {
 
 	return modules
 }
+
+// InitializeRemainingCoreModules loads and initializes all core modules except auth
+func InitializeRemainingCoreModules(init ModuleInitializer) map[string]module.Module {
+	modules := make(map[string]module.Module)
+
+	// Initialize users module
+	usersModule := users.NewUserModule(
+		init.DB,
+		init.Router,
+		init.Logger.GetZapLogger(),
+		init.Storage,
+	)
+	modules["users"] = usersModule
+
+	return modules
+}

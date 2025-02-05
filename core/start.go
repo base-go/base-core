@@ -2,6 +2,7 @@ package core
 
 import (
 	"base/app"
+	"base/core/app/auth"
 	"base/core/config"
 	"base/core/database"
 	"base/core/email"
@@ -134,32 +135,48 @@ func StartApplication() (*Application, error) {
 		ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.PersistAuthorization(true)))
 	appLogger.Info("Swagger documentation enabled")
 
-	// Create API router group
+	// Create API router group with API Key middleware
 	apiGroup := router.Group("/api")
 	apiGroup.Use(middleware.APIKeyMiddleware())
+
+	// Create auth group that only requires API key
+	authGroup := apiGroup.Group("/")
 
 	// Create a protected group that requires Bearer token
 	protectedGroup := apiGroup.Group("/")
 	protectedGroup.Use(middleware.AuthMiddleware())
 
-	// Initialize core modules with all dependencies
-	appLogger.Info("Initializing core modules")
+	// Initialize auth module with authGroup
+	authModule := auth.NewAuthModule(
+		db.DB,
+		authGroup,
+		emailSender,
+		appLogger.GetZapLogger(),
+		Emitter,
+	)
+	modules := make(map[string]module.Module)
+	modules["auth"] = authModule
+
+	// Initialize remaining core modules with protectedGroup
 	moduleInit := ModuleInitializer{
 		DB:          db.DB,
-		Router:      protectedGroup, // Use the protected group for core modules
+		Router:      protectedGroup,
 		EmailSender: emailSender,
 		Logger:      appLogger,
 		Emitter:     Emitter,
 		Storage:     activeStorage,
 	}
 
-	modules := InitializeCoreModules(moduleInit)
-	appLogger.Info("Core modules initialized", logger.Int("count", len(modules)))
+	// Initialize remaining core modules
+	remainingModules := InitializeRemainingCoreModules(moduleInit)
+	for k, v := range remainingModules {
+		modules[k] = v
+	}
 
 	// Initialize application modules
 	appLogger.Info("Initializing application modules")
 	appInitializer := &app.AppModuleInitializer{
-		Router:  apiGroup,
+		Router:  protectedGroup,
 		Logger:  appLogger,
 		Emitter: Emitter,
 		Storage: activeStorage,
