@@ -2,7 +2,9 @@ package auth
 
 import (
 	"base/core/email"
+	"bytes"
 	"errors"
+	"html/template"
 	"net/http"
 	"strings"
 
@@ -59,13 +61,13 @@ func (c *AuthController) Register(ctx *gin.Context) {
 	//	Send welcome email
 	msg := email.Message{
 		To:      []string{user.Email},
-		From:    "support@albafone.app",
-		Subject: "Welcome to Our Application",
+		From:    "no-reply@base.al",
+		Subject: "Welcome to Base",
 		Body:    c.getWelcomeEmailBody(user.Name),
 		IsHTML:  true,
 	}
 
-	err = email.Send(msg)
+	err = c.emailSender.Send(msg)
 	if err != nil {
 		c.logger.Error("Failed to send welcome email",
 			zap.Error(err),
@@ -196,8 +198,33 @@ func (c *AuthController) ResetPassword(ctx *gin.Context) {
 }
 
 func (c *AuthController) getWelcomeEmailBody(name string) string {
-	return "<h1>Welcome to Albafone!</h1>" +
-		"<p>Hi " + name + ",</p>" +
-		"<p>Thank you for registering with our application.</p>" +
-		"<p>Best regards,<br>Team</p>"
+	type EmailData struct {
+		Title string
+		Name  string
+	}
+
+	data := EmailData{
+		Title: "Welcome to Base!",
+		Name:  name,
+	}
+
+	tmpl, err := template.New("email").Parse(emailTemplate)
+	if err != nil {
+		// Fallback to simple email if template parsing fails
+		return "<h1>Welcome to Base!</h1>" +
+			"<p>Hi " + name + ",</p>" +
+			"<p>Thank you for registering with our application.</p>" +
+			"<p>Best regards,<br>Team</p>"
+	}
+
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		// Fallback to simple email if template execution fails
+		return "<h1>Welcome to Base!</h1>" +
+			"<p>Hi " + name + ",</p>" +
+			"<p>Thank you for registering with our application.</p>" +
+			"<p>Best regards,<br>Team</p>"
+	}
+
+	return buf.String()
 }
