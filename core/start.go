@@ -185,6 +185,8 @@ func StartApplication() (*Application, error) {
 	}
 	appInitializer.InitializeModules(db.DB)
 
+	// PACKAGE INITIALIZER MARKER - Do not remove this comment because it's used by the CLI to add new package initializers
+
 	// Add health check route
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
