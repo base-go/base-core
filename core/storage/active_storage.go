@@ -34,19 +34,24 @@ func NewActiveStorage(db *gorm.DB, config Config) (*ActiveStorage, error) {
 		})
 	case "s3":
 		provider, err = NewS3Provider(S3Config{
-			APIKey:    config.APIKey,
-			APISecret: config.APISecret,
-			Endpoint:  config.Endpoint,
-			Bucket:    config.Bucket,
-			BaseURL:   config.BaseURL,
+			APIKey:          config.APIKey,
+			APISecret:       config.APISecret,
+			AccessKeyID:     config.APIKey,
+			AccessKeySecret: config.APISecret,
+			AccountID:       config.AccountID,
+			Endpoint:        config.Endpoint,
+			Bucket:          config.Bucket,
+			BaseURL:         config.BaseURL,
+			Region:          config.Region,
 		})
 	case "r2":
 		provider, err = NewR2Provider(R2Config{
-			AccessKeyID: config.APIKey,
-
-			Bucket:  config.Bucket,
-			BaseURL: config.BaseURL,
-			CDN:     config.CDN,
+			AccessKeyID:     config.APIKey,
+			AccessKeySecret: config.APISecret,
+			AccountID:       config.AccountID,
+			Bucket:          config.Bucket,
+			BaseURL:         config.BaseURL,
+			CDN:             config.CDN,
 		})
 	default:
 		return nil, fmt.Errorf("unsupported storage provider: %s", config.Provider)

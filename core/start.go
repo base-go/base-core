@@ -79,9 +79,11 @@ func StartApplication() (*Application, error) {
 		BaseURL:   cfg.StorageBaseURL,
 		APIKey:    cfg.StorageAPIKey,
 		APISecret: cfg.StorageAPISecret,
+		AccountID: cfg.StorageAccountID,
 		Endpoint:  cfg.StorageEndpoint,
 		Bucket:    cfg.StorageBucket,
 		CDN:       cfg.CDN,
+		Region:    cfg.StorageRegion,
 	}
 
 	activeStorage, err := storage.NewActiveStorage(db.DB, storageConfig)

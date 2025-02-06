@@ -12,11 +12,15 @@ import (
 
 // S3Config holds configuration for S3 storage
 type S3Config struct {
-	APIKey    string
-	APISecret string
-	Endpoint  string
-	Bucket    string
-	BaseURL   string
+	APIKey          string
+	APISecret       string
+	AccessKeyID     string
+	AccessKeySecret string
+	AccountID       string
+	Endpoint        string
+	Bucket          string
+	BaseURL         string
+	Region          string
 }
 
 type s3Provider struct {
@@ -33,9 +37,9 @@ func NewS3Provider(config S3Config) (Provider, error) {
 	}
 
 	sess, err := session.NewSession(&aws.Config{
-		Credentials:      credentials.NewStaticCredentials(config.APIKey, config.APISecret, ""),
+		Credentials:      credentials.NewStaticCredentials(config.AccessKeyID, config.AccessKeySecret, ""),
 		Endpoint:         aws.String(endpoint),
-		Region:           aws.String("eu-central-1"),
+		Region:           aws.String(config.Region),
 		S3ForcePathStyle: aws.Bool(true),
 	})
 	if err != nil {
