@@ -42,7 +42,7 @@ func (s *UserService) toResponse(user *User) *UserResponse {
 
 func (s *UserService) GetByID(id uint) (*UserResponse, error) {
 	var user User
-	if err := s.db.Preload("Avatar").First(&user, id).Error; err != nil {
+	if err := s.db.First(&user, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			s.logger.Debug("User not found", zap.Uint("user_id", id))
 		} else {
@@ -58,7 +58,7 @@ func (s *UserService) GetByID(id uint) (*UserResponse, error) {
 
 func (s *UserService) Update(id uint, req *UpdateRequest) (*UserResponse, error) {
 	var user User
-	if err := s.db.Preload("Avatar").First(&user, id).Error; err != nil {
+	if err := s.db.First(&user, id).Error; err != nil {
 		s.logger.Error("Failed to find user for update",
 			zap.Error(err),
 			zap.Uint("user_id", id))
@@ -117,7 +117,7 @@ func (s *UserService) RemoveAvatar(ctx context.Context, id uint) (*UserResponse,
 	}()
 
 	var user User
-	if err := tx.Preload("Avatar").First(&user, id).Error; err != nil {
+	if err := tx.First(&user, id).Error; err != nil {
 		tx.Rollback()
 		return nil, err
 	}

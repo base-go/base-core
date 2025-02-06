@@ -32,7 +32,7 @@ func NewAuthModule(db *gorm.DB, router *gin.RouterGroup, emailSender email.Sende
 		EmailSender: emailSender,
 		Emitter:     emitter,
 	}
-
+	authModule.Migrate()
 	authModule.Routes(router)
 	return authModule
 }
