@@ -4,7 +4,7 @@ import (
 	"base/core/config"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func GenerateJWT(userID uint) (string, error) {

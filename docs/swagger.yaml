@@ -27,6 +27,7 @@ definitions:
   auth.ForgotPasswordRequest:
     properties:
       email:
+        example: john@example.com
         type: string
     required:
     - email
@@ -34,8 +35,10 @@ definitions:
   auth.LoginRequest:
     properties:
       email:
+        example: john@example.com
         type: string
       password:
+        example: password123
         type: string
     required:
     - email

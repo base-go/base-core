@@ -5,6 +5,7 @@ go 1.22.2
 require (
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/gin-gonic/gin v1.10.0
+	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/joho/godotenv v1.5.1
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/swag v1.16.3
@@ -79,7 +80,6 @@ require (
 )
 
 require (
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-contrib/cors v1.7.3
 	github.com/gorilla/websocket v1.5.3
 	github.com/jinzhu/inflection v1.0.0 // indirect
