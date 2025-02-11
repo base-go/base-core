@@ -3,10 +3,10 @@ package auth
 import (
 	"base/core/email"
 	"base/core/emitter"
+	"base/core/logger"
 	"base/core/module"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -15,12 +15,12 @@ type AuthModule struct {
 	DB          *gorm.DB
 	Controller  *AuthController
 	Service     *AuthService
-	Logger      *zap.Logger
+	Logger      logger.Logger
 	EmailSender email.Sender
 	Emitter     *emitter.Emitter
 }
 
-func NewAuthModule(db *gorm.DB, router *gin.RouterGroup, emailSender email.Sender, logger *zap.Logger, emitter *emitter.Emitter) module.Module {
+func NewAuthModule(db *gorm.DB, router *gin.RouterGroup, emailSender email.Sender, logger logger.Logger, emitter *emitter.Emitter) module.Module {
 	service := NewAuthService(db, emailSender, emitter)
 	controller := NewAuthController(service, emailSender, logger)
 
@@ -32,8 +32,7 @@ func NewAuthModule(db *gorm.DB, router *gin.RouterGroup, emailSender email.Sende
 		EmailSender: emailSender,
 		Emitter:     emitter,
 	}
-	authModule.Migrate()
-	authModule.Routes(router)
+
 	return authModule
 }
 

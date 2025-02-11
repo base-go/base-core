@@ -20,6 +20,8 @@ func (AuthUser) TableName() string {
 type LoginEvent struct {
 	User         *AuthUser
 	LoginAllowed *bool
+	Error        *ErrorResponse
+	Response     *AuthResponse
 }
 
 // RegisterRequest represents the payload for user registration
@@ -45,9 +47,9 @@ type ForgotPasswordRequest struct {
 }
 
 type ResetPasswordRequest struct {
-	Email       string `json:"email" binding:"required,email"`
+	Email       string `json:"email" binding:"required,email" example:"john@example.com"`
 	Token       string `json:"token" binding:"required"`
-	NewPassword string `json:"new_password" binding:"required,min=6"`
+	NewPassword string `json:"new_password" binding:"required,min=6" example:"newpassword123"`
 }
 
 type AuthResponse struct {

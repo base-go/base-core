@@ -1,22 +1,22 @@
 package users
 
 import (
+	"base/core/logger"
 	"errors"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
+
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 type UserController struct {
 	service *UserService
-	logger  *zap.Logger
+	logger  logger.Logger
 }
 
-func NewUserController(service *UserService, logger *zap.Logger) *UserController {
+func NewUserController(service *UserService, logger logger.Logger) *UserController {
 	return &UserController{
 		service: service,
 		logger:  logger,
@@ -24,29 +24,28 @@ func NewUserController(service *UserService, logger *zap.Logger) *UserController
 }
 
 func (c *UserController) Routes(router *gin.RouterGroup) {
-	router.GET("/users/:id", c.Get)
-	router.PUT("/users/:id", c.Update)
-
-	router.PUT("/users/:id/avatar", c.UpdateAvatar)
-	router.PUT("/users/:id/password", c.UpdatePassword)
+	router.GET("/users/me", c.Get)
+	router.PUT("/users/me", c.Update)
+	router.PUT("/users/me/avatar", c.UpdateAvatar)
+	router.PUT("/users/me/password", c.UpdatePassword)
 }
 
-// @Summary Get user by ID
-// @Description Get user by ID
+// @Summary Get user from Authenticated User Token
+// @Description Get user by Bearer Token
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Tags Core/Users
 // @Accept json
 // @Produce json
-// @Param id path int true "User ID"
 // @Success 200 {object} User
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
-// @Router /users/{id} [get]
+// @Router /users/me [get]
 func (c *UserController) Get(ctx *gin.Context) {
-	id, err := strconv.Atoi(ctx.Param("id"))
-	if err != nil {
+	id := ctx.GetUint("user_id")
+	c.logger.Debug("Getting user", logger.Uint("user_id", id))
+	if id == 0 {
 		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid user ID"})
 		return
 	}
@@ -57,7 +56,8 @@ func (c *UserController) Get(ctx *gin.Context) {
 			ctx.JSON(http.StatusNotFound, ErrorResponse{Error: "User not found"})
 			return
 		}
-		c.logger.Error("Failed to get user", zap.Error(err), zap.Int("user_id", id))
+		c.logger.Error("Failed to get user",
+			logger.Uint("user_id", id))
 		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to fetch user"})
 		return
 	}
@@ -65,23 +65,22 @@ func (c *UserController) Get(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, item)
 }
 
-// @Summary Update user
-// @Description Update user
+// @Summary Update user from Authenticated User Token
+// @Description Update user by Bearer Token
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Tags Core/Users
 // @Accept json
 // @Produce json
-// @Param id path int true "User ID"
 // @Param input body UpdateRequest true "Update Request"
 // @Success 200 {object} User
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
-// @Router /users/{id} [put]
+// @Router /users/me [put]
 func (c *UserController) Update(ctx *gin.Context) {
-	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
-	if err != nil {
+	id := ctx.GetUint("user_id")
+	if id == 0 {
 		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid ID format"})
 		return
 	}
@@ -95,8 +94,7 @@ func (c *UserController) Update(ctx *gin.Context) {
 	item, err := c.service.Update(uint(id), &req)
 	if err != nil {
 		c.logger.Error("Failed to update user",
-			zap.Error(err),
-			zap.Uint64("user_id", id))
+			logger.Uint("user_id", id))
 
 		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to update user: " + err.Error()})
 		return
@@ -105,23 +103,22 @@ func (c *UserController) Update(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, item)
 }
 
-// @Summary Update user avatar
-// @Description Update user avatar
+// @Summary Update user avatar from Authenticated User Token
+// @Description Update user avatar by Bearer Token
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Tags Core/Users
 // @Accept multipart/form-data
 // @Produce json
-// @Param id path int true "User ID"
 // @Param avatar formData file true "Avatar file"
 // @Success 200 {object} User
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
-// @Router /users/{id}/avatar [put]
+// @Router /users/me/avatar [put]
 func (c *UserController) UpdateAvatar(ctx *gin.Context) {
-	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
-	if err != nil {
+	id := ctx.GetUint("user_id")
+	if id == 0 {
 		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid ID format"})
 		return
 	}
@@ -135,8 +132,7 @@ func (c *UserController) UpdateAvatar(ctx *gin.Context) {
 	updatedUser, err := c.service.UpdateAvatar(ctx, uint(id), file)
 	if err != nil {
 		c.logger.Error("Failed to update avatar",
-			zap.Error(err),
-			zap.Uint64("user_id", id))
+			logger.Uint("user_id", id))
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			ctx.JSON(http.StatusNotFound, ErrorResponse{Error: "User not found"})
@@ -149,30 +145,29 @@ func (c *UserController) UpdateAvatar(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, updatedUser)
 }
 
-// @Summary Update user password
-// @Description Update user password
+// @Summary Update user password from Authenticated User Token
+// @Description Update user password by Bearer Token
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Tags Core/Users
 // @Accept json
 // @Produce json
-// @Param id path int true "User ID"
 // @Param input body UpdatePasswordRequest true "Update Password Request"
 // @Success 200 {object} User
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
-// @Router /users/{id}/password [put]
+// @Router /users/me/password [put]
 func (c *UserController) UpdatePassword(ctx *gin.Context) {
-	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
-	if err != nil {
+	id := ctx.GetUint("user_id")
+	if id == 0 {
 		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid user ID"})
 		return
 	}
 
 	var req UpdatePasswordRequest
 	if err := ctx.ShouldBind(&req); err != nil {
-		c.logger.Error("Failed to bind password update request", zap.Error(err))
+		c.logger.Error("Failed to bind password update request")
 		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid input: " + err.Error()})
 		return
 	}
@@ -182,11 +177,10 @@ func (c *UserController) UpdatePassword(ctx *gin.Context) {
 		return
 	}
 
-	err = c.service.UpdatePassword(uint(id), &req)
+	err := c.service.UpdatePassword(uint(id), &req)
 	if err != nil {
 		c.logger.Error("Failed to update password",
-			zap.Error(err),
-			zap.Uint64("user_id", id))
+			logger.Uint("user_id", id))
 
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):

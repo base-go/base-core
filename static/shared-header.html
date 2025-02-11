@@ -1,0 +1,73 @@
+<div class="shared-header">
+    <style>
+        .shared-header {
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            padding: 8px 16px;
+            color: #2c3e50;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            background: #f8f9fa;
+        }
+
+        .nav-link.active {
+            background: #3498db;
+            color: white;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 2px;
+            background: #3498db;
+            transition: width 0.2s;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .nav-link.active::after {
+            display: none;
+        }
+    </style>
+    <nav class="nav-links">
+        <a href="/static/index.html" class="nav-link" id="nav-home">Home</a>
+        <a href="/static/chat.html" class="nav-link" id="nav-chat">Chat Room</a>
+        <a href="/static/draw.html" class="nav-link" id="nav-draw">Drawing Board</a>
+        <a href="/static/editor.html" class="nav-link" id="nav-editor">Code Editor</a>
+        <a href="/static/monitor.html" class="nav-link" id="nav-monitor">System Monitor</a>
+        <a href="/static/kanban.html" class="nav-link" id="nav-kanban">Kanban Board</a>
+        <a href="/static/spreadsheet.html" class="nav-link" id="nav-spreadsheet">Spreadsheet</a>
+    </nav>
+    <script>
+        // Highlight current page in nav
+        const currentPage = window.location.pathname.split('/').pop().replace('.html', '');
+        const navId = currentPage === '' || currentPage === 'index' ? 'nav-home' : `nav-${currentPage}`;
+        document.getElementById(navId)?.classList.add('active');
+    </script>
+</div>

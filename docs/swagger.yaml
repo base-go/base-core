@@ -71,8 +71,10 @@ definitions:
   auth.ResetPasswordRequest:
     properties:
       email:
+        example: john@example.com
         type: string
       new_password:
+        example: newpassword123
         minLength: 6
         type: string
       token:
@@ -94,6 +96,42 @@ definitions:
       valid:
         description: Valid is true if Time is not NULL
         type: boolean
+    type: object
+  media.MediaListResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      file:
+        $ref: '#/definitions/storage.Attachment'
+      id:
+        type: integer
+      name:
+        type: string
+      type:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  media.MediaResponse:
+    properties:
+      created_at:
+        type: string
+      deleted_at:
+        $ref: '#/definitions/gorm.DeletedAt'
+      description:
+        type: string
+      file:
+        $ref: '#/definitions/storage.Attachment'
+      id:
+        type: integer
+      name:
+        type: string
+      type:
+        type: string
+      updated_at:
+        type: string
     type: object
   oauth.ErrorResponse:
     properties:
@@ -123,6 +161,23 @@ definitions:
       url:
         type: string
     type: object
+  types.PaginatedResponse:
+    properties:
+      data: {}
+      pagination:
+        $ref: '#/definitions/types.Pagination'
+    type: object
+  types.Pagination:
+    properties:
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
   users.ErrorResponse:
     properties:
       error:
@@ -150,6 +205,8 @@ definitions:
     type: object
   users.User:
     properties:
+      avatar:
+        $ref: '#/definitions/storage.Attachment'
       createdAt:
         type: string
       deletedAt:
@@ -277,7 +334,6 @@ paths:
             $ref: '#/definitions/auth.ErrorResponse'
       security:
       - ApiKeyAuth: []
-      - BearerAuth: []
       summary: Logout
       tags:
       - Core/Auth
@@ -353,6 +409,239 @@ paths:
       summary: Reset Password
       tags:
       - Core/Auth
+  /media:
+    get:
+      description: Get a paginated list of media items
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.PaginatedResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: List media items
+      tags:
+      - Core/Media
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create a new media item with optional file upload
+      parameters:
+      - description: Media name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Media type
+        in: formData
+        name: type
+        required: true
+        type: string
+      - description: Media description
+        in: formData
+        name: description
+        type: string
+      - description: Media file
+        in: formData
+        name: file
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/media.MediaResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new media item
+      tags:
+      - Core/Media
+  /media/{id}:
+    delete:
+      description: Delete a media item and its associated file
+      parameters:
+      - description: Media ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a media item
+      tags:
+      - Core/Media
+    get:
+      description: Get a media item by ID
+      parameters:
+      - description: Media ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/media.MediaResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get a media item
+      tags:
+      - Core/Media
+    put:
+      consumes:
+      - multipart/form-data
+      description: Update a media item's details and optionally its file
+      parameters:
+      - description: Media ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Media name
+        in: formData
+        name: name
+        type: string
+      - description: Media type
+        in: formData
+        name: type
+        type: string
+      - description: Media description
+        in: formData
+        name: description
+        type: string
+      - description: Media file
+        in: formData
+        name: file
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/media.MediaResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update a media item
+      tags:
+      - Core/Media
+  /media/{id}/file:
+    delete:
+      description: Remove the file attached to a media item
+      parameters:
+      - description: Media ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/media.MediaResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Remove media file
+      tags:
+      - Core/Media
+    put:
+      consumes:
+      - multipart/form-data
+      description: Update the file attached to a media item
+      parameters:
+      - description: Media ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Media file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/media.MediaResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update media file
+      tags:
+      - Core/Media
+  /media/all:
+    get:
+      description: Get an unpaginated list of all media items
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/media.MediaListResponse'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: List all media items
+      tags:
+      - Core/Media
+  /oauth/apple/callback:
+    post:
+      consumes:
+      - application/json
+      description: Handle the OAuth callback from Apple
+      parameters:
+      - description: Apple ID Token
+        in: body
+        name: idToken
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/users.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/oauth.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/oauth.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Apple OAuth callback
+      tags:
+      - Core/OAuth
   /oauth/facebook/callback:
     post:
       consumes:
@@ -417,17 +706,11 @@ paths:
       summary: Google OAuth callback
       tags:
       - Core/OAuth
-  /users/{id}:
+  /users/me:
     get:
       consumes:
       - application/json
-      description: Get user by ID
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: integer
+      description: Get user by Bearer Token
       produces:
       - application/json
       responses:
@@ -450,19 +733,14 @@ paths:
       security:
       - ApiKeyAuth: []
       - BearerAuth: []
-      summary: Get user by ID
+      summary: Get user from Authenticated User Token
       tags:
       - Core/Users
     put:
       consumes:
       - application/json
-      description: Update user
+      description: Update user by Bearer Token
       parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Update Request
         in: body
         name: input
@@ -491,20 +769,15 @@ paths:
       security:
       - ApiKeyAuth: []
       - BearerAuth: []
-      summary: Update user
+      summary: Update user from Authenticated User Token
       tags:
       - Core/Users
-  /users/{id}/avatar:
+  /users/me/avatar:
     put:
       consumes:
       - multipart/form-data
-      description: Update user avatar
+      description: Update user avatar by Bearer Token
       parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Avatar file
         in: formData
         name: avatar
@@ -532,20 +805,15 @@ paths:
       security:
       - ApiKeyAuth: []
       - BearerAuth: []
-      summary: Update user avatar
+      summary: Update user avatar from Authenticated User Token
       tags:
       - Core/Users
-  /users/{id}/password:
+  /users/me/password:
     put:
       consumes:
       - application/json
-      description: Update user password
+      description: Update user password by Bearer Token
       parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: integer
       - description: Update Password Request
         in: body
         name: input
@@ -574,17 +842,26 @@ paths:
       security:
       - ApiKeyAuth: []
       - BearerAuth: []
-      summary: Update user password
+      summary: Update user password from Authenticated User Token
       tags:
       - Core/Users
   /ws:
     get:
       consumes:
       - application/json
+      description: 'Establishes a WebSocket connection, check example at: /static/chat.html'
       parameters:
       - description: Client ID
         in: query
         name: id
+        type: string
+      - description: User Nickname
+        in: query
+        name: nickname
+        type: string
+      - description: Chat Room
+        in: query
+        name: room
         type: string
       produces:
       - application/json
@@ -597,6 +874,12 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/websocket.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Connect to WebSocket
+      tags:
+      - Core/Websocket
 schemes:
 - http
 - https

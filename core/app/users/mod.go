@@ -1,11 +1,11 @@
 package users
 
 import (
+	"base/core/logger"
 	"base/core/module"
 	"base/core/storage"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -14,20 +14,18 @@ type UserModule struct {
 	DB            *gorm.DB
 	Controller    *UserController
 	Service       *UserService
-	Logger        *zap.Logger
+	Logger        logger.Logger
 	ActiveStorage *storage.ActiveStorage
 }
 
 func NewUserModule(
 	db *gorm.DB,
 	router *gin.RouterGroup,
-	logger *zap.Logger,
+	logger logger.Logger,
 	activeStorage *storage.ActiveStorage,
 ) module.Module {
 	// Initialize service with active storage
 	service := NewUserService(db, logger, activeStorage)
-
-	// Initialize controller
 	controller := NewUserController(service, logger)
 
 	usersModule := &UserModule{
@@ -36,15 +34,6 @@ func NewUserModule(
 		Service:       service,
 		Logger:        logger,
 		ActiveStorage: activeStorage,
-	}
-
-	// Set up routes
-	usersModule.Routes(router)
-
-	// Perform database migration
-	if err := usersModule.Migrate(); err != nil {
-		logger.Error("Failed to migrate user module",
-			zap.Error(err))
 	}
 
 	return usersModule
@@ -57,7 +46,7 @@ func (m *UserModule) Routes(router *gin.RouterGroup) {
 func (m *UserModule) Migrate() error {
 	err := m.DB.AutoMigrate(&User{})
 	if err != nil {
-		m.Logger.Error("Migration failed", zap.Error(err))
+		m.Logger.Error("Migration failed", logger.String("error", err.Error()))
 		return err
 	}
 	return nil

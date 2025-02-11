@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collaborative Code Editor</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="/static/shared.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        #status {
+            color: #666;
+            margin-left: 10px;
+        }
+
+        .editor-container {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .CodeMirror {
+            height: 600px;
+            font-size: 14px;
+        }
+
+        .remote-cursor {
+            background-color: #90caf9;
+            width: 2px;
+            display: inline-block;
+        }
+
+        .remote-cursor-label {
+            position: absolute;
+            background-color: #1976d2;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            transform: translateY(-100%);
+            z-index: 1000;
+        }
+
+        .cursor-widget {
+            border-left: 2px solid #90caf9;
+            border-radius: 2px;
+            margin-left: -1px;
+        }
+
+        .users-panel {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .user-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            margin: 4px;
+            background: #007bff;
+            color: white;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        button {
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        button:hover:not(:disabled) {
+            background: #0056b3;
+        }
+
+        select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+        }
+
+        #nickname-input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Collaborative Code Editor</h1>
+            <div>
+                <input type="text" id="nickname-input" placeholder="Your nickname" value="Guest">
+                <button id="connect-btn">Connect</button>
+                <button id="disconnect-btn" disabled>Disconnect</button>
+                <span id="status">Status: Disconnected</span>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <select id="language-select">
+                <option value="javascript">JavaScript</option>
+                <option value="python">Python</option>
+                <option value="java">Java</option>
+            </select>
+            <button id="run-btn" disabled>Run Code</button>
+            <button id="share-btn" disabled>Share Code</button>
+        </div>
+
+        <div class="editor-container">
+            <textarea id="editor"></textarea>
+        </div>
+
+        <div class="users-panel">
+            <h3>Connected Users</h3>
+            <div id="users-list"></div>
+        </div>
+    </div>
+
+    <script>
+        const statusEl = document.getElementById('status');
+        const connectBtn = document.getElementById('connect-btn');
+        const disconnectBtn = document.getElementById('disconnect-btn');
+        const nicknameInput = document.getElementById('nickname-input');
+        const runBtn = document.getElementById('run-btn');
+        const shareBtn = document.getElementById('share-btn');
+        const usersListEl = document.getElementById('users-list');
+        const languageSelect = document.getElementById('language-select');
+
+        let socket;
+        let editor;
+        let isUpdating = false;
+        let cursors = new Map();
+        let cursorWidgets = new Map();
+        let lastCursorUpdate = 0;
+        const CURSOR_THROTTLE = 50; // ms
+
+        // Initialize CodeMirror
+        editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+            mode: 'javascript',
+            theme: 'monokai',
+            lineNumbers: true,
+            autoCloseBrackets: true,
+            matchBrackets: true,
+            indentUnit: 4,
+            tabSize: 4,
+            indentWithTabs: true,
+            lineWrapping: true
+        });
+
+        // Sample initial code
+        const initialCode = `// Welcome to the collaborative code editor!
+// Start typing and your changes will be synced with other users.
+
+function greet(name) {
+    return \`Hello, \${name}!\`;
+}
+
+console.log(greet('World'));`;
+
+        editor.setValue(initialCode);
+
+        function updateStatus(status) {
+            statusEl.textContent = `Status: ${status}`;
+        }
+
+        function updateUsersList(users) {
+            usersListEl.innerHTML = '';
+            users.forEach(user => {
+                const badge = document.createElement('span');
+                badge.className = 'user-badge';
+                badge.textContent = user;
+                usersListEl.appendChild(badge);
+            });
+        }
+
+        function createCursorWidget(nickname, color) {
+            const widget = document.createElement('span');
+            widget.className = 'remote-cursor';
+            widget.style.backgroundColor = color;
+
+            const label = document.createElement('span');
+            label.className = 'remote-cursor-label';
+            label.style.backgroundColor = color;
+            label.textContent = nickname;
+            widget.appendChild(label);
+
+            return widget;
+        }
+
+        function updateRemoteCursor(data) {
+            if (!data.nickname || data.nickname === nicknameInput.value.trim()) return;
+
+            // Remove old cursor widget if it exists
+            if (cursorWidgets.has(data.nickname)) {
+                cursorWidgets.get(data.nickname).clear();
+            }
+
+            const pos = editor.posFromIndex(data.cursor);
+            const cursorEl = createCursorWidget(data.nickname, data.color || '#1976d2');
+            const widget = editor.setBookmark(pos, { widget: cursorEl });
+            cursorWidgets.set(data.nickname, widget);
+        }
+
+        function sendCursorPosition() {
+            const now = Date.now();
+            if (now - lastCursorUpdate < CURSOR_THROTTLE) return;
+            lastCursorUpdate = now;
+
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                const cursor = editor.indexFromPos(editor.getCursor());
+                const data = {
+                    type: 'cursor_update',
+                    content: {
+                        nickname: nicknameInput.value.trim() || 'Guest',
+                        cursor: cursor,
+                        color: '#' + Math.floor(Math.random()*16777215).toString(16) // Random color per user
+                    }
+                };
+                socket.send(JSON.stringify(data));
+            }
+        }
+
+        function connect() {
+            const clientId = 'editor_' + Math.random().toString(36).substr(2, 9);
+            const nickname = nicknameInput.value.trim() || 'Guest';
+            socket = new WebSocket(`ws://localhost:8001/api/ws?id=${clientId}&room=code_editor&nickname=${encodeURIComponent(nickname)}`);
+
+            socket.onopen = function() {
+                updateStatus('Connected');
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+                runBtn.disabled = false;
+                shareBtn.disabled = false;
+
+                // Send initial code to sync
+                sendCodeUpdate(editor.getValue());
+            };
+
+            socket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                
+                if (data.type === 'code_update' && !isUpdating) {
+                    isUpdating = true;
+                    const cursor = editor.getCursor();
+                    editor.setValue(data.content);
+                    editor.setCursor(cursor);
+                    isUpdating = false;
+                } else if (data.type === 'users_update') {
+                    updateUsersList(data.content);
+                } else if (data.type === 'cursor_update') {
+                    updateRemoteCursor(data.content);
+                } else if (data.type === 'selection_update') {
+                    updateRemoteSelection(data.content);
+                }
+            };
+
+            socket.onclose = function() {
+                updateStatus('Disconnected');
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+                runBtn.disabled = true;
+                shareBtn.disabled = true;
+                usersListEl.innerHTML = '';
+                
+                // Clear all cursor widgets
+                cursorWidgets.forEach(widget => widget.clear());
+                cursorWidgets.clear();
+            };
+
+            socket.onerror = function(error) {
+                console.error('WebSocket Error:', error);
+                updateStatus('Error occurred');
+            };
+        }
+
+        function disconnect() {
+            if (socket) {
+                socket.close();
+            }
+            // Clean up all cursor widgets
+            cursorWidgets.forEach(widget => widget.clear());
+            cursorWidgets.clear();
+        }
+
+        function sendCodeUpdate(code) {
+            if (socket && socket.readyState === WebSocket.OPEN && !isUpdating) {
+                const data = {
+                    type: 'code_update',
+                    content: code
+                };
+                socket.send(JSON.stringify(data));
+            }
+        }
+
+        // Event Listeners
+        connectBtn.addEventListener('click', connect);
+        disconnectBtn.addEventListener('click', disconnect);
+
+        editor.on('change', (cm, change) => {
+            if (!isUpdating) {
+                sendCodeUpdate(cm.getValue());
+            }
+        });
+
+        editor.on('cursorActivity', () => {
+            if (!isUpdating) {
+                sendCursorPosition();
+            }
+        });
+
+        // Handle cursor visibility when window loses focus
+        window.addEventListener('blur', () => {
+            cursorWidgets.forEach(widget => widget.clear());
+        });
+
+        window.addEventListener('focus', () => {
+            sendCursorPosition();
+        });
+
+        languageSelect.addEventListener('change', (e) => {
+            editor.setOption('mode', e.target.value);
+        });
+
+        runBtn.addEventListener('click', () => {
+            // In a real implementation, this would send the code to a backend service
+            try {
+                eval(editor.getValue());
+            } catch (error) {
+                console.error('Error running code:', error);
+            }
+        });
+
+        shareBtn.addEventListener('click', () => {
+            const code = editor.getValue();
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Code copied to clipboard!');
+            });
+        });
+    </script>
+</body>
+</html>

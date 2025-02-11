@@ -141,29 +141,42 @@ func (s *AuthService) Login(req *LoginRequest) (*AuthResponse, error) {
 		return nil, errors.New("invalid credentials")
 	}
 
+	// Proceed with generating token and response
+	now := time.Now()
+	token, err := helper.GenerateJWT(user.User.Id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate token: %w", err)
+	}
+
+	// Create the response
+	response := &AuthResponse{
+		AccessToken: token,
+		Exp:         now.Add(24 * time.Hour).Unix(),
+		Username:    user.Username,
+		ID:          user.User.Id,
+		Avatar:      user.Avatar,
+		Email:       user.Email,
+		Name:        user.Name,
+		LastLogin:   now.Format(time.RFC3339),
+	}
+
 	// Prepare the login event
 	loginAllowed := true
 	event := LoginEvent{
 		User:         &user,
 		LoginAllowed: &loginAllowed,
+		Response:     response,
 	}
 
 	// Emit the login attempt event
 	s.emitter.Emit("user.login_attempt", &event)
-	// Debug statement to confirm loginAllowed status after event processing
-	fmt.Printf("Login allowed after event processing: %v\n", loginAllowed)
 
 	// Check if login was allowed after event listeners have processed it
 	if !loginAllowed {
-		fmt.Println("Login attempt was blocked by event listeners")
-		return nil, errors.New("not authorized")
-	}
-
-	// Proceed with login if allowed
-	now := time.Now()
-	token, err := helper.GenerateJWT(user.User.Id)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate token: %w", err)
+		if event.Error != nil {
+			return event.Response, errors.New(event.Error.Error)
+		}
+		return event.Response, errors.New("not authorized")
 	}
 
 	// Update last login with proper time handling
@@ -174,16 +187,7 @@ func (s *AuthService) Login(req *LoginRequest) (*AuthResponse, error) {
 		return nil, fmt.Errorf("failed to update last login: %w", err)
 	}
 
-	return &AuthResponse{
-		AccessToken: token,
-		Exp:         now.Add(24 * time.Hour).Unix(),
-		Username:    user.Username,
-		ID:          user.User.Id,
-		Avatar:      user.Avatar,
-		Email:       user.Email,
-		Name:        user.Name,
-		LastLogin:   now.Format(time.RFC3339),
-	}, nil
+	return response, nil
 }
 
 func (s *AuthService) ForgotPassword(email string) error {

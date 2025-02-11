@@ -2,9 +2,8 @@ package auth
 
 import (
 	"base/core/email"
-	"bytes"
+	"base/core/logger"
 	"errors"
-	"html/template"
 	"net/http"
 	"strings"
 
@@ -15,10 +14,10 @@ import (
 type AuthController struct {
 	service     *AuthService
 	emailSender email.Sender
-	logger      *zap.Logger
+	logger      logger.Logger
 }
 
-func NewAuthController(service *AuthService, emailSender email.Sender, logger *zap.Logger) *AuthController {
+func NewAuthController(service *AuthService, emailSender email.Sender, logger logger.Logger) *AuthController {
 	return &AuthController{
 		service:     service,
 		emailSender: emailSender,
@@ -61,20 +60,20 @@ func (c *AuthController) Register(ctx *gin.Context) {
 	//	Send welcome email
 	msg := email.Message{
 		To:      []string{user.Email},
-		From:    "no-reply@base.al",
-		Subject: "Welcome to Base",
+		From:    "support@albafone.app",
+		Subject: "Welcome to Our Application",
 		Body:    c.getWelcomeEmailBody(user.Name),
 		IsHTML:  true,
 	}
 
-	err = c.emailSender.Send(msg)
+	err = email.Send(msg)
 	if err != nil {
 		c.logger.Error("Failed to send welcome email",
-			zap.Error(err),
-			zap.String("email", user.Email))
+			logger.String("error", err.Error()),
+			logger.String("email", user.Email))
 	} else {
 		c.logger.Info("Welcome email sent",
-			zap.String("email", user.Email))
+			logger.String("email", user.Email))
 	}
 
 	ctx.JSON(http.StatusCreated, user)
@@ -102,7 +101,19 @@ func (c *AuthController) Login(ctx *gin.Context) {
 
 	response, err := c.service.Login(&req)
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Invalid credentials"})
+		if strings.Contains(err.Error(), "access_denied") {
+			// Return both the response and error when user is not an author
+			ctx.JSON(http.StatusForbidden, gin.H{
+				"error": err.Error(),
+				"data":  response,
+			})
+			return
+		}
+		if strings.Contains(err.Error(), "invalid credentials") {
+			ctx.JSON(http.StatusUnauthorized, ErrorResponse{Error: err.Error()})
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Internal server error"})
 		return
 	}
 
@@ -113,7 +124,6 @@ func (c *AuthController) Login(ctx *gin.Context) {
 // @Summary Logout
 // @Description Logout user
 // @Security ApiKeyAuth
-// @Security BearerAuth
 // @Tags Core/Auth
 // @Accept json
 // @Produce json
@@ -198,33 +208,8 @@ func (c *AuthController) ResetPassword(ctx *gin.Context) {
 }
 
 func (c *AuthController) getWelcomeEmailBody(name string) string {
-	type EmailData struct {
-		Title string
-		Name  string
-	}
-
-	data := EmailData{
-		Title: "Welcome to Base!",
-		Name:  name,
-	}
-
-	tmpl, err := template.New("email").Parse(emailTemplate)
-	if err != nil {
-		// Fallback to simple email if template parsing fails
-		return "<h1>Welcome to Base!</h1>" +
-			"<p>Hi " + name + ",</p>" +
-			"<p>Thank you for registering with our application.</p>" +
-			"<p>Best regards,<br>Team</p>"
-	}
-
-	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, data); err != nil {
-		// Fallback to simple email if template execution fails
-		return "<h1>Welcome to Base!</h1>" +
-			"<p>Hi " + name + ",</p>" +
-			"<p>Thank you for registering with our application.</p>" +
-			"<p>Best regards,<br>Team</p>"
-	}
-
-	return buf.String()
+	return "<h1>Welcome to Albafone!</h1>" +
+		"<p>Hi " + name + ",</p>" +
+		"<p>Thank you for registering with our application.</p>" +
+		"<p>Best regards,<br>Team</p>"
 }

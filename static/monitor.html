@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Monitor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/static/shared.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        #status {
+            color: #666;
+        }
+
+        .charts {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            margin: 10px 0;
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        button:hover:not(:disabled) {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>System Monitor</h1>
+            <div>
+                <button id="connect-btn">Connect</button>
+                <button id="disconnect-btn" disabled>Disconnect</button>
+                <span id="status">Status: Disconnected</span>
+            </div>
+        </div>
+
+        <div class="metrics">
+            <div class="metric-card">
+                <div class="metric-label">CPU Usage</div>
+                <div class="metric-value" id="cpu-usage">0%</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Memory Usage</div>
+                <div class="metric-value" id="memory-usage">0%</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Disk Usage</div>
+                <div class="metric-value" id="disk-usage">0%</div>
+            </div>
+        </div>
+
+        <div class="charts">
+            <div class="chart-container">
+                <canvas id="cpuChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="memoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const statusEl = document.getElementById('status');
+        const connectBtn = document.getElementById('connect-btn');
+        const disconnectBtn = document.getElementById('disconnect-btn');
+        const cpuUsageEl = document.getElementById('cpu-usage');
+        const memoryUsageEl = document.getElementById('memory-usage');
+        const diskUsageEl = document.getElementById('disk-usage');
+
+        let socket;
+        const maxDataPoints = 20;
+        const initialData = Array(maxDataPoints).fill(0);
+        const labels = Array(maxDataPoints).fill('');
+
+        // CPU Chart
+        const cpuChart = new Chart(document.getElementById('cpuChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'CPU Usage %',
+                    data: [...initialData],
+                    borderColor: '#007bff',
+                    tension: 0.4,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+
+        // Memory Chart
+        const memoryChart = new Chart(document.getElementById('memoryChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Memory Usage %',
+                    data: [...initialData],
+                    borderColor: '#28a745',
+                    tension: 0.4,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+
+        function updateStatus(status) {
+            statusEl.textContent = `Status: ${status}`;
+        }
+
+        function updateCharts(data) {
+            // Update CPU chart
+            cpuChart.data.datasets[0].data.push(data.cpu);
+            cpuChart.data.datasets[0].data.shift();
+            cpuChart.update('none');
+
+            // Update Memory chart
+            memoryChart.data.datasets[0].data.push(data.memory);
+            memoryChart.data.datasets[0].data.shift();
+            memoryChart.update('none');
+
+            // Update metrics
+            cpuUsageEl.textContent = `${data.cpu.toFixed(1)}%`;
+            memoryUsageEl.textContent = `${data.memory.toFixed(1)}%`;
+            diskUsageEl.textContent = `${data.disk.toFixed(1)}%`;
+        }
+
+        function connect() {
+            const clientId = 'monitor_' + Math.random().toString(36).substr(2, 9);
+            socket = new WebSocket(`ws://localhost:8001/api/ws?id=${clientId}&room=system_monitor`);
+
+            socket.onopen = function() {
+                updateStatus('Connected');
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+            };
+
+            socket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                if (data.type === 'system_metrics') {
+                    updateCharts(data.content);
+                }
+            };
+
+            socket.onclose = function() {
+                updateStatus('Disconnected');
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+            };
+
+            socket.onerror = function(error) {
+                console.error('WebSocket Error:', error);
+                updateStatus('Error occurred');
+            };
+        }
+
+        function disconnect() {
+            if (socket) {
+                socket.close();
+            }
+        }
+
+        connectBtn.addEventListener('click', connect);
+        disconnectBtn.addEventListener('click', disconnect);
+
+        // Simulate system metrics for demo purposes
+        function simulateMetrics() {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                const data = {
+                    type: 'system_metrics',
+                    content: {
+                        cpu: Math.random() * 100,
+                        memory: Math.random() * 100,
+                        disk: 50 + Math.random() * 20
+                    }
+                };
+                socket.send(JSON.stringify(data));
+            }
+        }
+
+        // Start simulation when connected
+        setInterval(() => {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                simulateMetrics();
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

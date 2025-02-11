@@ -24,6 +24,7 @@ func NewOAuthController(service *OAuthService, logger *logrus.Logger, config *OA
 func (c *OAuthController) Routes(router *gin.RouterGroup) {
 	router.POST("/google/callback", c.GoogleCallback)
 	router.POST("/facebook/callback", c.FacebookCallback)
+	router.POST("/apple/callback", c.AppleCallback)
 }
 
 // GoogleCallback godoc
@@ -85,6 +86,39 @@ func (c *OAuthController) FacebookCallback(ctx *gin.Context) {
 	user, err := c.Service.ProcessFacebookOAuth(req.AccessToken)
 	if err != nil {
 		c.Logger.WithError(err).Error("Facebook OAuth authentication failed")
+		ctx.JSON(http.StatusUnauthorized, ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, user)
+}
+
+// AppleCallback godoc
+// @Summary Apple OAuth callback
+// @Description Handle the OAuth callback from Apple
+// @Security ApiKeyAuth
+// @Tags Core/OAuth
+// @Accept json
+// @Produce json
+// @Param idToken body string true "Apple ID Token"
+// @Success 200 {object} users.User
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Router /oauth/apple/callback [post]
+func (c *OAuthController) AppleCallback(ctx *gin.Context) {
+	var req struct {
+		IDToken string `json:"idToken"`
+	}
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		c.Logger.WithError(err).Error("Failed to bind JSON request")
+		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid request payload"})
+		return
+	}
+
+	user, err := c.Service.ProcessAppleOAuth(req.IDToken)
+	if err != nil {
+		c.Logger.WithError(err).Error("Apple OAuth authentication failed")
 		ctx.JSON(http.StatusUnauthorized, ErrorResponse{Error: err.Error()})
 		return
 	}
