@@ -51,6 +51,7 @@ func (c *MediaController) Routes(router *gin.RouterGroup) {
 // @Success 201 {object} MediaResponse
 // @Router /media [post]
 // @Security ApiKeyAuth
+// @Security BearerAuth
 func (c *MediaController) Create(ctx *gin.Context) {
 	var req CreateMediaRequest
 	if err := ctx.ShouldBind(&req); err != nil {
@@ -83,6 +84,7 @@ func (c *MediaController) Create(ctx *gin.Context) {
 // @Success 200 {object} MediaResponse
 // @Router /media/{id}/file [put]
 // @Security ApiKeyAuth
+// @Security BearerAuth
 func (c *MediaController) UpdateFile(ctx *gin.Context) {
 	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	if err != nil {
@@ -114,6 +116,7 @@ func (c *MediaController) UpdateFile(ctx *gin.Context) {
 // @Success 200 {object} MediaResponse
 // @Router /media/{id}/file [delete]
 // @Security ApiKeyAuth
+// @Security BearerAuth
 func (c *MediaController) RemoveFile(ctx *gin.Context) {
 	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	if err != nil {
@@ -144,6 +147,7 @@ func (c *MediaController) RemoveFile(ctx *gin.Context) {
 // @Success 200 {object} MediaResponse
 // @Router /media/{id} [put]
 // @Security ApiKeyAuth
+// @Security BearerAuth
 func (c *MediaController) Update(ctx *gin.Context) {
 	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	if err != nil {
@@ -180,6 +184,7 @@ func (c *MediaController) Update(ctx *gin.Context) {
 // @Success 204 "No Content"
 // @Router /media/{id} [delete]
 // @Security ApiKeyAuth
+// @Security BearerAuth
 func (c *MediaController) Delete(ctx *gin.Context) {
 	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	if err != nil {
@@ -204,6 +209,7 @@ func (c *MediaController) Delete(ctx *gin.Context) {
 // @Success 200 {object} MediaResponse
 // @Router /media/{id} [get]
 // @Security ApiKeyAuth
+// @Security BearerAuth
 func (c *MediaController) Get(ctx *gin.Context) {
 	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	if err != nil {
@@ -230,6 +236,7 @@ func (c *MediaController) Get(ctx *gin.Context) {
 // @Success 200 {object} types.PaginatedResponse
 // @Router /media [get]
 // @Security ApiKeyAuth
+// @Security BearerAuth
 func (c *MediaController) List(ctx *gin.Context) {
 	page := 1
 	limit := 10
@@ -263,6 +270,7 @@ func (c *MediaController) List(ctx *gin.Context) {
 // @Success 200 {array} MediaListResponse
 // @Router /media/all [get]
 // @Security ApiKeyAuth
+// @Security BearerAuth
 func (c *MediaController) ListAll(ctx *gin.Context) {
 	result, err := c.Service.GetAll(nil, nil)
 	if err != nil {

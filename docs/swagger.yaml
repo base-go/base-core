@@ -430,6 +430,7 @@ paths:
             $ref: '#/definitions/types.PaginatedResponse'
       security:
       - ApiKeyAuth: []
+      - BearerAuth: []
       summary: List media items
       tags:
       - Core/Media
@@ -465,6 +466,7 @@ paths:
             $ref: '#/definitions/media.MediaResponse'
       security:
       - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Create a new media item
       tags:
       - Core/Media
@@ -484,6 +486,7 @@ paths:
           description: No Content
       security:
       - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Delete a media item
       tags:
       - Core/Media
@@ -504,6 +507,7 @@ paths:
             $ref: '#/definitions/media.MediaResponse'
       security:
       - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Get a media item
       tags:
       - Core/Media
@@ -542,6 +546,7 @@ paths:
             $ref: '#/definitions/media.MediaResponse'
       security:
       - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Update a media item
       tags:
       - Core/Media
@@ -563,6 +568,7 @@ paths:
             $ref: '#/definitions/media.MediaResponse'
       security:
       - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Remove media file
       tags:
       - Core/Media
@@ -590,6 +596,7 @@ paths:
             $ref: '#/definitions/media.MediaResponse'
       security:
       - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Update media file
       tags:
       - Core/Media
@@ -607,6 +614,7 @@ paths:
             type: array
       security:
       - ApiKeyAuth: []
+      - BearerAuth: []
       summary: List all media items
       tags:
       - Core/Media

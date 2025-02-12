@@ -137,14 +137,14 @@ func StartApplication() (*Application, error) {
 		ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.PersistAuthorization(true)))
 	appLogger.Info("Swagger documentation enabled")
 
-	// Create API router group
+	// Create API router group with API key requirement for all routes
 	apiGroup := router.Group("/api")
 	apiGroup.Use(middleware.APIKeyMiddleware())
 
-	// Create auth group that only requires API key (for login, register, etc.)
-	authGroup := apiGroup.Group("/")
+	// Create auth group for login/register (only requires API key)
+	authGroup := apiGroup.Group("/auth")
 
-	// Create a protected group that requires Bearer token
+	// Create protected group that requires Bearer token
 	protectedGroup := apiGroup.Group("/")
 	protectedGroup.Use(middleware.AuthMiddleware())
 

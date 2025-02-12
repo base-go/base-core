@@ -37,8 +37,8 @@ func NewAuthModule(db *gorm.DB, router *gin.RouterGroup, emailSender email.Sende
 }
 
 func (m *AuthModule) Routes(router *gin.RouterGroup) {
-	authGroup := router.Group("/auth")
-	m.Controller.Routes(authGroup)
+	// Router is already /api/auth from start.go
+	m.Controller.Routes(router)
 }
 
 func (m *AuthModule) Migrate() error {

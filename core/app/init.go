@@ -17,14 +17,14 @@ import (
 
 // Core represents the core application with all its dependencies
 type Core struct {
-	DB            *gorm.DB
-	Router        *gin.RouterGroup // Protected routes requiring auth
-	AuthRouter    *gin.RouterGroup // Auth routes (login, register)
-	EmailSender   email.Sender
-	Logger        logger.Logger
-	Storage       *storage.ActiveStorage
-	Emitter       *emitter.Emitter
-	Modules       map[string]module.Module
+	DB          *gorm.DB
+	Router      *gin.RouterGroup // Protected routes requiring auth
+	AuthRouter  *gin.RouterGroup // Auth routes (login, register)
+	EmailSender email.Sender
+	Logger      logger.Logger
+	Storage     *storage.ActiveStorage
+	Emitter     *emitter.Emitter
+	Modules     map[string]module.Module
 }
 
 // NewCore creates and initializes a new Core instance
@@ -128,7 +128,12 @@ func (core *Core) initializeModules() map[string]module.Module {
 		// Set up routes for the module
 		if routeModule, ok := mod.(interface{ Routes(*gin.RouterGroup) }); ok {
 			core.Logger.Info("Setting up routes for module", zap.String("module", name))
-			routeModule.Routes(core.Router)
+			// Use AuthRouter for auth module, protected Router for others
+			if name == "auth" {
+				routeModule.Routes(core.AuthRouter)
+			} else {
+				routeModule.Routes(core.Router)
+			}
 		}
 
 		modules[name] = mod
