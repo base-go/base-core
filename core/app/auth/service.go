@@ -118,16 +118,14 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 
 	extended := app.Extend(user.User.Id)
 
+	userResponse := users.ToResponse(&user.User)
+	userResponse.LastLogin = now.Format(time.RFC3339)
+
 	return &AuthResponse{
-		AccessToken: token,
-		Exp:         now.Add(24 * time.Hour).Unix(),
-		Username:    user.Username,
-		ID:          user.User.Id,
-		Avatar:      user.Avatar,
-		Email:       user.Email,
-		Name:        user.Name,
-		LastLogin:   now.Format(time.RFC3339),
-		Extend:      extended,
+		UserResponse: *userResponse,
+		AccessToken:  token,
+		Exp:          now.Add(24 * time.Hour).Unix(),
+		Extend:       extended,
 	}, nil
 }
 
@@ -153,15 +151,15 @@ func (s *AuthService) Login(req *LoginRequest) (*AuthResponse, error) {
 	}
 
 	// Create the response
+	userResponse := users.ToResponse(&user.User)
+	if user.LastLogin != nil {
+		userResponse.LastLogin = user.LastLogin.Format(time.RFC3339)
+	}
+
 	response := &AuthResponse{
-		AccessToken: token,
-		Exp:         now.Add(24 * time.Hour).Unix(),
-		Username:    user.Username,
-		ID:          user.User.Id,
-		Avatar:      user.Avatar,
-		Email:       user.Email,
-		Name:        user.Name,
-		LastLogin:   now.Format(time.RFC3339),
+		UserResponse: *userResponse,
+		AccessToken:  token,
+		Exp:          now.Add(24 * time.Hour).Unix(),
 		Extend:      app.Extend(user.User.Id),
 	}
 

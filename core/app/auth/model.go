@@ -2,7 +2,6 @@ package auth
 
 import (
 	"base/core/app/users"
-	"base/core/storage"
 	"time"
 )
 
@@ -53,15 +52,10 @@ type ResetPasswordRequest struct {
 }
 
 type AuthResponse struct {
-	AccessToken string              `json:"accessToken"`
-	Exp         int64               `json:"exp"`
-	Username    string              `json:"username"`
-	ID          uint                `json:"id"`
-	Avatar      *storage.Attachment `json:"avatar"`
-	Email       string              `json:"email"`
-	Name        string              `json:"name"`
-	LastLogin   string              `json:"last_login"`
-	Extend      interface{}         `json:"extend"`
+	users.UserResponse
+	AccessToken string      `json:"accessToken"`
+	Exp         int64       `json:"exp"`
+	Extend      interface{} `json:"extend,omitempty"`
 }
 
 type ErrorResponse struct {

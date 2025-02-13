@@ -14,6 +14,7 @@ type User struct {
 	Email     string              `gorm:"column:email;unique;not null"`
 	Avatar    *storage.Attachment `gorm:"foreignKey:ModelId;references:Id"`
 	Password  string              `gorm:"column:password"`
+	LastLogin *time.Time          `gorm:"column:last_login"`
 	CreatedAt time.Time           `gorm:"column:created_at"`
 	UpdatedAt time.Time           `gorm:"column:updated_at"`
 	DeletedAt gorm.DeletedAt      `gorm:"column:deleted_at"`
@@ -52,12 +53,12 @@ func (u *User) GetModelName() string {
 
 // UserResponse represents the API response structure
 type UserResponse struct {
-	Id        uint   `json:"id"`
-	Name      string `json:"name"`
-	Username  string `json:"username"`
-	Email     string `json:"email"`
-	AvatarId  uint   `json:"avatar_id"`
-	AvatarURL string `json:"avatar_url"`
+	Id        uint                `json:"id"`
+	Name      string              `json:"name"`
+	Username  string              `json:"username"`
+	Email     string              `json:"email"`
+	Avatar    *storage.Attachment `json:"avatar"`
+	LastLogin string              `json:"last_login"`
 }
 
 // AvatarResponse represents the avatar in API responses
@@ -74,11 +75,11 @@ func ToResponse(user *User) *UserResponse {
 		Name:     user.Name,
 		Username: user.Username,
 		Email:    user.Email,
+		Avatar:   user.Avatar,
 	}
 
-	if user.Avatar != nil {
-		response.AvatarId = user.Avatar.Id
-		response.AvatarURL = user.Avatar.URL
+	if user.LastLogin != nil {
+		response.LastLogin = user.LastLogin.Format(time.RFC3339)
 	}
 
 	return response

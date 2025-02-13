@@ -90,16 +90,6 @@ definitions:
       message:
         type: string
     type: object
-  companies.ErrorResponse:
-    properties:
-      error:
-        type: string
-    type: object
-  companies.SuccessResponse:
-    properties:
-      message:
-        type: string
-    type: object
   gorm.DeletedAt:
     properties:
       time:
@@ -142,35 +132,6 @@ definitions:
       type:
         type: string
       updated_at:
-        type: string
-    type: object
-  models.CompanyResponse:
-    properties:
-      created_at:
-        type: string
-      deleted_at:
-        $ref: '#/definitions/gorm.DeletedAt'
-      id:
-        type: integer
-      name:
-        type: string
-      updated_at:
-        type: string
-      user:
-        $ref: '#/definitions/users.User'
-      user_id:
-        type: integer
-    type: object
-  models.CreateCompanyRequest:
-    properties:
-      name:
-        type: string
-    required:
-    - name
-    type: object
-  models.UpdateCompanyRequest:
-    properties:
-      name:
         type: string
     type: object
   oauth.ErrorResponse:
@@ -255,6 +216,8 @@ definitions:
         type: string
       id:
         type: integer
+      lastLogin:
+        type: string
       name:
         type: string
       password:
@@ -449,199 +412,6 @@ paths:
       summary: Reset Password
       tags:
       - Core/Auth
-  /companies:
-    get:
-      consumes:
-      - application/json
-      description: Get a list of companies
-      parameters:
-      - description: Page number
-        in: query
-        name: page
-        type: integer
-      - description: Number of items per page
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/types.PaginatedResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/companies.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/companies.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      - BearerAuth: []
-      summary: List companies
-      tags:
-      - Company
-    post:
-      consumes:
-      - application/json
-      description: Create a new Company with the input payload
-      parameters:
-      - description: Create Company request
-        in: body
-        name: companies
-        required: true
-        schema:
-          $ref: '#/definitions/models.CreateCompanyRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/models.CompanyResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/companies.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/companies.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      - BearerAuth: []
-      summary: Create a new Company
-      tags:
-      - Company
-  /companies/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete a Company by its id
-      parameters:
-      - description: Company id
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/companies.SuccessResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/companies.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/companies.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      - BearerAuth: []
-      summary: Delete a Company
-      tags:
-      - Company
-    get:
-      consumes:
-      - application/json
-      description: Get a Company by its id
-      parameters:
-      - description: Company id
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.CompanyResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/companies.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/companies.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      - BearerAuth: []
-      summary: Get a Company
-      tags:
-      - Company
-    put:
-      consumes:
-      - application/json
-      description: Update a Company by its id
-      parameters:
-      - description: Company id
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Update Company request
-        in: body
-        name: companies
-        required: true
-        schema:
-          $ref: '#/definitions/models.UpdateCompanyRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.CompanyResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/companies.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/companies.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/companies.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      - BearerAuth: []
-      summary: Update a Company
-      tags:
-      - Company
-  /companies/all:
-    get:
-      consumes:
-      - application/json
-      description: Get a list of all companies without pagination
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/types.PaginatedResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/companies.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      - BearerAuth: []
-      summary: List all companies without pagination
-      tags:
-      - Company
   /media:
     get:
       description: Get a paginated list of media items
