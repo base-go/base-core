@@ -130,7 +130,6 @@ func (a *AppModuleInitializer) getModules(db *gorm.DB) map[string]module.Module 
 	modules := make(map[string]module.Module)
 	// Define the module initializers directly
 	moduleInitializers := map[string]func(*gorm.DB, *gin.RouterGroup, logger.Logger, *emitter.Emitter, *storage.ActiveStorage) module.Module{
-
 		// MODULE_INITIALIZER_MARKER - Do not remove this comment because it's used by the CLI to add new module initializers
 	}
 
@@ -149,4 +148,45 @@ func initDB(cfg *config.Config) (*gorm.DB, error) {
 		return nil, err
 	}
 	return db.DB, nil
+}
+
+/*
+ This function returns an extension of the user's context with a company ID
+ If no company is found, returns just the user ID
+ This is useful for contexts where you want to extend the user context with additional information
+ For example, you could use this to pass the user ID and the company ID to the handler function
+
+ Example:
+
+	Let's find the company for the user
+	since we have access to the database, we can do it here instead of in the handler function
+
+	var company models.Company
+	if err := database.DB.Where("user_id = ?", user_id).First(&company).Error; err != nil {
+		// If no company found, return just the user ID
+		return map[string]interface{}{
+			"user_id": user_id,
+		}
+	}
+
+	Then return the context with both user ID and company ID
+	return map[string]interface{}{
+		"user_id": user_id,
+		"company_id": company.Id,
+	}
+*/
+
+func Extend(user_id uint) interface{} {
+	// Get database instance
+	if database.DB == nil {
+		return map[string]interface{}{
+			"user_id": user_id,
+		}
+	}
+
+	// Get company for the user Here like in Examle above
+
+	return map[string]interface{}{
+		"user_id": user_id,
+	}
 }

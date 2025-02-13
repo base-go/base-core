@@ -61,6 +61,7 @@ type AuthResponse struct {
 	Email       string              `json:"email"`
 	Name        string              `json:"name"`
 	LastLogin   string              `json:"last_login"`
+	Extend      interface{}         `json:"extend"`
 }
 
 type ErrorResponse struct {

@@ -10,6 +10,7 @@ import (
 	"text/template"
 	"time"
 
+	"base/app"
 	"base/core/app/users"
 	"base/core/email"
 	"base/core/emitter"
@@ -97,7 +98,7 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 	}
 
 	// Generate JWT token
-	token, err := helper.GenerateJWT(user.User.Id)
+	token, err := helper.GenerateJWT(user.User.Id, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
@@ -115,6 +116,8 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 	// 	}
 	// }()
 
+	extended := app.Extend(user.User.Id)
+
 	return &AuthResponse{
 		AccessToken: token,
 		Exp:         now.Add(24 * time.Hour).Unix(),
@@ -123,8 +126,8 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 		Avatar:      user.Avatar,
 		Email:       user.Email,
 		Name:        user.Name,
-
-		LastLogin: now.Format(time.RFC3339),
+		LastLogin:   now.Format(time.RFC3339),
+		Extend:      extended,
 	}, nil
 }
 
@@ -143,7 +146,8 @@ func (s *AuthService) Login(req *LoginRequest) (*AuthResponse, error) {
 
 	// Proceed with generating token and response
 	now := time.Now()
-	token, err := helper.GenerateJWT(user.User.Id)
+	extendData := app.Extend(user.User.Id)
+	token, err := helper.GenerateJWT(user.User.Id, extendData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
@@ -158,6 +162,7 @@ func (s *AuthService) Login(req *LoginRequest) (*AuthResponse, error) {
 		Email:       user.Email,
 		Name:        user.Name,
 		LastLogin:   now.Format(time.RFC3339),
+		Extend:      app.Extend(user.User.Id),
 	}
 
 	// Prepare the login event
