@@ -24,7 +24,7 @@ func GenerateJWT(userID uint, extend interface{}) (string, error) {
 	return tokenString, nil
 }
 
-func ValidateJWT(tokenString string) (uint, error) {
+func ValidateJWT(tokenString string) (interface{}, uint, error) {
 	cfg := config.NewConfig()
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -32,13 +32,15 @@ func ValidateJWT(tokenString string) (uint, error) {
 	})
 
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		userID := uint(claims["user_id"].(float64))
-		return userID, nil
+		extend := claims["extend"]
+
+		return extend, userID, nil
 	}
 
-	return 0, jwt.ErrSignatureInvalid
+	return 0, 0, jwt.ErrSignatureInvalid
 }
