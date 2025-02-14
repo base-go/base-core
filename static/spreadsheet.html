@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Spreadsheet</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        #status {
+            color: #666;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        #nickname-input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .spreadsheet {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: auto;
+            max-width: 100%;
+        }
+
+        .row {
+            display: flex;
+        }
+
+        .cell {
+            min-width: 120px;
+            height: 30px;
+            border: 1px solid #ddd;
+            padding: 4px 8px;
+            position: relative;
+        }
+
+        .header-cell {
+            background: #f8f9fa;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .row-header {
+            background: #f8f9fa;
+            font-weight: bold;
+            text-align: center;
+            width: 40px;
+        }
+
+        .cell-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            padding: 4px 8px;
+            box-sizing: border-box;
+            display: none;
+        }
+
+        .cell-input:focus {
+            outline: 2px solid #007bff;
+            z-index: 1;
+        }
+
+        .cell.editing .cell-input {
+            display: block;
+        }
+
+        .cell.editing .cell-content {
+            visibility: hidden;
+        }
+
+        .users-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 12px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .user-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            margin: 4px;
+            background: #007bff;
+            color: white;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .cell-cursor {
+            position: absolute;
+            border: 2px solid;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .cell-cursor-label {
+            position: absolute;
+            background: inherit;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            transform: translateY(-100%);
+            white-space: nowrap;
+        }
+
+        .formula-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        #formula-input {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        #selected-cell {
+            font-weight: bold;
+            min-width: 60px;
+        }
+    </style>
+</head>
+<body>
+    <script src="/static/shared.js"></script>
+    <div class="header">
+        <h1>Real-time Spreadsheet</h1>
+        <div>
+            <input type="text" id="nickname-input" placeholder="Your nickname" value="User">
+            <button id="connect-btn">Connect</button>
+            <button id="disconnect-btn" disabled>Disconnect</button>
+            <span id="status">Status: Disconnected</span>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <button onclick="addRow()">Add Row</button>
+        <button onclick="addColumn()">Add Column</button>
+        <button onclick="exportCsv()">Export CSV</button>
+    </div>
+
+    <div class="formula-bar">
+        <span>Selected: </span>
+        <span id="selected-cell">-</span>
+        <span>=</span>
+        <input type="text" id="formula-input" placeholder="Enter formula or value">
+    </div>
+
+    <div class="users-panel">
+        <strong>Connected Users</strong>
+        <div id="users-list"></div>
+    </div>
+
+    <div class="spreadsheet" id="spreadsheet"></div>
+
+    <script>
+        const statusEl = document.getElementById('status');
+        const connectBtn = document.getElementById('connect-btn');
+        const disconnectBtn = document.getElementById('disconnect-btn');
+        const nicknameInput = document.getElementById('nickname-input');
+        const usersListEl = document.getElementById('users-list');
+        const spreadsheetEl = document.getElementById('spreadsheet');
+        const formulaInput = document.getElementById('formula-input');
+        const selectedCellEl = document.getElementById('selected-cell');
+
+        let socket;
+        let currentCell = null;
+        let cursors = new Map();
+        let rows = 10;
+        let cols = 10;
+
+        function updateStatus(status) {
+            statusEl.textContent = `Status: ${status}`;
+        }
+
+        function connect() {
+            const clientId = 'sheet_' + Math.random().toString(36).substr(2, 9);
+            const nickname = nicknameInput.value.trim() || 'User';
+            socket = new WebSocket(`ws://localhost:8001/api/ws?id=${clientId}&room=spreadsheet&nickname=${encodeURIComponent(nickname)}`);
+
+            socket.onopen = function() {
+                updateStatus('Connected');
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+                initializeSpreadsheet();
+                requestData();
+            };
+
+            socket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                if (data.type === 'cell_update') {
+                    updateCell(data.content);
+                } else if (data.type === 'users_update') {
+                    updateUsersList(data.content);
+                } else if (data.type === 'cursor_update') {
+                    updateCursor(data.content);
+                } else if (data.type === 'full_update') {
+                    updateFullSheet(data.content);
+                }
+            };
+
+            socket.onclose = function() {
+                updateStatus('Disconnected');
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+                clearCursors();
+            };
+
+            socket.onerror = function(error) {
+                console.error('WebSocket Error:', error);
+                updateStatus('Error occurred');
+            };
+        }
+
+        function disconnect() {
+            if (socket) {
+                socket.close();
+            }
+            clearCursors();
+        }
+
+        function updateUsersList(users) {
+            usersListEl.innerHTML = '';
+            users.forEach(user => {
+                const badge = document.createElement('span');
+                badge.className = 'user-badge';
+                badge.textContent = user;
+                usersListEl.appendChild(badge);
+            });
+        }
+
+        function initializeSpreadsheet() {
+            spreadsheetEl.innerHTML = '';
+            
+            // Create header row
+            const headerRow = document.createElement('div');
+            headerRow.className = 'row';
+            headerRow.appendChild(createHeaderCell(''));
+            for (let col = 0; col < cols; col++) {
+                headerRow.appendChild(createHeaderCell(getColumnLabel(col)));
+            }
+            spreadsheetEl.appendChild(headerRow);
+
+            // Create data rows
+            for (let row = 0; row < rows; row++) {
+                const rowEl = document.createElement('div');
+                rowEl.className = 'row';
+                rowEl.appendChild(createHeaderCell(row + 1));
+                for (let col = 0; col < cols; col++) {
+                    rowEl.appendChild(createCell(row, col));
+                }
+                spreadsheetEl.appendChild(rowEl);
+            }
+        }
+
+        function createHeaderCell(content) {
+            const cell = document.createElement('div');
+            cell.className = 'cell header-cell';
+            cell.textContent = content;
+            return cell;
+        }
+
+        function createCell(row, col) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.dataset.row = row;
+            cell.dataset.col = col;
+            cell.dataset.id = `${row}-${col}`;
+
+            const content = document.createElement('div');
+            content.className = 'cell-content';
+            cell.appendChild(content);
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'cell-input';
+            cell.appendChild(input);
+
+            cell.addEventListener('click', () => startEditing(cell));
+            return cell;
+        }
+
+        function startEditing(cell) {
+            if (currentCell) {
+                currentCell.classList.remove('editing');
+            }
+            currentCell = cell;
+            cell.classList.add('editing');
+            const input = cell.querySelector('.cell-input');
+            const content = cell.querySelector('.cell-content');
+            input.value = content.textContent;
+            input.focus();
+
+            selectedCellEl.textContent = getColumnLabel(parseInt(cell.dataset.col)) + (parseInt(cell.dataset.row) + 1);
+            formulaInput.value = content.textContent;
+
+            sendCursorUpdate(cell);
+
+            // Listen for input changes
+            input.oninput = () => {
+                content.textContent = input.value;
+                sendCellUpdate(cell, input.value);
+                formulaInput.value = input.value;
+            };
+        }
+
+        function updateCell(data) {
+            const cell = document.querySelector(`[data-id="${data.id}"]`);
+            if (cell) {
+                const content = cell.querySelector('.cell-content');
+                const input = cell.querySelector('.cell-input');
+                content.textContent = data.value;
+                if (cell === currentCell) {
+                    input.value = data.value;
+                    formulaInput.value = data.value;
+                }
+            }
+        }
+
+        function sendCellUpdate(cell, value) {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: 'cell_update',
+                    content: {
+                        id: cell.dataset.id,
+                        value: value,
+                        row: parseInt(cell.dataset.row),
+                        col: parseInt(cell.dataset.col)
+                    }
+                }));
+            }
+        }
+
+        function sendCursorUpdate(cell) {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: 'cursor_update',
+                    content: {
+                        nickname: nicknameInput.value.trim() || 'User',
+                        cellId: cell.dataset.id,
+                        color: '#' + Math.floor(Math.random()*16777215).toString(16)
+                    }
+                }));
+            }
+        }
+
+        function updateCursor(data) {
+            if (data.nickname === nicknameInput.value.trim()) return;
+
+            let cursor = cursors.get(data.nickname);
+            if (!cursor) {
+                cursor = document.createElement('div');
+                cursor.className = 'cell-cursor';
+                cursor.style.borderColor = data.color;
+
+                const label = document.createElement('div');
+                label.className = 'cell-cursor-label';
+                label.style.background = data.color;
+                label.textContent = data.nickname;
+                cursor.appendChild(label);
+
+                document.body.appendChild(cursor);
+                cursors.set(data.nickname, cursor);
+            }
+
+            const cell = document.querySelector(`[data-id="${data.cellId}"]`);
+            if (cell) {
+                const rect = cell.getBoundingClientRect();
+                cursor.style.left = rect.left + 'px';
+                cursor.style.top = rect.top + 'px';
+                cursor.style.width = rect.width + 'px';
+                cursor.style.height = rect.height + 'px';
+            }
+        }
+
+        function clearCursors() {
+            cursors.forEach(cursor => cursor.remove());
+            cursors.clear();
+        }
+
+        function getColumnLabel(index) {
+            let label = '';
+            while (index >= 0) {
+                label = String.fromCharCode(65 + (index % 26)) + label;
+                index = Math.floor(index / 26) - 1;
+            }
+            return label;
+        }
+
+        function addRow() {
+            rows++;
+            const rowEl = document.createElement('div');
+            rowEl.className = 'row';
+            rowEl.appendChild(createHeaderCell(rows));
+            for (let col = 0; col < cols; col++) {
+                rowEl.appendChild(createCell(rows - 1, col));
+            }
+            spreadsheetEl.appendChild(rowEl);
+        }
+
+        function addColumn() {
+            cols++;
+            const headerCell = createHeaderCell(getColumnLabel(cols - 1));
+            spreadsheetEl.querySelector('.row').appendChild(headerCell);
+
+            const dataRows = spreadsheetEl.querySelectorAll('.row:not(:first-child)');
+            dataRows.forEach((row, rowIndex) => {
+                row.appendChild(createCell(rowIndex, cols - 1));
+            });
+        }
+
+        function exportCsv() {
+            let csv = '';
+            const rows = spreadsheetEl.querySelectorAll('.row:not(:first-child)');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('.cell:not(:first-child)');
+                const values = Array.from(cells).map(cell => {
+                    const content = cell.querySelector('.cell-content').textContent;
+                    return `"${content.replace(/"/g, '""')}"`;
+                });
+                csv += values.join(',') + '\n';
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'spreadsheet.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function requestData() {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: 'request_data'
+                }));
+            }
+        }
+
+        function updateFullSheet(data) {
+            data.forEach(cellData => {
+                updateCell(cellData);
+            });
+        }
+
+        // Event listeners for formula bar
+        formulaInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && currentCell) {
+                const value = formulaInput.value;
+                const content = currentCell.querySelector('.cell-content');
+                content.textContent = value;
+                currentCell.classList.remove('editing');
+                sendCellUpdate(currentCell, value);
+            }
+        });
+
+        // Event listener for cell input
+        document.addEventListener('keydown', (e) => {
+            if (!currentCell) return;
+
+            if (e.key === 'Enter') {
+                const input = currentCell.querySelector('.cell-input');
+                const content = currentCell.querySelector('.cell-content');
+                content.textContent = input.value;
+                currentCell.classList.remove('editing');
+                sendCellUpdate(currentCell, input.value);
+                formulaInput.value = input.value;
+            } else if (e.key === 'Escape') {
+                currentCell.classList.remove('editing');
+            } else if (e.key === 'Tab') {
+                e.preventDefault();
+                const nextCell = currentCell.nextElementSibling;
+                if (nextCell) {
+                    startEditing(nextCell);
+                }
+            }
+        });
+
+        connectBtn.addEventListener('click', connect);
+        disconnectBtn.addEventListener('click', disconnect);
+    </script>
+</body>
+</html>

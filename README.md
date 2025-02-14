@@ -31,6 +31,10 @@ Base is a modern Go web framework designed for rapid development and maintainabl
 
 ### Security Features
 - JWT Token Authentication
+  - Extensible JWT Claims via `Extend` function in `app/init.go`
+  - Default user context with `user_id`
+  - Customizable token expiration (24h by default)
+  - Secure token validation and verification
 - API Key Authentication
 - Rate Limiting Middleware
 - Request Logging

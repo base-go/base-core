@@ -140,9 +140,6 @@ const docTemplate = `{
                 "security": [
                     {
                         "ApiKeyAuth": []
-                    },
-                    {
-                        "BearerAuth": []
                     }
                 ],
                 "description": "Logout user",
@@ -292,6 +289,400 @@ const docTemplate = `{
                 }
             }
         },
+        "/media": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a paginated list of media items",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Core/Media"
+                ],
+                "summary": "List media items",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/types.PaginatedResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new media item with optional file upload",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Core/Media"
+                ],
+                "summary": "Create a new media item",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Media name",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Media type",
+                        "name": "type",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Media description",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Media file",
+                        "name": "file",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/media.MediaResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/media/all": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get an unpaginated list of all media items",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Core/Media"
+                ],
+                "summary": "List all media items",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/media.MediaListResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/media/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a media item by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Core/Media"
+                ],
+                "summary": "Get a media item",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Media ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/media.MediaResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a media item's details and optionally its file",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Core/Media"
+                ],
+                "summary": "Update a media item",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Media ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Media name",
+                        "name": "name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Media type",
+                        "name": "type",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Media description",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Media file",
+                        "name": "file",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/media.MediaResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a media item and its associated file",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Core/Media"
+                ],
+                "summary": "Delete a media item",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Media ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
+        },
+        "/media/{id}/file": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update the file attached to a media item",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Core/Media"
+                ],
+                "summary": "Update media file",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Media ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Media file",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/media.MediaResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Remove the file attached to a media item",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Core/Media"
+                ],
+                "summary": "Remove media file",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Media ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/media.MediaResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/oauth/apple/callback": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Handle the OAuth callback from Apple",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Core/OAuth"
+                ],
+                "summary": "Apple OAuth callback",
+                "parameters": [
+                    {
+                        "description": "Apple ID Token",
+                        "name": "idToken",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/users.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/oauth.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/oauth.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/oauth/facebook/callback": {
             "post": {
                 "security": [
@@ -394,7 +785,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/{id}": {
+        "/users/me": {
             "get": {
                 "security": [
                     {
@@ -404,7 +795,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get user by ID",
+                "description": "Get user by Bearer Token",
                 "consumes": [
                     "application/json"
                 ],
@@ -414,16 +805,7 @@ const docTemplate = `{
                 "tags": [
                     "Core/Users"
                 ],
-                "summary": "Get user by ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
+                "summary": "Get user from Authenticated User Token",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -460,7 +842,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Update user",
+                "description": "Update user by Bearer Token",
                 "consumes": [
                     "application/json"
                 ],
@@ -470,15 +852,8 @@ const docTemplate = `{
                 "tags": [
                     "Core/Users"
                 ],
-                "summary": "Update user",
+                "summary": "Update user from Authenticated User Token",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Update Request",
                         "name": "input",
@@ -517,7 +892,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/{id}/avatar": {
+        "/users/me/avatar": {
             "put": {
                 "security": [
                     {
@@ -527,7 +902,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Update user avatar",
+                "description": "Update user avatar by Bearer Token",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -537,15 +912,8 @@ const docTemplate = `{
                 "tags": [
                     "Core/Users"
                 ],
-                "summary": "Update user avatar",
+                "summary": "Update user avatar from Authenticated User Token",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "type": "file",
                         "description": "Avatar file",
@@ -582,7 +950,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/{id}/password": {
+        "/users/me/password": {
             "put": {
                 "security": [
                     {
@@ -592,7 +960,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Update user password",
+                "description": "Update user password by Bearer Token",
                 "consumes": [
                     "application/json"
                 ],
@@ -602,15 +970,8 @@ const docTemplate = `{
                 "tags": [
                     "Core/Users"
                 ],
-                "summary": "Update user password",
+                "summary": "Update user password from Authenticated User Token",
                 "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
                     {
                         "description": "Update Password Request",
                         "name": "input",
@@ -651,17 +1012,42 @@ const docTemplate = `{
         },
         "/ws": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Establishes a WebSocket connection, check example at: /static/chat.html",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "Core/Websocket"
+                ],
+                "summary": "Connect to WebSocket",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "Client ID",
                         "name": "id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "User Nickname",
+                        "name": "nickname",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Chat Room",
+                        "name": "room",
                         "in": "query"
                     }
                 ],
@@ -698,6 +1084,7 @@ const docTemplate = `{
                 "exp": {
                     "type": "integer"
                 },
+                "extend": {},
                 "id": {
                     "type": "integer"
                 },
@@ -727,7 +1114,8 @@ const docTemplate = `{
             ],
             "properties": {
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "john@example.com"
                 }
             }
         },
@@ -739,10 +1127,12 @@ const docTemplate = `{
             ],
             "properties": {
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "john@example.com"
                 },
                 "password": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "password123"
                 }
             }
         },
@@ -786,11 +1176,13 @@ const docTemplate = `{
             ],
             "properties": {
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "john@example.com"
                 },
                 "new_password": {
                     "type": "string",
-                    "minLength": 6
+                    "minLength": 6,
+                    "example": "newpassword123"
                 },
                 "token": {
                     "type": "string"
@@ -814,6 +1206,61 @@ const docTemplate = `{
                 "valid": {
                     "description": "Valid is true if Time is not NULL",
                     "type": "boolean"
+                }
+            }
+        },
+        "media.MediaListResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "file": {
+                    "$ref": "#/definitions/storage.Attachment"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "media.MediaResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "file": {
+                    "$ref": "#/definitions/storage.Attachment"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
@@ -860,6 +1307,32 @@ const docTemplate = `{
                 }
             }
         },
+        "types.PaginatedResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "pagination": {
+                    "$ref": "#/definitions/types.Pagination"
+                }
+            }
+        },
+        "types.Pagination": {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "type": "integer"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
         "users.ErrorResponse": {
             "type": "object",
             "properties": {
@@ -901,6 +1374,9 @@ const docTemplate = `{
         "users.User": {
             "type": "object",
             "properties": {
+                "avatar": {
+                    "$ref": "#/definitions/storage.Attachment"
+                },
                 "createdAt": {
                     "type": "string"
                 },
@@ -912,6 +1388,9 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "integer"
+                },
+                "lastLogin": {
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
