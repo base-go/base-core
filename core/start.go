@@ -2,7 +2,7 @@ package core
 
 import (
 	"base/app"
-	"base/core/app/auth"
+	coreapp "base/core/app"
 	"base/core/config"
 	"base/core/database"
 	"base/core/email"
@@ -79,9 +79,11 @@ func StartApplication() (*Application, error) {
 		BaseURL:   cfg.StorageBaseURL,
 		APIKey:    cfg.StorageAPIKey,
 		APISecret: cfg.StorageAPISecret,
+		AccountID: cfg.StorageAccountID,
 		Endpoint:  cfg.StorageEndpoint,
 		Bucket:    cfg.StorageBucket,
 		CDN:       cfg.CDN,
+		Region:    cfg.StorageRegion,
 	}
 
 	activeStorage, err := storage.NewActiveStorage(db.DB, storageConfig)
@@ -95,7 +97,7 @@ func StartApplication() (*Application, error) {
 	activeStorage.RegisterAttachment("users", storage.AttachmentConfig{
 		Field:             "avatar",
 		Path:              "users",
-		AllowedExtensions: []string{".jpg", ".jpeg", ".png"},
+		AllowedExtensions: []string{".jpg", ".jpeg", ".png", ".gif", ".webp"},
 		MaxFileSize:       2 << 20, // 2MB
 		Multiple:          false,
 	})
@@ -135,48 +137,39 @@ func StartApplication() (*Application, error) {
 		ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.PersistAuthorization(true)))
 	appLogger.Info("Swagger documentation enabled")
 
-	// Create API router group with API Key middleware
+	// Create API router group with API key requirement for all routes
 	apiGroup := router.Group("/api")
 	apiGroup.Use(middleware.APIKeyMiddleware())
 
-	// Create auth group that only requires API key
-	authGroup := apiGroup.Group("/")
+	// Create auth group for login/register (only requires API key)
+	authGroup := apiGroup.Group("/auth")
 
-	// Create a protected group that requires Bearer token
+	// Create protected group that requires Bearer token
 	protectedGroup := apiGroup.Group("/")
 	protectedGroup.Use(middleware.AuthMiddleware())
 
-	// Initialize auth module with authGroup
-	authModule := auth.NewAuthModule(
+	// Initialize core modules with all dependencies
+	appLogger.Info("Initializing core modules")
+
+	core := coreapp.NewCore(
 		db.DB,
-		authGroup,
+		protectedGroup, // Use protected group for most routes
+		authGroup,      // Pass auth group for auth routes
 		emailSender,
-		appLogger.GetZapLogger(),
+		appLogger,
+		activeStorage,
 		Emitter,
 	)
-	modules := make(map[string]module.Module)
-	modules["auth"] = authModule
+	modules := core.Modules
+	appLogger.Info("Core modules initialized", logger.Int("count", len(modules)))
 
-	// Initialize remaining core modules with protectedGroup
-	moduleInit := ModuleInitializer{
-		DB:          db.DB,
-		Router:      protectedGroup,
-		EmailSender: emailSender,
-		Logger:      appLogger,
-		Emitter:     Emitter,
-		Storage:     activeStorage,
-	}
-
-	// Initialize remaining core modules
-	remainingModules := InitializeRemainingCoreModules(moduleInit)
-	for k, v := range remainingModules {
-		modules[k] = v
-	}
+	// Register core module routes
+	//core.RegisterRoutes()
 
 	// Initialize application modules
 	appLogger.Info("Initializing application modules")
 	appInitializer := &app.AppModuleInitializer{
-		Router:  protectedGroup,
+		Router:  protectedGroup, // Use protected group for app modules
 		Logger:  appLogger,
 		Emitter: Emitter,
 		Storage: activeStorage,

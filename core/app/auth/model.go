@@ -2,7 +2,6 @@ package auth
 
 import (
 	"base/core/app/users"
-	"base/core/storage"
 	"time"
 )
 
@@ -20,6 +19,8 @@ func (AuthUser) TableName() string {
 type LoginEvent struct {
 	User         *AuthUser
 	LoginAllowed *bool
+	Error        *ErrorResponse
+	Response     *AuthResponse
 }
 
 // RegisterRequest represents the payload for user registration
@@ -36,29 +37,25 @@ type RegisterRequest struct {
 }
 
 type LoginRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required"`
+	Email    string `json:"email" binding:"required,email" example:"john@example.com"`
+	Password string `json:"password" binding:"required" example:"password123"`
 }
 
 type ForgotPasswordRequest struct {
-	Email string `json:"email" binding:"required,email"`
+	Email string `json:"email" binding:"required,email" example:"john@example.com"`
 }
 
 type ResetPasswordRequest struct {
-	Email       string `json:"email" binding:"required,email"`
+	Email       string `json:"email" binding:"required,email" example:"john@example.com"`
 	Token       string `json:"token" binding:"required"`
-	NewPassword string `json:"new_password" binding:"required,min=6"`
+	NewPassword string `json:"new_password" binding:"required,min=6" example:"newpassword123"`
 }
 
 type AuthResponse struct {
-	AccessToken string              `json:"accessToken"`
-	Exp         int64               `json:"exp"`
-	Username    string              `json:"username"`
-	ID          uint                `json:"id"`
-	Avatar      *storage.Attachment `json:"avatar"`
-	Email       string              `json:"email"`
-	Name        string              `json:"name"`
-	LastLogin   string              `json:"last_login"`
+	users.UserResponse
+	AccessToken string      `json:"accessToken"`
+	Exp         int64       `json:"exp"`
+	Extend      interface{} `json:"extend,omitempty"`
 }
 
 type ErrorResponse struct {

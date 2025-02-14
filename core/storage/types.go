@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"mime/multipart"
+	"net/textproto"
+	"os"
+
 	"time"
 
 	"gorm.io/gorm"
@@ -52,6 +55,21 @@ func (a *Attachment) Scan(value interface{}) error {
 	return json.Unmarshal(bytes, &a)
 }
 
+// AsFileHeader converts an Attachment to a multipart.FileHeader
+func (a *Attachment) AsFileHeader() (*multipart.FileHeader, error) {
+	file, err := os.Open(a.Path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	return &multipart.FileHeader{
+		Filename: a.Filename,
+		Size:     a.Size,
+		Header:   textproto.MIMEHeader{"Content-Type": []string{"application/octet-stream"}},
+	}, nil
+}
+
 // AttachmentConfig holds configuration for file attachments
 type AttachmentConfig struct {
 	Field             string
@@ -68,9 +86,11 @@ type Config struct {
 	BaseURL   string
 	APIKey    string
 	APISecret string
+	AccountID string
 	Endpoint  string
 	Bucket    string
 	CDN       string
+	Region    string
 }
 
 // Attachable interface for models that can have attachments

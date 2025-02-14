@@ -2,6 +2,7 @@ package auth
 
 import (
 	"base/core/email"
+	"base/core/logger"
 	"errors"
 	"net/http"
 	"strings"
@@ -13,10 +14,10 @@ import (
 type AuthController struct {
 	service     *AuthService
 	emailSender email.Sender
-	logger      *zap.Logger
+	logger      logger.Logger
 }
 
-func NewAuthController(service *AuthService, emailSender email.Sender, logger *zap.Logger) *AuthController {
+func NewAuthController(service *AuthService, emailSender email.Sender, logger logger.Logger) *AuthController {
 	return &AuthController{
 		service:     service,
 		emailSender: emailSender,
@@ -68,11 +69,11 @@ func (c *AuthController) Register(ctx *gin.Context) {
 	err = email.Send(msg)
 	if err != nil {
 		c.logger.Error("Failed to send welcome email",
-			zap.Error(err),
-			zap.String("email", user.Email))
+			logger.String("error", err.Error()),
+			logger.String("email", user.Email))
 	} else {
 		c.logger.Info("Welcome email sent",
-			zap.String("email", user.Email))
+			logger.String("email", user.Email))
 	}
 
 	ctx.JSON(http.StatusCreated, user)
@@ -100,7 +101,19 @@ func (c *AuthController) Login(ctx *gin.Context) {
 
 	response, err := c.service.Login(&req)
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Invalid credentials"})
+		if strings.Contains(err.Error(), "access_denied") {
+			// Return both the response and error when user is not an author
+			ctx.JSON(http.StatusForbidden, gin.H{
+				"error": err.Error(),
+				"data":  response,
+			})
+			return
+		}
+		if strings.Contains(err.Error(), "invalid credentials") {
+			ctx.JSON(http.StatusUnauthorized, ErrorResponse{Error: err.Error()})
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Internal server error"})
 		return
 	}
 
@@ -111,7 +124,6 @@ func (c *AuthController) Login(ctx *gin.Context) {
 // @Summary Logout
 // @Description Logout user
 // @Security ApiKeyAuth
-// @Security BearerAuth
 // @Tags Core/Auth
 // @Accept json
 // @Produce json

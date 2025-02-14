@@ -40,6 +40,7 @@ type Config struct {
 	StorageBaseURL       string   `json:"storage_base_url"`
 	StorageAPIKey        string   `json:"storage_api_key"`
 	StorageAPISecret     string   `json:"storage_api_secret"`
+	StorageAccountID     string   `json:"storage_account_id"`
 	StorageEndpoint      string   `json:"storage_endpoint"`
 	StorageRegion        string   `json:"storage_region"`
 	StorageBucket        string   `json:"storage_bucket"`
@@ -77,7 +78,7 @@ func NewConfig() *Config {
 		ApiKey:             getEnvWithLog("API_KEY", "test_api_key"),
 		JWTSecret:          getEnvWithLog("JWT_SECRET", "secret"),
 		ServerAddress:      serverAddr,
-		CORSAllowedOrigins: []string{"https://admin.albafone.net", "http://localhost:3000"},
+		CORSAllowedOrigins: strings.Split(getEnvWithLog("CORS_ALLOWED_ORIGINS", ""), ","),
 		Version:            getEnvWithLog("APP_VERSION", "0.0.1"),
 
 		EmailProvider:        getEnvWithLog("EMAIL_PROVIDER", "default"),
@@ -93,6 +94,7 @@ func NewConfig() *Config {
 		StorageBaseURL:       getEnvWithLog("STORAGE_BASE_URL", ""),
 		StorageAPIKey:        getEnvWithLog("STORAGE_API_KEY", ""),
 		StorageAPISecret:     getEnvWithLog("STORAGE_API_SECRET", ""),
+		StorageAccountID:     getEnvWithLog("STORAGE_ACCOUNT_ID", ""),
 		StorageEndpoint:      getEnvWithLog("STORAGE_ENDPOINT", ""),
 		StorageRegion:        getEnvWithLog("STORAGE_REGION", "eu-central-1"),
 		StorageBucket:        getEnvWithLog("STORAGE_BUCKET", "default"),

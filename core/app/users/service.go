@@ -1,6 +1,7 @@
 package users
 
 import (
+	"base/core/logger"
 	"base/core/storage"
 	"context"
 	"errors"
@@ -14,11 +15,21 @@ import (
 
 type UserService struct {
 	db            *gorm.DB
-	logger        *zap.Logger
+	logger        logger.Logger
 	activeStorage *storage.ActiveStorage
 }
 
-func NewUserService(db *gorm.DB, logger *zap.Logger, activeStorage *storage.ActiveStorage) *UserService {
+func NewUserService(db *gorm.DB, logger logger.Logger, activeStorage *storage.ActiveStorage) *UserService {
+	if db == nil {
+		panic("db is required")
+	}
+	if logger == nil {
+		panic("logger is required")
+	}
+	if activeStorage == nil {
+		panic("activeStorage is required")
+	}
+
 	// Register avatar attachment configuration
 	activeStorage.RegisterAttachment("users", storage.AttachmentConfig{
 		Field:             "avatar",
@@ -44,11 +55,12 @@ func (s *UserService) GetByID(id uint) (*UserResponse, error) {
 	var user User
 	if err := s.db.First(&user, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			s.logger.Debug("User not found", zap.Uint("user_id", id))
+			s.logger.Error("User not found",
+				logger.Uint("user_id", id))
 		} else {
 			s.logger.Error("Database error while fetching user",
-				zap.Error(err),
-				zap.Uint("user_id", id))
+
+				logger.Uint("user_id", id))
 		}
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
@@ -84,8 +96,6 @@ func (s *UserService) Update(id uint, req *UpdateRequest) (*UserResponse, error)
 
 	return s.toResponse(&user), nil
 }
-
-// Remove CleanupOldAttachments method completely
 
 func (s *UserService) UpdateAvatar(ctx context.Context, id uint, avatarFile *multipart.FileHeader) (*UserResponse, error) {
 	var user User

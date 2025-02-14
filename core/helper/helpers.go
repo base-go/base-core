@@ -4,16 +4,17 @@ import (
 	"base/core/config"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 )
 
-func GenerateJWT(userID uint) (string, error) {
+func GenerateJWT(userID uint, extend interface{}) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 	cfg := config.NewConfig()
 
 	claims := token.Claims.(jwt.MapClaims)
 	claims["user_id"] = userID
 	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
+	claims["extend"] = extend
 
 	tokenString, err := token.SignedString([]byte(cfg.JWTSecret))
 	if err != nil {

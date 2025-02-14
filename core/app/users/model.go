@@ -12,8 +12,9 @@ type User struct {
 	Name      string              `gorm:"column:name;not null"`
 	Username  string              `gorm:"column:username;unique;not null"`
 	Email     string              `gorm:"column:email;unique;not null"`
-	Avatar    *storage.Attachment `json:"-" gorm:"-"`
+	Avatar    *storage.Attachment `gorm:"foreignKey:ModelId;references:Id"`
 	Password  string              `gorm:"column:password"`
+	LastLogin *time.Time          `gorm:"column:last_login"`
 	CreatedAt time.Time           `gorm:"column:created_at"`
 	UpdatedAt time.Time           `gorm:"column:updated_at"`
 	DeletedAt gorm.DeletedAt      `gorm:"column:deleted_at"`
@@ -56,8 +57,8 @@ type UserResponse struct {
 	Name      string `json:"name"`
 	Username  string `json:"username"`
 	Email     string `json:"email"`
-	AvatarId  uint   `json:"avatar_id"`
 	AvatarURL string `json:"avatar_url"`
+	LastLogin string `json:"last_login"`
 }
 
 // AvatarResponse represents the avatar in API responses
@@ -77,42 +78,12 @@ func ToResponse(user *User) *UserResponse {
 	}
 
 	if user.Avatar != nil {
-		response.AvatarId = user.Avatar.Id
 		response.AvatarURL = user.Avatar.URL
 	}
 
+	if user.LastLogin != nil {
+		response.LastLogin = user.LastLogin.Format(time.RFC3339)
+	}
+
 	return response
-}
-
-// AfterFind loads attachments after finding the model
-func (u *User) AfterFind(tx *gorm.DB) error {
-	var avatar storage.Attachment
-	err := tx.Model(&storage.Attachment{}).
-		Where("model_type = ? AND model_id = ? AND field = ?", "users", u.Id, "avatar").
-		First(&avatar).Error
-	if err != nil && err != gorm.ErrRecordNotFound {
-		return err
-	}
-	if err == nil {
-		u.Avatar = &avatar
-	}
-	return nil
-}
-
-// BeforeCreate hook
-func (u *User) BeforeCreate(tx *gorm.DB) error {
-	if u.Avatar != nil {
-		u.Avatar.ModelType = "users"
-		u.Avatar.Field = "avatar"
-	}
-	return nil
-}
-
-// BeforeUpdate hook
-func (u *User) BeforeUpdate(tx *gorm.DB) error {
-	if u.Avatar != nil {
-		u.Avatar.ModelType = "users"
-		u.Avatar.Field = "avatar"
-	}
-	return nil
 }

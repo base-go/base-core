@@ -2,115 +2,165 @@ package app
 
 import (
 	"base/core/app/auth"
+	"base/core/app/media"
 	"base/core/app/users"
 	"base/core/email"
 	"base/core/emitter"
+	"base/core/logger"
 	"base/core/module"
 	"base/core/storage"
-	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
-// CoreModuleInitializer holds dependencies for core module initialization
-type CoreModuleInitializer struct {
+// Core represents the core application with all its dependencies
+type Core struct {
 	DB          *gorm.DB
-	Router      *gin.RouterGroup
+	Router      *gin.RouterGroup // Protected routes requiring auth
+	AuthRouter  *gin.RouterGroup // Auth routes (login, register)
 	EmailSender email.Sender
-	Logger      *zap.Logger
+	Logger      logger.Logger
 	Storage     *storage.ActiveStorage
 	Emitter     *emitter.Emitter
+	Modules     map[string]module.Module
 }
 
-// InitializeCoreModules loads and initializes all core modules
-func InitializeCoreModules(db *gorm.DB, router *gin.RouterGroup, emailSender email.Sender, logger *zap.Logger, storage *storage.ActiveStorage, emitter *emitter.Emitter) map[string]module.Module {
-	modules := make(map[string]module.Module)
-
-	// Check if emitter is nil
-	if emitter == nil {
-		logger.Error("Emitter is nil in InitializeCoreModules; cannot register event listeners")
-		fmt.Println("Emitter is nil in InitializeCoreModules; cannot register event listeners")
-	} else {
-		fmt.Println("WE GOT EMITTER IN INITIALIZECOREMODULES")
-		logger.Info("WE GOT EMITTER IN INITIALIZECOREMODULES")
+// NewCore creates and initializes a new Core instance
+func NewCore(
+	db *gorm.DB,
+	protectedRouter *gin.RouterGroup,
+	authRouter *gin.RouterGroup,
+	emailSender email.Sender,
+	logger logger.Logger,
+	storage *storage.ActiveStorage,
+	emitter *emitter.Emitter,
+) *Core {
+	core := &Core{
+		DB:          db,
+		Router:      protectedRouter,
+		AuthRouter:  authRouter,
+		EmailSender: emailSender,
+		Logger:      logger,
+		Storage:     storage,
+		Emitter:     emitter,
+		Modules:     make(map[string]module.Module),
 	}
 
-	// Log initialization start
-	logger.Info("Starting core modules initialization")
+	// Initialize modules
+	core.Modules = core.initializeModules()
+	return core
+}
+
+// initializeModules loads and initializes all core modules
+func (core *Core) initializeModules() map[string]module.Module {
+	modules := make(map[string]module.Module)
+
+	if core.Emitter == nil {
+		core.Logger.Error("Emitter is nil in initializeModules; cannot register event listeners")
+	}
+
+	core.Logger.Info("Starting core modules initialization")
 
 	// Define module initializers
 	moduleInitializers := map[string]func() module.Module{
 		"users": func() module.Module {
 			return users.NewUserModule(
-				db,
-				router,
-				logger,
-				storage,
+				core.DB,
+				core.Router,
+				core.Logger,
+				core.Storage,
+			)
+		},
+		"media": func() module.Module {
+			return media.NewMediaModule(
+				core.DB,
+				core.Router,
+				core.Storage,
+				core.Emitter,
+				core.Logger,
 			)
 		},
 		"auth": func() module.Module {
 			return auth.NewAuthModule(
-				db,
-				router,
-				emailSender,
-				logger,
-				emitter,
+				core.DB,
+				core.AuthRouter, // Use AuthRouter for auth routes
+				core.EmailSender,
+				core.Logger,
+				core.Emitter,
 			)
 		},
 	}
 
-	// Initialize and register each module
-	for name, initializer := range moduleInitializers {
-		logger.Info("Initializing module", zap.String("module", name))
+	// Initialize modules
+	moduleMap := moduleInitializers
 
-		module := initializer()
-		modules[name] = module
+	// Register and initialize each module
+	for name, initializer := range moduleMap {
+		core.Logger.Info("Initializing module", zap.String("module", name))
+		mod := initializer()
+		if mod == nil {
+			core.Logger.Error("Failed to initialize module", zap.String("module", name))
+			continue
+		}
 
-		logger.Info("Core module initialized", zap.String("module", name))
+		// Initialize the module
+		if initializer, ok := mod.(interface{ Init() error }); ok {
+			if err := initializer.Init(); err != nil {
+				core.Logger.Error("Failed to initialize module",
+					zap.String("module", name),
+					zap.Error(err))
+				continue
+			}
+		}
+
+		// Migrate the module
+		if migrator, ok := mod.(interface{ Migrate() error }); ok {
+			if err := migrator.Migrate(); err != nil {
+				core.Logger.Error("Failed to migrate module",
+					zap.String("module", name),
+					zap.Error(err))
+				continue
+			}
+		}
+
+		// Set up routes for the module
+		if routeModule, ok := mod.(interface{ Routes(*gin.RouterGroup) }); ok {
+			core.Logger.Info("Setting up routes for module", zap.String("module", name))
+			// Use AuthRouter for auth module, protected Router for others
+			if name == "auth" {
+				routeModule.Routes(core.AuthRouter)
+			} else {
+				routeModule.Routes(core.Router)
+			}
+		}
+
+		modules[name] = mod
+		core.Logger.Info("Core module initialized", zap.String("module", name))
 	}
 
-	logger.Info("Core modules initialization completed", zap.Strings("modules", getModuleNames(modules)))
 	return modules
 }
 
-// NewCoreModuleInitializer creates a new instance of CoreModuleInitializer
-func NewCoreModuleInitializer(
-	db *gorm.DB,
-	router *gin.RouterGroup,
-	emailSender email.Sender,
-	logger *zap.Logger,
-	storage *storage.ActiveStorage,
-	emitter *emitter.Emitter,
-) *CoreModuleInitializer {
-	return &CoreModuleInitializer{
-		DB:          db,
-		Router:      router,
-		EmailSender: emailSender,
-		Logger:      logger,
-		Storage:     storage,
-		Emitter:     emitter,
+// runMigrations runs migrations for all modules that implement the Migrate interface
+func (core *Core) runMigrations(modules map[string]module.Module) {
+	for _, module := range modules {
+		if migrator, ok := module.(interface{ Migrate() error }); ok {
+			if err := migrator.Migrate(); err != nil {
+				core.Logger.Error("Failed to migrate module",
+					zap.String("error", err.Error()))
+				continue
+			}
+		}
 	}
 }
 
-// getModuleNames extracts module names from the modules map
-func getModuleNames(modules map[string]module.Module) []string {
-	names := make([]string, 0, len(modules))
-	for name := range modules {
+// GetModuleNames returns a list of all initialized module names
+func (core *Core) GetModuleNames() []string {
+	names := make([]string, 0, len(core.Modules))
+	for name := range core.Modules {
 		names = append(names, name)
 	}
 	return names
-}
-
-// Initialize initializes all core modules using the initializer's dependencies
-func (i *CoreModuleInitializer) Initialize() map[string]module.Module {
-	return InitializeCoreModules(
-		i.DB,
-		i.Router,
-		i.EmailSender,
-		i.Logger,
-		i.Storage,
-		i.Emitter,
-	)
 }

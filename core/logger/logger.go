@@ -18,7 +18,7 @@ type Logger interface {
 	Warn(msg string, fields ...Field)
 	Fatal(msg string, fields ...Field)
 	With(fields ...Field) Logger
-	GetZapLogger() *zap.Logger // Add method to get underlying zap logger
+	GetZapLogger() *zap.Logger
 }
 
 // Field represents a log field

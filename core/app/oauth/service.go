@@ -32,6 +32,15 @@ func NewOAuthService(db *gorm.DB, config *OAuthConfig, activeStorage *storage.Ac
 	}
 }
 
+func (s *OAuthService) ProcessAppleOAuth(idToken string) (*OAuthUser, error) {
+	email, name, username, picture, providerID, err := s.handleAppleOAuth(idToken)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.processUser(email, name, username, picture, "apple", providerID, idToken)
+}
+
 func (s *OAuthService) ProcessGoogleOAuth(idToken string) (*OAuthUser, error) {
 	email, name, username, picture, providerID, err := s.handleGoogleOAuth(idToken)
 	if err != nil {
@@ -48,6 +57,21 @@ func (s *OAuthService) ProcessFacebookOAuth(accessToken string) (*OAuthUser, err
 	}
 
 	return s.processUser(email, name, username, picture, "facebook", providerID, accessToken)
+}
+
+func (s *OAuthService) handleAppleOAuth(idToken string) (email, name, username, picture, providerID string, err error) {
+	payload, err := idtoken.Validate(context.Background(), idToken, s.Config.Apple.ClientID)
+	if err != nil {
+		return "", "", "", "", "", fmt.Errorf("invalid ID token: %w", err)
+	}
+
+	email, _ = payload.Claims["email"].(string)
+	name, _ = payload.Claims["name"].(string)
+	username = strings.ToLower(strings.ReplaceAll(name, " ", ""))
+	picture, _ = payload.Claims["picture"].(string)
+	providerID, _ = payload.Claims["sub"].(string)
+
+	return email, name, username, picture, providerID, nil
 }
 
 func (s *OAuthService) handleGoogleOAuth(idToken string) (email, name, username, picture, providerID string, err error) {
