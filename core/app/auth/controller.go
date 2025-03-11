@@ -60,8 +60,8 @@ func (c *AuthController) Register(ctx *gin.Context) {
 	//	Send welcome email
 	msg := email.Message{
 		To:      []string{user.Email},
-		From:    "support@albafone.app",
-		Subject: "Welcome to Our Application",
+		From:    "no-reply@base.al",
+		Subject: "Welcome to Base",
 		Body:    c.getWelcomeEmailBody(user.Name),
 		IsHTML:  true,
 	}
@@ -208,7 +208,7 @@ func (c *AuthController) ResetPassword(ctx *gin.Context) {
 }
 
 func (c *AuthController) getWelcomeEmailBody(name string) string {
-	return "<h1>Welcome to Albafone!</h1>" +
+	return "<h1>Welcome to Base!</h1>" +
 		"<p>Hi " + name + ",</p>" +
 		"<p>Thank you for registering with our application.</p>" +
 		"<p>Best regards,<br>Team</p>"

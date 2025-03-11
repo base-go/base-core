@@ -490,7 +490,7 @@ const emailTemplate = `
                                                           width="252"
                                                       >
                                                           <a
-                                                              href="http://albafone.app"
+                                                              href="http://base.al"
                                                               target="_blank"
                                                               style="
                                                                   -webkit-font-smoothing: antialiased;
@@ -535,7 +535,7 @@ const emailTemplate = `
                                                           valign="bottom"
                                                       >
                                                           <a
-                                                              href="http://albafone.app"
+                                                              href="http://base.al"
                                                               target="_blank"
                                                               style="
                                                                   -webkit-font-smoothing: antialiased;
@@ -580,7 +580,7 @@ const emailTemplate = `
                                                           width="252"
                                                       >
                                                           <a
-                                                              href="http://albafone.app"
+                                                              href="http://base.al"
                                                               target="_blank"
                                                               style="
                                                                   -webkit-font-smoothing: antialiased;
@@ -805,8 +805,8 @@ const emailTemplate = `
                                                               font-weight: bold;
                                                               text-decoration: none;
                                                           "
-                                                          href="mailto:support@albafone.app"
-                                                          >support@albafone.app</a
+                                                          href="mailto:support@base.al"
+                                                          >support@base.al</a
                                                       >.
                                                   </td>
                                                   <td
