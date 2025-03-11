@@ -4,7 +4,7 @@ import (
 	"base/core/config"
 	"base/core/types"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // GenerateJWT is a wrapper around types.GenerateJWT for backward compatibility
