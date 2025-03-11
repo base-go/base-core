@@ -15,6 +15,7 @@ import (
 	"base/core/email"
 	"base/core/emitter"
 	"base/core/helper"
+	"base/core/types"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -102,9 +103,17 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
+
+	userData := types.UserData{
+		Id:       user.Id,
+		Name:     user.Name,
+		Username: user.Username,
+		Email:    user.Email,
+	}
+
 	// Emit registration event
 	if s.emitter != nil {
-		s.emitter.Emit("user.registered", &user)
+		s.emitter.Emit("user.registered", userData)
 	} else {
 		fmt.Printf("Emitter is nil in AuthService.Register; cannot emit 'user.registered' event")
 	}
@@ -160,7 +169,7 @@ func (s *AuthService) Login(req *LoginRequest) (*AuthResponse, error) {
 		UserResponse: *userResponse,
 		AccessToken:  token,
 		Exp:          now.Add(24 * time.Hour).Unix(),
-		Extend:      app.Extend(user.User.Id),
+		Extend:       app.Extend(user.User.Id),
 	}
 
 	// Prepare the login event
