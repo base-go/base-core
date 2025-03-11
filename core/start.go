@@ -140,6 +140,8 @@ func StartApplication() (*Application, error) {
 	// Create API router group with API key requirement for all routes
 	apiGroup := router.Group("/api")
 	apiGroup.Use(middleware.APIKeyMiddleware())
+	// Add header middleware to extract and process Base- prefixed headers
+	apiGroup.Use(middleware.HeaderMiddleware())
 
 	// Create auth group for login/register (only requires API key)
 	authGroup := apiGroup.Group("/auth")

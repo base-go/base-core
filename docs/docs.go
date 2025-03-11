@@ -1075,8 +1075,8 @@ const docTemplate = `{
                 "accessToken": {
                     "type": "string"
                 },
-                "avatar": {
-                    "$ref": "#/definitions/storage.Attachment"
+                "avatar_url": {
+                    "type": "string"
                 },
                 "email": {
                     "type": "string"

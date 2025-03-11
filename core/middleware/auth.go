@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	helper "base/core/helper"
 	"base/core/types"
 	"net/http"
 	"strings"
@@ -31,7 +30,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		userId, err := helper.ValidateJWT(parts[1])
+		userId, err := types.ValidateJWT(parts[1])
 		if err != nil {
 			log.Warnf("Invalid or expired JWT: %s", err.Error())
 			c.AbortWithStatusJSON(http.StatusUnauthorized, types.ErrorResponse{
