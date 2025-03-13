@@ -1,6 +1,6 @@
 module base
 
-go 1.22.2
+go 1.23.4
 
 require (
 	github.com/aws/aws-sdk-go v1.55.5
@@ -41,6 +41,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/s2a-go v0.1.8 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
+	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/pgx/v5 v5.5.5 // indirect
@@ -82,6 +83,7 @@ require (
 require (
 	github.com/gin-contrib/cors v1.7.3
 	github.com/gorilla/websocket v1.5.3
+	github.com/gosimple/slug v1.15.0
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/keighl/postmark v0.0.0-20190821160221-28358b1a94e3

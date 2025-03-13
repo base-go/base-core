@@ -337,7 +337,7 @@ func (s *AuthService) sendEmail(to, subject, title, content string) error {
 
 	msg := email.Message{
 		To:      []string{to},
-		From:    "support@albafone.app",
+		From:    "no-reply@base.al",
 		Subject: subject,
 		Body:    body.String(),
 		IsHTML:  true,
@@ -346,7 +346,7 @@ func (s *AuthService) sendEmail(to, subject, title, content string) error {
 }
 
 func (s *AuthService) sendPasswordResetEmail(user *AuthUser, token string) error {
-	title := "Reset Your Albafone Password"
+	title := "Reset Your Base Password"
 	content := fmt.Sprintf(`
 		<p>Hi %s,</p>
 		<p>You have requested to reset your password. Use the following code to reset your password:</p>
@@ -358,7 +358,7 @@ func (s *AuthService) sendPasswordResetEmail(user *AuthUser, token string) error
 }
 
 func (s *AuthService) sendPasswordChangedEmail(user *AuthUser) error {
-	title := "Your Albafone Password Has Been Changed"
+	title := "Your Base Password Has Been Changed"
 	content := fmt.Sprintf("<p>Hi %s,</p><p>Your password has been successfully changed. If you did not make this change, please contact support immediately.</p>", user.Name)
 	return s.sendEmail(user.Email, title, title, content)
 }

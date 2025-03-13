@@ -12,6 +12,7 @@ import (
 	"base/core/module"
 	"base/core/storage"
 	"base/core/websocket"
+	"time"
 
 	"fmt"
 
@@ -126,10 +127,14 @@ func StartApplication() (*Application, error) {
 	router.Static("/storage", "./storage")
 
 	// Set up CORS
-	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowOrigins = cfg.CORSAllowedOrigins
-	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
-	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Api-Key"}
+	corsConfig := cors.Config{
+		AllowOrigins:     cfg.CORSAllowedOrigins,
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "authorization", "X-Api-Key", "Base-Orgid", "Base-*"},
+		ExposeHeaders:    []string{"Content-Length", "Content-Type"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}
 	router.Use(cors.New(corsConfig))
 
 	// Set up Swagger
