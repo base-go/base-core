@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="{{currentLanguage.Code}}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.title}} - {{tr "landing.welcome"}}</title>
+    <script defer src="https://unpkg.com/alpinejs-component@latest/dist/component.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50" x-data="{ sidebarOpen: false }">
+    <!-- Navigation -->
+    <nav class="bg-white shadow fixed w-full z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <button @click="sidebarOpen = !sidebarOpen" class="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                    <a href="{{localizedUrl "/"}}" class="ml-4 text-xl font-bold text-gray-900">Base App</a>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-4">
+                    <a href="{{localizedUrl "/posts"}}" class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md">{{tr "navigation.posts"}}</a>
+                    
+                    <!-- Language Selector -->
+                    {{template "components/language_selector.html" .}}
+                    
+                    <!-- User dropdown -->
+                    {{template "components/user_profile.html" .}}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile sidebar -->
+    <div x-show="sidebarOpen" class="fixed inset-0 z-40 md:hidden">
+        <div x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300" 
+             x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+             x-transition:leave="transition-opacity ease-linear duration-300"
+             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-gray-600 bg-opacity-75" @click="sidebarOpen = false"></div>
+        
+        <div x-show="sidebarOpen" x-transition:enter="transition ease-in-out duration-300 transform"
+             x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
+             x-transition:leave="transition ease-in-out duration-300 transform"
+             x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full"
+             class="relative flex-1 flex flex-col max-w-xs w-full bg-white">
+            <div class="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
+                <nav class="mt-5 px-2 space-y-1">
+                    <a href="{{localizedUrl "/posts"}}" class="text-gray-700 hover:text-gray-900 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium">{{tr "navigation.posts"}}</a>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <div class="pt-16">
+        <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            {{if .flash}}
+                <div class="mb-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded" role="alert">
+                    {{.flash}}
+                </div>
+            {{end}}
+            
+            {{if .error}}
+                <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded" role="alert">
+                    {{.error}}
+                </div>
+            {{end}}
+            
+            <main>
+                {{safe .Content}}
+            </main>
+        </div>
+    </div>
+</body>
+</html>

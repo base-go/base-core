@@ -12,11 +12,13 @@ import (
 
 	"base/app"
 	"base/core/app/users"
+	"base/core/config"
 	"base/core/email"
 	"base/core/emitter"
 	"base/core/helper"
 	"base/core/types"
 
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -358,7 +360,88 @@ func (s *AuthService) sendPasswordResetEmail(user *AuthUser, token string) error
 }
 
 func (s *AuthService) sendPasswordChangedEmail(user *AuthUser) error {
-	title := "Your Base Password Has Been Changed"
-	content := fmt.Sprintf("<p>Hi %s,</p><p>Your password has been successfully changed. If you did not make this change, please contact support immediately.</p>", user.Name)
-	return s.sendEmail(user.Email, title, title, content)
+	return s.sendEmail(
+		user.Email,
+		"Password Changed",
+		"Password Changed",
+		"Your password has been successfully changed.",
+	)
+}
+
+// GetUserByID retrieves a user by their ID
+func (s *AuthService) GetUserByID(userID uint) (*users.UserResponse, error) {
+	var user users.User
+	result := s.db.First(&user, userID)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return users.ToResponse(&user), nil
+}
+
+// ValidateToken validates a JWT token and returns the user information
+func (s *AuthService) ValidateToken(tokenString string) (*users.UserResponse, error) {
+	if tokenString == "" {
+		return nil, errors.New("empty token")
+	}
+
+	// Parse the token
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// Validate the signing method
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		// Return the secret key used for signing
+		cfg := config.NewConfig()
+		return []byte(cfg.JWTSecret), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if the token is valid
+	if !token.Valid {
+		return nil, errors.New("invalid token")
+	}
+
+	// Extract claims
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, errors.New("invalid token claims")
+	}
+
+	// Check token expiration
+	exp, ok := claims["exp"].(float64)
+	if !ok {
+		return nil, errors.New("invalid expiration claim")
+	}
+
+	if time.Unix(int64(exp), 0).Before(time.Now()) {
+		return nil, errors.New("token expired")
+	}
+
+	// Extract user ID
+	userID, ok := claims["sub"].(string)
+	if !ok {
+		return nil, errors.New("invalid subject claim")
+	}
+
+	// Find user in database
+	var user AuthUser
+	if err := s.db.Where("id = ?", userID).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrUserNotFound
+		}
+		return nil, err
+	}
+
+	// Return user response
+	return &users.UserResponse{
+		Id:       user.Id,
+		Name:     user.Name,
+		Username: user.Username,
+		Email:    user.Email,
+	}, nil
 }

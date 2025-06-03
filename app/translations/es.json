@@ -1,0 +1,80 @@
+{
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "ok": "Aceptar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "submit": "Enviar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "warning": "Advertencia",
+    "info": "Información",
+    "actions": "Acciones",
+    "view": "Ver"
+  },
+  "navigation": {
+    "home": "Inicio",
+    "posts": "Publicaciones",
+    "settings": "Configuración",
+    "profile": "Perfil",
+    "logout": "Cerrar sesión",
+    "login": "Iniciar sesión",
+    "register": "Registrarse"
+  },
+  "posts": {
+    "title": "Publicaciones",
+    "new_post": "Nueva Publicación",
+    "create_post": "Crear Publicación",
+    "edit_post": "Editar Publicación",
+    "edit_title_prefix": "Editar ",
+    "details": "Detalles de la Publicación",
+    "post_details": "Detalles de la Publicación",
+    "post_list": "Lista de Publicaciones",
+    "no_posts": "No hay publicaciones, ¡crea una!",
+    "post_not_found": "Publicación no encontrada",
+    "invalid_post_id": "ID de publicación inválido",
+    "delete_post_confirm": "¿Estás seguro de que quieres eliminar esta publicación?",
+    "post_deleted": "Publicación eliminada con éxito",
+    "post_created": "Publicación creada con éxito",
+    "post_updated": "Publicación actualizada con éxito",
+    "title_column": "Título",
+    "content_column": "Contenido",
+    "created_column": "Creado"
+  },
+  "errors": {
+    "general_error": "Se produjo un error",
+    "not_found": "No encontrado",
+    "unauthorized": "No autorizado",
+    "forbidden": "Prohibido",
+    "server_error": "Error del servidor",
+    "validation_error": "Error de validación",
+    "please_try_again": "Por favor, inténtelo de nuevo",
+    "failed_to_fetch_posts": "Error al obtener publicaciones: ",
+    "post_not_found": "Publicación no encontrada",
+    "invalid_post_id": "ID de publicación inválido"
+  },
+  "auth": {
+    "username": "Nombre de usuario",
+    "password": "Contraseña",
+    "email": "Correo electrónico",
+    "login": "Iniciar sesión",
+    "register": "Registrarse",
+    "forgot_password": "¿Olvidó su contraseña?",
+    "reset_password": "Restablecer contraseña",
+    "remember_me": "Recordarme",
+    "logout": "Cerrar sesión",
+    "profile": "Perfil"
+  },
+  "landing": {
+    "welcome": "Bienvenido a Base",
+    "tagline": "Un framework web moderno",
+    "get_started": "Comenzar",
+    "learn_more": "Más información"
+  }
+}

@@ -1,0 +1,238 @@
+{{define "auth/register.html"}}
+<div>
+  <h2 class="text-center text-2xl font-bold mb-4 text-indigo-700">
+    {{tr "auth.create_account"}}
+  </h2>
+  <p class="text-center text-sm text-gray-600 mb-6">
+    {{tr "auth.or"}}
+    <a href="{{localizedUrl "/auth/login"}}" class="font-medium text-indigo-600 hover:text-indigo-700 transition duration-300">
+      {{tr "auth.login"}}
+    </a>
+  </p>
+
+  {{if .error}}
+    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded" role="alert">
+      <p>{{.error}}</p>
+    </div>
+  {{end}}
+
+  <div id="message-container" class="hidden rounded relative px-4 py-3 mb-4">
+    <span class="block sm:inline" id="message-text"></span>
+  </div>
+
+  <form class="space-y-5" id="register-form" method="POST" action="{{localizedUrl "/auth/register"}}">
+    <div class="space-y-4">
+      <div class="transition duration-300 ease-in-out transform hover:scale-[1.01]">
+        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">{{tr "auth.full_name"}}</label>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"></path>
+            </svg>
+          </span>
+          <input id="name" name="name" type="text" required class="pl-10 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="{{tr "auth.full_name"}}">
+        </div>
+      </div>
+
+      <div class="transition duration-300 ease-in-out transform hover:scale-[1.01]">
+        <label for="username" class="block text-sm font-medium text-gray-700 mb-1">{{tr "auth.username"}}</label>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"></path>
+            </svg>
+          </span>
+          <input id="username" name="username" type="text" required class="pl-10 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="{{tr "auth.username"}}">
+        </div>
+      </div>
+
+      <div class="transition duration-300 ease-in-out transform hover:scale-[1.01]">
+        <label for="email-address" class="block text-sm font-medium text-gray-700 mb-1">{{tr "auth.email_address"}}</label>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+            </svg>
+          </span>
+          <input id="email-address" name="email" type="email" autocomplete="email" required class="pl-10 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="{{tr "auth.email_address"}}">
+        </div>
+      </div>
+
+      <div class="transition duration-300 ease-in-out transform hover:scale-[1.01]">
+        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">{{tr "auth.password"}}</label>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path>
+            </svg>
+          </span>
+          <input id="password" name="password" type="password" autocomplete="new-password" required class="pl-10 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="{{tr "auth.password"}}">
+        </div>
+      </div>
+
+      <div class="transition duration-300 ease-in-out transform hover:scale-[1.01]">
+        <label for="password-confirm" class="block text-sm font-medium text-gray-700 mb-1">{{tr "auth.confirm_password"}}</label>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+            </svg>
+          </span>
+          <input id="password-confirm" name="password_confirmation" type="password" autocomplete="new-password" required class="pl-10 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="{{tr "auth.confirm_password"}}">
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6">
+      <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-lg">
+        <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+          <svg class="h-5 w-5 text-indigo-300 group-hover:text-indigo-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+          </svg>
+        </span>
+        {{tr "auth.register"}}
+      </button>
+    </div>
+  </form>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const registerForm = document.getElementById('register-form');
+    const messageContainer = document.getElementById('message-container');
+    const messageText = document.getElementById('message-text');
+    
+    // Check if we were redirected with a message
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorMsg = urlParams.get('error');
+    
+    if (errorMsg) {
+      messageText.textContent = decodeURIComponent(errorMsg);
+      messageContainer.classList.remove('hidden');
+      messageContainer.classList.add('bg-red-100', 'border', 'border-red-400', 'text-red-700');
+      // Clean up the URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
+    registerForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const name = document.getElementById('name').value;
+      const username = document.getElementById('username').value;
+      const email = document.getElementById('email-address').value;
+      const password = document.getElementById('password').value;
+      const passwordConfirm = document.getElementById('password-confirm').value;
+      
+      // Basic validation
+      if (password !== passwordConfirm) {
+        messageText.textContent = 'Passwords do not match';
+        messageContainer.classList.remove('hidden');
+        messageContainer.classList.add('bg-red-100', 'border', 'border-red-400', 'text-red-700');
+        messageContainer.classList.remove('bg-green-100', 'border-green-400', 'text-green-700');
+        return;
+      }
+      
+      if (password.length < 8) {
+        messageText.textContent = 'Password must be at least 8 characters';
+        messageContainer.classList.remove('hidden');
+        messageContainer.classList.add('bg-red-100', 'border', 'border-red-400', 'text-red-700');
+        messageContainer.classList.remove('bg-green-100', 'border-green-400', 'text-green-700');
+        return;
+      }
+      
+      // Hide any previous messages
+      messageContainer.classList.add('hidden');
+      
+      // Attempt both API and form-based registration
+      // First try the API endpoint with JSON
+      fetch('{{localizedUrl "/auth/register"}}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: name,
+          username: username,
+          email: email,
+          password: password
+        }),
+        credentials: 'same-origin'
+      })
+      .then(response => {
+        if (!response.ok && response.status !== 409) { // 409 Conflict is handled in the next step
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.error) {
+          // Show error message
+          messageText.textContent = data.error;
+          messageContainer.classList.remove('hidden');
+          messageContainer.classList.add('bg-red-100', 'border', 'border-red-400', 'text-red-700');
+          messageContainer.classList.remove('bg-green-100', 'border-green-400', 'text-green-700');
+        } else {
+          // Registration successful
+          if (data.accessToken) {
+            // Store JWT token for API access
+            localStorage.setItem('auth_token', data.accessToken);
+            
+            // Redirect to posts page or dashboard
+            window.location.href = '{{localizedUrl "/posts"}}';
+          } else {
+            // Fallback to traditional form submission if no token
+            submitFormTraditionally();
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        // If API call fails, fall back to traditional form submission
+        submitFormTraditionally();
+      });
+      
+      function submitFormTraditionally() {
+        // Create a hidden form and submit it traditionally
+        const traditionalForm = document.createElement('form');
+        traditionalForm.method = 'POST';
+        traditionalForm.action = registerForm.action;
+        traditionalForm.style.display = 'none';
+        
+        const nameInput = document.createElement('input');
+        nameInput.type = 'hidden';
+        nameInput.name = 'name';
+        nameInput.value = name;
+        
+        const usernameInput = document.createElement('input');
+        usernameInput.type = 'hidden';
+        usernameInput.name = 'username';
+        usernameInput.value = username;
+        
+        const emailInput = document.createElement('input');
+        emailInput.type = 'hidden';
+        emailInput.name = 'email';
+        emailInput.value = email;
+        
+        const passwordInput = document.createElement('input');
+        passwordInput.type = 'hidden';
+        passwordInput.name = 'password';
+        passwordInput.value = password;
+        
+        const passwordConfirmInput = document.createElement('input');
+        passwordConfirmInput.type = 'hidden';
+        passwordConfirmInput.name = 'password_confirmation';
+        passwordConfirmInput.value = passwordConfirm;
+        
+        traditionalForm.appendChild(nameInput);
+        traditionalForm.appendChild(usernameInput);
+        traditionalForm.appendChild(emailInput);
+        traditionalForm.appendChild(passwordInput);
+        traditionalForm.appendChild(passwordConfirmInput);
+        
+        document.body.appendChild(traditionalForm);
+        traditionalForm.submit();
+      }
+    });
+  });
+</script>
+{{end}}

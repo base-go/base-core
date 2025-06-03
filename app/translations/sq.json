@@ -1,0 +1,80 @@
+{
+  "common": {
+    "save": "Ruaj",
+    "cancel": "Anulo",
+    "ok": "OK",
+    "delete": "Fshi",
+    "edit": "Ndrysho",
+    "create": "Krijo",
+    "back": "Kthehu",
+    "next": "Tjetër",
+    "previous": "Paraprake",
+    "submit": "Dërgo",
+    "loading": "Duke ngarkuar...",
+    "error": "Gabim",
+    "success": "Sukses",
+    "warning": "Paralajmërim",
+    "info": "Informacion",
+    "actions": "Veprimet",
+    "view": "Shiko"
+  },
+  "navigation": {
+    "home": "Kryefaqja",
+    "posts": "Postimet",
+    "settings": "Cilësimet",
+    "profile": "Profili",
+    "logout": "Dilni",
+    "login": "Hyni",
+    "register": "Regjistrohu"
+  },
+  "posts": {
+    "title": "Postimet",
+    "new_post": "Postim i Ri",
+    "create_post": "Krijo Postim",
+    "edit_post": "Ndrysho Postimin",
+    "edit_title_prefix": "Ndrysho ",
+    "details": "Detajet e Postimit",
+    "post_details": "Detajet e Postimit",
+    "post_list": "Lista e Postimeve",
+    "no_posts": "Nuk ka postime, krijoni një!",
+    "post_not_found": "Postimi nuk u gjet",
+    "invalid_post_id": "ID e postimit e pavlefshme",
+    "delete_post_confirm": "A jeni i sigurt që dëshironi të fshini këtë postim?",
+    "post_deleted": "Postimi u fshi me sukses",
+    "post_created": "Postimi u krijua me sukses",
+    "post_updated": "Postimi u përditësua me sukses",
+    "title_column": "Titulli",
+    "content_column": "Përmbajtja",
+    "created_column": "Krijuar"
+  },
+  "errors": {
+    "general_error": "Ndodhi një gabim",
+    "not_found": "Nuk u gjet",
+    "unauthorized": "I paautorizuar",
+    "forbidden": "I ndaluar",
+    "server_error": "Gabim në server",
+    "validation_error": "Gabim validimi",
+    "please_try_again": "Ju lutemi, provoni përsëri",
+    "failed_to_fetch_posts": "Dështoi në marrjen e postimeve: ",
+    "post_not_found": "Postimi nuk u gjet",
+    "invalid_post_id": "ID e postimit e pavlefshme"
+  },
+  "auth": {
+    "username": "Emri i përdoruesit",
+    "password": "Fjalëkalimi",
+    "email": "Email",
+    "login": "Hyni",
+    "register": "Regjistrohu",
+    "forgot_password": "Keni harruar fjalëkalimin?",
+    "reset_password": "Rivendosni fjalëkalimin",
+    "remember_me": "Më mbaj mend",
+    "logout": "Dilni",
+    "profile": "Profili"
+  },
+  "landing": {
+    "welcome": "Mirë se vini në Base",
+    "tagline": "Një framework modern për web",
+    "get_started": "Filloni",
+    "learn_more": "Mëso më shumë"
+  }
+}

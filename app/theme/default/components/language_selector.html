@@ -1,0 +1,88 @@
+<!-- Simple Language Selector -->
+<div class="relative inline-block text-left" id="language-selector">
+  <button type="button" class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" id="language-menu-button" aria-expanded="false" aria-haspopup="true" onclick="toggleLanguageMenu()">
+    <span id="current-language-name">{{ currentLanguage.Name }}</span>
+    <!-- Heroicon name: solid/chevron-down -->
+    <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+    </svg>
+  </button>
+
+  <div id="language-menu" class="hidden origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="language-menu-button" tabindex="-1">
+    <div class="py-1" role="none">
+      <!-- Active: "bg-gray-100 text-gray-900", Not Active: "text-gray-700" -->
+      {{ $currentLang := currentLanguage }}
+      {{ range supportedLanguages }}
+        <a href="javascript:void(0)" 
+           onclick="switchLanguage('{{.Code}}')" 
+           class="{{if eq $currentLang.Code .Code}}bg-gray-100 text-gray-900{{else}}text-gray-700{{end}} block px-4 py-2 text-sm hover:bg-gray-50" 
+           role="menuitem" 
+           tabindex="-1">
+          {{.Name}}
+        </a>
+      {{ end }}
+    </div>
+  </div>
+</div>
+
+<script>
+  // Function to toggle the language menu visibility
+  function toggleLanguageMenu() {
+    const menu = document.getElementById('language-menu');
+    if (menu) {
+      if (menu.classList.contains('hidden')) {
+        menu.classList.remove('hidden');
+      } else {
+        menu.classList.add('hidden');
+      }
+    }
+  }
+
+  // Function to switch language while preserving the current path
+  function switchLanguage(langCode) {
+    // Save language preference in a cookie
+    document.cookie = 'language=' + langCode + ';path=/;max-age=' + (60*60*24*30); // 30 days expiration
+    
+    // Get the current path
+    let currentPath = window.location.pathname;
+    
+    // Extract the path without the language prefix if it exists
+    const pathParts = currentPath.split('/');
+    if (pathParts.length > 1) {
+      // Check if the first part is a language code
+      const potentialLangCode = pathParts[1];
+      const supportedCodes = ['en', 'es', 'sq']; // Add all supported language codes here
+      
+      if (supportedCodes.includes(potentialLangCode)) {
+        // Remove the language code from the path
+        pathParts.splice(1, 1);
+        currentPath = pathParts.join('/');
+        if (currentPath === '') currentPath = '/';
+      }
+    }
+    
+    // Construct the new URL with the selected language code
+    let newUrl = '/' + langCode;
+    if (currentPath !== '/') {
+      // Ensure we don't have double slashes
+      if (currentPath.startsWith('/')) {
+        newUrl += currentPath;
+      } else {
+        newUrl += '/' + currentPath;
+      }
+    }
+    
+    // Navigate to the new URL
+    window.location.href = newUrl;
+  }
+
+  // Close the language menu when clicking outside of it
+  document.addEventListener('click', function(event) {
+    const selector = document.getElementById('language-selector');
+    const menu = document.getElementById('language-menu');
+    
+    if (selector && menu && !selector.contains(event.target) && !menu.classList.contains('hidden')) {
+      menu.classList.add('hidden');
+    }
+  });
+</script>

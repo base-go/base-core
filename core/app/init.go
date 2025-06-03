@@ -24,6 +24,7 @@ type Core struct {
 	Logger      logger.Logger
 	Storage     *storage.ActiveStorage
 	Emitter     *emitter.Emitter
+	WebRouter   *gin.RouterGroup
 	Modules     map[string]module.Module
 }
 
@@ -36,11 +37,13 @@ func NewCore(
 	logger logger.Logger,
 	storage *storage.ActiveStorage,
 	emitter *emitter.Emitter,
+	webRouter *gin.RouterGroup,
 ) *Core {
 	core := &Core{
 		DB:          db,
 		Router:      protectedRouter,
 		AuthRouter:  authRouter,
+		WebRouter:   webRouter,
 		EmailSender: emailSender,
 		Logger:      logger,
 		Storage:     storage,
@@ -141,19 +144,6 @@ func (core *Core) initializeModules() map[string]module.Module {
 	}
 
 	return modules
-}
-
-// runMigrations runs migrations for all modules that implement the Migrate interface
-func (core *Core) runMigrations(modules map[string]module.Module) {
-	for _, module := range modules {
-		if migrator, ok := module.(interface{ Migrate() error }); ok {
-			if err := migrator.Migrate(); err != nil {
-				core.Logger.Error("Failed to migrate module",
-					zap.String("error", err.Error()))
-				continue
-			}
-		}
-	}
 }
 
 // GetModuleNames returns a list of all initialized module names

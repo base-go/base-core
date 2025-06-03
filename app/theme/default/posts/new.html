@@ -1,0 +1,82 @@
+<div class="max-w-2xl mx-auto">
+    <div class="md:grid md:grid-cols-3 md:gap-6">
+        <div class="md:col-span-1">
+            <div class="px-4 sm:px-0">
+                <h3 class="text-lg font-medium leading-6 text-gray-900">Create New Post</h3>
+                <p class="mt-1 text-sm text-gray-600">
+                    Fill out the form below to create a new post.
+                </p>
+            </div>
+        </div>
+        
+        <div class="mt-5 md:mt-0 md:col-span-2">
+            <form action="/posts" method="POST" x-data="postForm()">
+                <div class="shadow sm:rounded-md sm:overflow-hidden">
+                    <div class="px-4 py-5 bg-white space-y-6 sm:p-6">
+                        {{if .error}}
+                            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+                                <span class="block sm:inline">{{.error}}</span>
+                            </div>
+                        {{end}}
+                        
+                        <div>
+                            <label for="title" class="block text-sm font-medium text-gray-700">
+                                Title
+                            </label>
+                            <div class="mt-1">
+                                <input type="text" name="title" id="title" x-model="title" required
+                                       class="shadow-sm focus:ring-blue-500 focus:border-blue-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md"
+                                       placeholder="Enter post title">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="content" class="block text-sm font-medium text-gray-700">
+                                Content
+                            </label>
+                            <div class="mt-1">
+                                <textarea id="content" name="content" rows="6" x-model="content" required
+                                          class="shadow-sm focus:ring-blue-500 focus:border-blue-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md"
+                                          placeholder="Write your post content here..."></textarea>
+                            </div>
+                            <p class="mt-2 text-sm text-gray-500">
+                                <span x-text="content.length"></span> characters
+                            </p>
+                        </div>
+
+                        <div>
+                            <label for="status" class="block text-sm font-medium text-gray-700">
+                                Status
+                            </label>
+                            <div class="mt-1">
+                                <input type="number" name="status" id="status" x-model="status" required
+                                       class="shadow-sm focus:ring-blue-500 focus:border-blue-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md"
+                                       placeholder="Enter post status (e.g., 0 or 1)">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="px-4 py-3 bg-gray-50 text-right sm:px-6 space-x-3">
+                        <a href="/posts" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Cancel
+                        </a>
+                        <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                :disabled="!title.trim() || !content.trim() || !status.toString().trim()">
+                            Create Post
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function postForm() {
+    return {
+        title: '',
+        content: '',
+        status: '' // Or a default status like 0 or 1 if appropriate
+    }
+}
+</script>
