@@ -1,0 +1,9 @@
+{{define "components/debug_auth.html"}}
+<div class="bg-gray-100 p-4 rounded-md mt-4 text-xs font-mono">
+  <h3 class="font-bold">Debug Auth Info:</h3>
+  <div>logged_in: {{if .logged_in}}true{{else}}false{{end}}</div>
+  <div>user_id: {{.user_id}}</div>
+  <div>username: {{.username}}</div>
+  <div>auth_token cookie: {{if .Request.Cookies}}{{range .Request.Cookies}}{{if eq .Name "auth_token"}}exists{{end}}{{end}}{{else}}no cookies{{end}}</div>
+</div>
+{{end}}

@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{currentLanguage.Code}}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{.title}} - Base App</title>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <title>{{.title}} - {{tr "landing.welcome"}}</title>
+    <script defer src="https://unpkg.com/alpinejs-component@latest/dist/component.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50">
@@ -15,9 +16,13 @@
                     <a href="{{localizedUrl "/"}}" class="text-xl font-bold text-gray-900">Base App</a>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="{{localizedUrl "/posts"}}" class="text-gray-700 hover:text-gray-900">Posts</a>
-                    <a href="{{localizedUrl "/login"}}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Login</a>
-                    <a href="{{localizedUrl "/register"}}" class="text-blue-500 hover:text-blue-600 px-4 py-2 rounded border border-blue-500">Sign Up</a>
+                    <a href="{{localizedUrl "/posts"}}" class="text-gray-700 hover:text-gray-900">{{tr "navigation.posts"}}</a>
+                    
+                    <!-- Language Selector -->
+                    {{template "components/language_selector.html" .}}
+                    
+                    <!-- User Profile / Auth Buttons -->
+                    {{template "components/user_profile.html" .}}
                 </div>
             </div>
         </div>

@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/render"
 )
@@ -176,6 +177,29 @@ func (e *Engine) RenderWithLayout(w io.Writer, templateName, layoutName string, 
 	if ctx != nil {
 		templateData["Request"] = ctx.Request
 		templateData["Context"] = ctx
+
+		// Add authentication status
+		session := sessions.Default(ctx)
+		userID := session.Get("user_id")
+		username := session.Get("username")
+
+		if userID != nil {
+			templateData["logged_in"] = true
+			templateData["user_id"] = userID
+
+			if username != nil {
+				templateData["username"] = username
+			}
+		} else {
+			// Check for token in cookie as fallback
+			token, err := ctx.Cookie("auth_token")
+			if err == nil && token != "" {
+				// If we have a token, consider the user logged in
+				templateData["logged_in"] = true
+			} else {
+				templateData["logged_in"] = false
+			}
+		}
 	}
 
 	// Render the main template to capture its content

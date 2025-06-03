@@ -1,44 +1,44 @@
 {{define "components/user_profile.html"}}
-<div class="relative" x-data="{ open: false }">
-  {{if .logged_in}}
+<div class="relative" x-data="{ open: false, isLoggedIn: false }" x-init="isLoggedIn = document.cookie.includes('auth_token=')">
+  <template x-if="isLoggedIn">
     <!-- User is logged in -->
-    <button @click="open = !open" type="button" class="flex items-center gap-x-1 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" id="user-menu-button">
-      <span class="sr-only">{{tr "common.open_user_menu"}}</span>
-      <div class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
-        {{if .username}}
-          <span class="text-indigo-700 font-medium text-sm">{{index .username 0 | upper}}</span>
-        {{else}}
+    <div>
+      <button @click="open = !open" type="button" class="flex items-center gap-x-1 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" id="user-menu-button">
+        <span class="sr-only">{{tr "common.open_user_menu"}}</span>
+        <div class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
           <span class="text-indigo-700 font-medium text-sm">U</span>
-        {{end}}
-      </div>
-      <span class="hidden md:block text-gray-700">{{.username}}</span>
-    </button>
-    
-    <!-- Dropdown menu -->
-    <div 
-      x-show="open" 
-      @click.outside="open = false"
-      class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-      x-transition:enter="transition ease-out duration-100"
-      x-transition:enter-start="transform opacity-0 scale-95"
-      x-transition:enter-end="transform opacity-100 scale-100"
-      x-transition:leave="transition ease-in duration-75"
-      x-transition:leave-start="transform opacity-100 scale-100"
-      x-transition:leave-end="transform opacity-0 scale-95">
+        </div>
+        <span class="hidden md:block text-gray-700">{{tr "navigation.account"}}</span>
+      </button>
       
-      <a href="{{localizedUrl "/profile"}}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-        {{tr "navigation.profile"}}
-      </a>
-      <a href="{{localizedUrl "/settings"}}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-        {{tr "navigation.settings"}}
-      </a>
-      <form method="POST" action="{{localizedUrl "/auth/logout"}}" class="block w-full">
-        <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-          {{tr "navigation.logout"}}
-        </button>
-      </form>
+      <!-- Dropdown menu -->
+      <div 
+        x-show="open" 
+        @click.outside="open = false"
+        class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+        x-transition:enter="transition ease-out duration-100"
+        x-transition:enter-start="transform opacity-0 scale-95"
+        x-transition:enter-end="transform opacity-100 scale-100"
+        x-transition:leave="transition ease-in duration-75"
+        x-transition:leave-start="transform opacity-100 scale-100"
+        x-transition:leave-end="transform opacity-0 scale-95">
+        
+        <a href="{{localizedUrl "/profile"}}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+          {{tr "navigation.profile"}}
+        </a>
+        <a href="{{localizedUrl "/settings"}}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+          {{tr "navigation.settings"}}
+        </a>
+        <form method="POST" action="{{localizedUrl "/auth/logout"}}" class="block w-full">
+          <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            {{tr "navigation.logout"}}
+          </button>
+        </form>
+      </div>
     </div>
-  {{else}}
+  </template>
+  
+  <template x-if="!isLoggedIn">
     <!-- User is not logged in -->
     <div class="flex space-x-4">
       <a href="{{localizedUrl "/auth/login"}}" class="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium">
@@ -48,6 +48,6 @@
         {{tr "auth.register"}}
       </a>
     </div>
-  {{end}}
+  </template>
 </div>
 {{end}}
