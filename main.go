@@ -3,8 +3,6 @@ package main
 import (
 	"base/core"
 	_ "base/docs" // Import the Swagger docs
-	"fmt"
-	"net"
 	"strings"
 	"time"
 
@@ -17,7 +15,7 @@ import (
 // @title Base API
 // @version 1.0
 // @description This is the API documentation for Base
-// @host localhost:8001
+// @host localhost:8000
 // @BasePath /api
 // @schemes http https
 // @produces json
@@ -39,21 +37,6 @@ type DeletedAt gorm.DeletedAt
 // Time represents a time.Time
 type Time time.Time
 
-func getLocalIP() string {
-	addrs, err := net.InterfaceAddrs()
-	if err != nil {
-		return ""
-	}
-	for _, addr := range addrs {
-		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-			if ipnet.IP.To4() != nil {
-				return ipnet.IP.String()
-			}
-		}
-	}
-	return ""
-}
-
 func main() {
 	// Load the .env file
 	if err := godotenv.Load(); err != nil {
@@ -70,15 +53,10 @@ func main() {
 	}
 
 	// Get local IP and format server address
-	localIP := getLocalIP()
 	addr := app.Config.ServerAddress
 	if strings.HasPrefix(addr, ":") {
 		addr = "0.0.0.0" + addr
 	}
-
-	fmt.Printf("\nServer is running at:\n")
-	fmt.Printf("- Local:   http://localhost%s\n", strings.TrimPrefix(addr, "0.0.0.0"))
-	fmt.Printf("- Network: http://%s%s\n\n", localIP, strings.TrimPrefix(addr, "0.0.0.0"))
 
 	// Start the server
 	if err := app.Router.Run(app.Config.ServerAddress); err != nil {

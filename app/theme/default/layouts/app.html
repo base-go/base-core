@@ -19,11 +19,11 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
-                    <a href="{{localizedUrl "/"}}" class="ml-4 text-xl font-bold text-gray-900">Base App</a>
+                    <a href="/" class="ml-4 text-xl font-bold text-gray-900">Main App</a>
                 </div>
                 
                 <div class="hidden md:flex items-center space-x-4">
-                    <a href="{{localizedUrl "/posts"}}" class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md">{{tr "navigation.posts"}}</a>
+                    <a href="/posts" class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md">{{tr "navigation.posts"}}</a>
                     
                     <!-- Language Selector -->
                     {{template "components/language_selector.html" .}}
@@ -50,7 +50,7 @@
              class="relative flex-1 flex flex-col max-w-xs w-full bg-white">
             <div class="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
                 <nav class="mt-5 px-2 space-y-1">
-                    <a href="{{localizedUrl "/posts"}}" class="text-gray-700 hover:text-gray-900 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium">{{tr "navigation.posts"}}</a>
+                    <a href="/posts" class="text-gray-700 hover:text-gray-900 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium">{{tr "navigation.posts"}}</a>
                 </nav>
             </div>
         </div>

@@ -1,6 +1,7 @@
 package users
 
 import (
+	"base/core/layout"
 	"base/core/logger"
 	"base/core/module"
 	"base/core/storage"
@@ -13,6 +14,7 @@ type UserModule struct {
 	module.DefaultModule
 	DB            *gorm.DB
 	Controller    *UserController
+	ApiController *UserAPIController
 	Service       *UserService
 	Logger        logger.Logger
 	ActiveStorage *storage.ActiveStorage
@@ -20,17 +22,21 @@ type UserModule struct {
 
 func NewUserModule(
 	db *gorm.DB,
-	router *gin.RouterGroup,
+	webRouter *gin.RouterGroup,
+	apiRouter *gin.RouterGroup,
 	logger logger.Logger,
 	activeStorage *storage.ActiveStorage,
+	layoutEngine *layout.Engine,
 ) module.Module {
 	// Initialize service with active storage
 	service := NewUserService(db, logger, activeStorage)
-	controller := NewUserController(service, logger)
+	controller := NewUserController(service, logger, layoutEngine)
+	apiController := NewUserAPIController(service, logger)
 
 	usersModule := &UserModule{
 		DB:            db,
 		Controller:    controller,
+		ApiController: apiController,
 		Service:       service,
 		Logger:        logger,
 		ActiveStorage: activeStorage,
@@ -39,8 +45,16 @@ func NewUserModule(
 	return usersModule
 }
 
-func (m *UserModule) Routes(router *gin.RouterGroup) {
-	m.Controller.Routes(router)
+// Routes implements the standard module interface for web routes
+func (m *UserModule) Routes(webRouter *gin.RouterGroup) {
+	// Setup web routes for user module
+	m.Controller.Routes(webRouter)
+}
+
+// APIRoutes implements the standard module interface for API routes
+func (m *UserModule) APIRoutes(apiRouter *gin.RouterGroup) {
+	// Setup API routes for user module
+	m.ApiController.Routes(apiRouter)
 }
 
 func (m *UserModule) Migrate() error {
@@ -52,8 +66,8 @@ func (m *UserModule) Migrate() error {
 	return nil
 }
 
-func (m *UserModule) GetModels() []interface{} {
-	return []interface{}{
+func (m *UserModule) GetModels() []any {
+	return []any{
 		&User{},
 	}
 }

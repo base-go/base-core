@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -148,7 +149,7 @@ func (s *OAuthService) processUser(email, name, username, pictureURL, provider, 
 					user.User.Avatar = attachment
 				} else {
 					// Log this failure but proceed with user creation
-					fmt.Printf("failed to fetch and attach avatar: %v\n", err)
+
 				}
 			}
 
@@ -173,7 +174,7 @@ func (s *OAuthService) processUser(email, name, username, pictureURL, provider, 
 			if err == nil {
 				user.User.Avatar = attachment
 			} else {
-				fmt.Printf("failed to fetch and attach avatar: %v\n", err)
+
 			}
 		}
 

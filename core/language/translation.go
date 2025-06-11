@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+
+	"github.com/gin-gonic/gin"
 )
 
 // TranslationService manages translations for the application
@@ -176,4 +178,9 @@ func (s *TranslationService) HasTranslation(key string) bool {
 	}
 
 	return false
+}
+
+// GetTranslation returns the translation for a key in the current language
+func (s *TranslationService) GetTranslation(ctx *gin.Context, key string, defaultValue string) string {
+	return s.Translate(key)
 }

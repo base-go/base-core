@@ -21,19 +21,19 @@ func GetContextString(c *gin.Context, key string) string {
 	if !strings.HasPrefix(key, ContextKeyPrefix) {
 		key = ContextKeyPrefix + strings.ToLower(key)
 	}
-	
+
 	// Get the value from the context
 	value, exists := c.Get(key)
 	if !exists {
 		return ""
 	}
-	
+
 	// Convert to string
 	strValue, ok := value.(string)
 	if !ok {
 		return ""
 	}
-	
+
 	return strValue
 }
 
@@ -46,7 +46,7 @@ func GetContextUint(c *gin.Context, key string) uint {
 	if strValue == "" {
 		return 0
 	}
-	
+
 	// Convert to uint
 	var uintValue uint
 	_, err := fmt.Sscanf(strValue, "%d", &uintValue)
@@ -54,7 +54,7 @@ func GetContextUint(c *gin.Context, key string) uint {
 		log.Warnf("Failed to convert context value %s to uint: %v", strValue, err)
 		return 0
 	}
-	
+
 	return uintValue
 }
 
@@ -84,7 +84,7 @@ func GetContextBool(c *gin.Context, key string) bool {
 	if strValue == "" {
 		return false
 	}
-	
+
 	strValue = strings.ToLower(strValue)
 	return strValue == "true" || strValue == "1" || strValue == "yes"
 }
@@ -97,12 +97,12 @@ func GetContextFloat(c *gin.Context, key string) float64 {
 	if strValue == "" {
 		return 0
 	}
-	
+
 	floatValue, err := strconv.ParseFloat(strValue, 64)
 	if err != nil {
 		log.Warnf("Failed to convert context value %s to float: %v", strValue, err)
 		return 0
 	}
-	
+
 	return floatValue
 }

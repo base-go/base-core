@@ -25,7 +25,8 @@
     "profile": "Profili",
     "logout": "Dilni",
     "login": "Hyni",
-    "register": "Regjistrohu"
+    "register": "Regjistrohu",
+    "account": "Llogaria"
   },
   "posts": {
     "title": "Postimet",
@@ -45,7 +46,8 @@
     "post_updated": "Postimi u përditësua me sukses",
     "title_column": "Titulli",
     "content_column": "Përmbajtja",
-    "created_column": "Krijuar"
+    "created_column": "Krijuar",
+    "status_column": "Status"
   },
   "errors": {
     "general_error": "Ndodhi një gabim",
@@ -69,7 +71,8 @@
     "reset_password": "Rivendosni fjalëkalimin",
     "remember_me": "Më mbaj mend",
     "logout": "Dilni",
-    "profile": "Profili"
+    "profile": "Profili",
+    "account": "Llogaria"
   },
   "landing": {
     "welcome": "Mirë se vini në Base",

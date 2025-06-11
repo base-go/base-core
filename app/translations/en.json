@@ -26,7 +26,8 @@
     "profile": "Profile",
     "logout": "Logout",
     "login": "Login",
-    "register": "Register"
+    "register": "Register",
+    "account": "Account"
   },
   "posts": {
     "title": "Posts",
@@ -46,7 +47,8 @@
     "post_updated": "Post updated successfully",
     "title_column": "Title",
     "content_column": "Content",
-    "created_column": "Created"
+    "created_column": "Created",
+    "status_column": "Status"
   },
   "errors": {
     "general_error": "An error occurred",
@@ -80,6 +82,19 @@
     "back_to_login": "Back to login",
     "logout": "Logout",
     "profile": "Profile"
+  },
+  "home": {
+    "title": "Welcome",
+    "hero_title": "Welcome to Base",
+    "hero_subtitle": "A modern web application framework built with Go, Alpine.js, and Tailwind CSS",
+    "explore_posts": "Explore Posts",
+    "get_started": "Get Started",
+    "features_title": "Features",
+    "features_subtitle": "Everything you need to build",
+    "cta_title": "Ready to get started?",
+    "cta_subtitle": "Join thousands of developers",
+    "cta_description": "Start building your next great application with our modern stack.",
+    "join_now": "Join Now"
   },
   "landing": {
     "welcome": "Welcome to Base",

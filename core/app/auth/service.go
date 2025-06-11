@@ -6,11 +6,13 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+
+	"os"
+	"path/filepath"
 	"sync"
 	"text/template"
 	"time"
 
-	"base/app"
 	"base/core/app/users"
 	"base/core/config"
 	"base/core/email"
@@ -27,6 +29,33 @@ var (
 	emailTemplateMutex sync.RWMutex
 	emailTemplateCache *template.Template
 )
+
+// loadEmailTemplate attempts to load email template from theme directory,
+// falls back to hardcoded template if file doesn't exist
+func loadEmailTemplate(templateName string) (*template.Template, error) {
+	// Try to load from theme directory first
+	themePath := filepath.Join("app", "theme", "default", "email", templateName+".html")
+	if _, err := os.Stat(themePath); err == nil {
+		// File exists, load it
+		templateContent, err := os.ReadFile(themePath)
+		if err != nil {
+			return nil, fmt.Errorf("error reading theme email template %s: %w", themePath, err)
+		}
+
+		tmpl, err := template.New("email").Parse(string(templateContent))
+		if err != nil {
+			return nil, fmt.Errorf("error parsing theme email template %s: %w", themePath, err)
+		}
+		return tmpl, nil
+	}
+
+	// Fall back to hardcoded template
+	tmpl, err := template.New("email").Parse(emailTemplate)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing fallback email template: %w", err)
+	}
+	return tmpl, nil
+}
 
 // AuthService handles authentication related operations
 type AuthService struct {
@@ -117,17 +146,15 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 	if s.emitter != nil {
 		s.emitter.Emit("user.registered", userData)
 	} else {
-		fmt.Printf("Emitter is nil in AuthService.Register; cannot emit 'user.registered' event")
+
 	}
 
-	// Send welcome email asynchronously
-	// go func() {
-	// 	if err := s.sendWelcomeEmail(&user); err != nil {
-	// 		fmt.Printf("Failed to send welcome email: %v", err)
-	// 	}
-	// }()
+	//Send welcome email asynchronously
+	go func() {
+		if err := s.sendEmail(user.Email, "Welcome to Base", "Welcome to Base", "Welcome to Base"); err != nil {
 
-	extended := app.Extend(user.User.Id)
+		}
+	}()
 
 	userResponse := users.ToResponse(&user.User)
 	userResponse.LastLogin = now.Format(time.RFC3339)
@@ -136,7 +163,6 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 		UserResponse: *userResponse,
 		AccessToken:  token,
 		Exp:          now.Add(24 * time.Hour).Unix(),
-		Extend:       extended,
 	}, nil
 }
 
@@ -155,8 +181,7 @@ func (s *AuthService) Login(req *LoginRequest) (*AuthResponse, error) {
 
 	// Proceed with generating token and response
 	now := time.Now()
-	extendData := app.Extend(user.User.Id)
-	token, err := helper.GenerateJWT(user.User.Id, extendData)
+	token, err := helper.GenerateJWT(user.User.Id, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
@@ -171,7 +196,6 @@ func (s *AuthService) Login(req *LoginRequest) (*AuthResponse, error) {
 		UserResponse: *userResponse,
 		AccessToken:  token,
 		Exp:          now.Add(24 * time.Hour).Unix(),
-		Extend:       app.Extend(user.User.Id),
 	}
 
 	// Prepare the login event
@@ -292,7 +316,7 @@ func (s *AuthService) ResetPassword(email, token, newPassword string) error {
 	// Send confirmation email asynchronously
 	go func() {
 		if err := s.sendPasswordChangedEmail(&user); err != nil {
-			fmt.Printf("Failed to send password changed email: %v\n", err)
+
 		}
 	}()
 
@@ -309,15 +333,20 @@ func generateToken() (string, error) {
 
 // Email sending functions
 func (s *AuthService) sendEmail(to, subject, title, content string) error {
+	return s.sendEmailWithTemplate(to, subject, title, content, "register")
+}
+
+// sendEmailWithTemplate sends email using specified template name
+func (s *AuthService) sendEmailWithTemplate(to, subject, title, content, templateName string) error {
 	var cachedTemplate *template.Template
 	emailTemplateMutex.RLock()
 	cachedTemplate = emailTemplateCache
 	emailTemplateMutex.RUnlock()
 
 	if cachedTemplate == nil {
-		newTemplate, err := template.New("email").Parse(emailTemplate)
+		newTemplate, err := loadEmailTemplate(templateName)
 		if err != nil {
-			return fmt.Errorf("error parsing email template: %w", err)
+			return fmt.Errorf("error loading email template: %w", err)
 		}
 
 		emailTemplateMutex.Lock()
@@ -352,20 +381,27 @@ func (s *AuthService) sendPasswordResetEmail(user *AuthUser, token string) error
 	content := fmt.Sprintf(`
 		<p>Hi %s,</p>
 		<p>You have requested to reset your password. Use the following code to reset your password:</p>
-		<h2>%s</h2>
+		<h2 style="color: #667eea; font-size: 32px; margin: 20px 0; text-align: center; padding: 15px; background-color: #f8f9fa; border-radius: 8px; border: 2px dashed #667eea;">%s</h2>
 		<p>This code will expire in 15 minutes.</p>
 		<p>If you didn't request a password reset, please ignore this email or contact support if you have concerns.</p>
 	`, user.Name, token)
-	return s.sendEmail(user.Email, title, title, content)
+	return s.sendEmailWithTemplate(user.Email, title, title, content, "password-reset")
 }
 
 func (s *AuthService) sendPasswordChangedEmail(user *AuthUser) error {
-	return s.sendEmail(
-		user.Email,
-		"Password Changed",
-		"Password Changed",
-		"Your password has been successfully changed.",
-	)
+	title := "Password Changed Successfully"
+	content := fmt.Sprintf(`
+		<p>Hi %s,</p>
+		<p>Your password has been successfully changed.</p>
+		<p>If you did not make this change, please contact our support team immediately.</p>
+		<p>For your security, we recommend:</p>
+		<ul>
+			<li>Use a unique, strong password</li>
+			<li>Enable two-factor authentication if available</li>
+			<li>Regularly review your account activity</li>
+		</ul>
+	`, user.Name)
+	return s.sendEmailWithTemplate(user.Email, title, title, content, "password-changed")
 }
 
 // GetUserByID retrieves a user by their ID

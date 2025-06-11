@@ -3,6 +3,7 @@ package email
 import (
 	"base/core/config"
 	"fmt"
+
 	"sync"
 
 	"github.com/sirupsen/logrus"

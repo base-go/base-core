@@ -5,7 +5,7 @@
   </h2>
   <p class="text-center text-sm text-gray-600 mb-6">
     {{tr "auth.or"}}
-    <a href="{{localizedUrl "/auth/register"}}" class="font-medium text-indigo-600 hover:text-indigo-700 transition duration-300">
+    <a href="/auth/register" class="font-medium text-indigo-600 hover:text-indigo-700 transition duration-300">
       {{tr "auth.register"}}
     </a>
   </p>
@@ -26,7 +26,7 @@
     <span class="block sm:inline" id="message-text"></span>
   </div>
     
-  <form class="space-y-5" id="login-form" method="POST" action="{{localizedUrl "/auth/login"}}">
+  <form class="space-y-5" id="login-form" method="POST" action="/auth/login">
     <div class="space-y-4">
       <div class="transition duration-300 ease-in-out transform hover:scale-[1.01]">
         <label for="email-address" class="block text-sm font-medium text-gray-700 mb-1">{{tr "auth.email_address"}}</label>
@@ -63,7 +63,7 @@
       </div>
 
       <div class="text-sm">
-        <a href="{{localizedUrl "/auth/forgot-password"}}" class="font-medium text-indigo-600 hover:text-indigo-700 transition duration-300">
+        <a href="/auth/forgot-password" class="font-medium text-indigo-600 hover:text-indigo-700 transition duration-300">
           {{tr "auth.forgot_password"}}
         </a>
       </div>
@@ -99,7 +99,7 @@
       messageContainer.classList.add('hidden');
       
       // Try to login via API
-      fetch('{{localizedUrl "/auth/login"}}', {
+      fetch('/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -124,7 +124,7 @@
           localStorage.setItem('auth_token', data.accessToken);
           
           // Redirect to posts page or dashboard
-          window.location.href = '{{localizedUrl "/posts"}}';
+          window.location.href = '/posts';
         } else {
           // Fallback to traditional form submission if no token
           submitFormTraditionally();

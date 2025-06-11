@@ -1,10 +1,11 @@
-package template
+package layout
 
 import (
 	"fmt"
 	"html/template"
 	"io"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin/render"
 )
 
+// Engine is the main template engine
 type Engine struct {
 	templates    *template.Template
 	templatesDir string
@@ -21,14 +23,15 @@ type Engine struct {
 	funcMap      template.FuncMap
 }
 
+// Config holds configuration for the template engine
 type Config struct {
 	TemplatesDir string
 	LayoutsDir   string
 	SharedDir    string
 }
 
+// NewEngine creates a new template engine
 func NewEngine(config Config) *Engine {
-
 	engine := &Engine{
 		templatesDir: config.TemplatesDir,
 		layoutsDir:   config.LayoutsDir,
@@ -37,7 +40,6 @@ func NewEngine(config Config) *Engine {
 	}
 
 	engine.addDefaultHelpers()
-
 	return engine
 }
 
@@ -55,14 +57,24 @@ func (e *Engine) addDefaultHelpers() {
 	}
 }
 
+// AddHelper adds a template helper function
 func (e *Engine) AddHelper(name string, fn any) {
-
 	e.funcMap[name] = fn
 
 	// If templates object already exists, recreate it with the updated funcMap
 	if e.templates != nil {
 		e.templates = template.New("").Funcs(e.funcMap)
 	}
+}
+
+// ParseString parses a template string and registers it with the engine
+func (e *Engine) ParseString(name string, content string) error {
+	if e.templates == nil {
+		e.templates = template.New("").Funcs(e.funcMap)
+	}
+
+	_, err := e.templates.New(name).Funcs(e.funcMap).Parse(content)
+	return err
 }
 
 func (e *Engine) ReloadTemplates() error {
@@ -90,24 +102,101 @@ func (e *Engine) loadTemplates() error {
 	}
 
 	if e.templatesDir != "" {
-		// Load templates from main directory
-		mainPattern := filepath.Join(e.templatesDir, "*.html")
-		if files, err := filepath.Glob(mainPattern); err == nil {
-			allFiles = append(allFiles, files...)
-		}
-
-		// Load templates from subdirectories
-		postsPattern := filepath.Join(e.templatesDir, "posts", "*.html")
-		if files, err := filepath.Glob(postsPattern); err == nil {
-			allFiles = append(allFiles, files...)
+		// Load all templates recursively from templatesDir (theme directory)
+		err := filepath.Walk(e.templatesDir, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if strings.HasSuffix(path, ".html") {
+				allFiles = append(allFiles, path)
+			}
+			return nil
+		})
+		if err != nil {
+			return err
 		}
 	}
 
-	// Parse all files at once
+	// Parse shared and layout files with proper naming
 	if len(allFiles) > 0 {
-		if _, err := e.templates.ParseFiles(allFiles...); err != nil {
+
+		for _, file := range allFiles {
+
+			// Read the file content
+			content, readErr := os.ReadFile(file)
+			if readErr != nil {
+
+				continue
+			}
+
+			// Determine template name based on file path
+			var templateName string
+			if e.templatesDir != "" && strings.HasPrefix(file, e.templatesDir) {
+				// For files in templatesDir, use relative path from templatesDir
+				relPath, err := filepath.Rel(e.templatesDir, file)
+				if err == nil {
+					templateName = filepath.ToSlash(relPath)
+				} else {
+					templateName = filepath.Base(file)
+				}
+			} else {
+				// For layout and shared files, just use the base name
+				templateName = filepath.Base(file)
+			}
+
+			// Parse and register with the determined name
+			_, parseErr := e.templates.New(templateName).Parse(string(content))
+			if parseErr != nil {
+
+				continue
+			}
+
+		}
+	}
+
+	// Automatically discover and load module-specific view templates with proper naming
+	// Walk through app/ directory to find all */views directories
+	err := filepath.Walk("app", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
 			return err
 		}
+		// Look for directories named "views"
+		if info.IsDir() && filepath.Base(path) == "views" {
+			// Extract module name from path (e.g., "app/posts/views" -> "posts")
+			pathParts := strings.Split(path, string(filepath.Separator))
+			var moduleName string
+			if len(pathParts) >= 2 {
+				moduleName = pathParts[len(pathParts)-2] // Get the directory before "views"
+			}
+
+			// Load all .html files from this views directory
+			if viewFiles, globErr := filepath.Glob(filepath.Join(path, "*.html")); globErr == nil {
+				for _, viewFile := range viewFiles {
+					// Read the file content
+					content, readErr := os.ReadFile(viewFile)
+					if readErr != nil {
+
+						continue
+					}
+
+					// Create a template name like "posts/index.html"
+					filename := filepath.Base(viewFile)
+					templateName := filepath.Join(moduleName, filename)
+
+					// Parse and register with the module-prefixed name
+					_, parseErr := e.templates.New(templateName).Parse(string(content))
+					if parseErr != nil {
+
+						continue
+					}
+
+				}
+			}
+		}
+		return nil
+	})
+	if err != nil {
+
 	}
 
 	return nil
@@ -159,6 +248,7 @@ func (e *Engine) Render(w io.Writer, name string, data any, ctx *gin.Context) er
 }
 
 func (e *Engine) RenderWithLayout(w io.Writer, templateName, layoutName string, data any, ctx *gin.Context) error {
+
 	// Convert data to map if it's not already
 	var templateData map[string]any
 
@@ -177,6 +267,18 @@ func (e *Engine) RenderWithLayout(w io.Writer, templateName, layoutName string, 
 	if ctx != nil {
 		templateData["Request"] = ctx.Request
 		templateData["Context"] = ctx
+
+		// Make sure the TranslationService and language are available in the template data
+		// This way, template helpers can access them directly without needing the context
+		translationService, tsExists := ctx.Get("TranslationService")
+		if tsExists {
+			templateData["_ts"] = translationService // Use a simple key that's unlikely to conflict
+		}
+
+		language, langExists := ctx.Get("language")
+		if langExists {
+			templateData["_lang"] = language // Use a simple key that's unlikely to conflict
+		}
 
 		// Add authentication status
 		session := sessions.Default(ctx)
@@ -203,16 +305,27 @@ func (e *Engine) RenderWithLayout(w io.Writer, templateName, layoutName string, 
 	}
 
 	// Render the main template to capture its content
+
 	var contentBuilder strings.Builder
 	if err := e.templates.ExecuteTemplate(&contentBuilder, templateName, templateData); err != nil {
+
 		return err
 	}
 
+	content := contentBuilder.String()
+
 	// Add the rendered content to template data
-	templateData["Content"] = contentBuilder.String()
+	templateData["Content"] = content
 
 	// Render with layout
-	return e.templates.ExecuteTemplate(w, layoutName, templateData)
+
+	err := e.templates.ExecuteTemplate(w, layoutName, templateData)
+	if err != nil {
+
+	} else {
+
+	}
+	return err
 }
 
 func (e *Engine) Instance(name string, data any) render.Render {

@@ -280,7 +280,3 @@ func (c *MediaController) ListAll(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, result)
 }
-
-type ErrorResponse struct {
-	Error string `json:"error"`
-}

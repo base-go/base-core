@@ -38,42 +38,10 @@
     }
   }
 
-  // Function to switch language while preserving the current path
+  // Function to switch language using cookie-based approach
   function switchLanguage(langCode) {
-    // Save language preference in a cookie
-    document.cookie = 'language=' + langCode + ';path=/;max-age=' + (60*60*24*30); // 30 days expiration
-    
-    // Get the current path
-    let currentPath = window.location.pathname;
-    
-    // Extract the path without the language prefix if it exists
-    const pathParts = currentPath.split('/');
-    if (pathParts.length > 1) {
-      // Check if the first part is a language code
-      const potentialLangCode = pathParts[1];
-      const supportedCodes = ['en', 'es', 'sq']; // Add all supported language codes here
-      
-      if (supportedCodes.includes(potentialLangCode)) {
-        // Remove the language code from the path
-        pathParts.splice(1, 1);
-        currentPath = pathParts.join('/');
-        if (currentPath === '') currentPath = '/';
-      }
-    }
-    
-    // Construct the new URL with the selected language code
-    let newUrl = '/' + langCode;
-    if (currentPath !== '/') {
-      // Ensure we don't have double slashes
-      if (currentPath.startsWith('/')) {
-        newUrl += currentPath;
-      } else {
-        newUrl += '/' + currentPath;
-      }
-    }
-    
-    // Navigate to the new URL
-    window.location.href = newUrl;
+    // Use the server endpoint to switch language
+    window.location.href = '/switch-language/' + langCode;
   }
 
   // Close the language menu when clicking outside of it

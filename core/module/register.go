@@ -12,7 +12,7 @@ import (
 type Module interface {
 	Init() error
 	Migrate() error
-	GetModels() []interface{}
+	GetModels() []any
 }
 
 // DefaultModule provides a default implementation for the Module interface.
@@ -29,7 +29,7 @@ func (DefaultModule) Migrate() error {
 func (DefaultModule) Routes() {
 	// Default implementation does nothing
 }
-func (DefaultModule) GetModels() []interface{} {
+func (DefaultModule) GetModels() []any {
 	return nil
 }
 
@@ -53,7 +53,7 @@ func RegisterModule(name string, module Module) error {
 		return fmt.Errorf("error: Module already registered: %s", name)
 	}
 	modulesRegistry[name] = module
-	fmt.Printf("Successfully registered module: %s\n", name)
+
 	return nil
 }
 

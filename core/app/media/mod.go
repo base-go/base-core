@@ -14,6 +14,7 @@ type MediaModule struct {
 	module.DefaultModule
 	DB            *gorm.DB
 	Controller    *MediaController
+	ApiController *MediaApiController
 	Service       *MediaService
 	ActiveStorage *storage.ActiveStorage
 	Emitter       *emitter.Emitter
@@ -22,17 +23,20 @@ type MediaModule struct {
 
 func NewMediaModule(
 	db *gorm.DB,
-	router *gin.RouterGroup,
+	webRouter *gin.RouterGroup,
+	apiRouter *gin.RouterGroup,
 	activeStorage *storage.ActiveStorage,
 	emitter *emitter.Emitter,
 	logger logger.Logger,
 ) module.Module {
 	service := NewMediaService(db, emitter, activeStorage, logger)
 	controller := NewMediaController(service, activeStorage, logger)
+	apiController := NewMediaApiController(service, activeStorage, logger)
 
 	mediaModule := &MediaModule{
 		DB:            db,
 		Controller:    controller,
+		ApiController: apiController,
 		Service:       service,
 		ActiveStorage: activeStorage,
 		Emitter:       emitter,
@@ -42,10 +46,12 @@ func NewMediaModule(
 	return mediaModule
 }
 
-func (m *MediaModule) Routes(router *gin.RouterGroup) {
+func (m *MediaModule) Routes(webRouter *gin.RouterGroup, apiRouter *gin.RouterGroup) {
 	m.Logger.Info("Registering media module routes")
-	mediaGroup := router.Group("/media")
+	mediaGroup := webRouter.Group("/media")
+	mediaApiGroup := apiRouter.Group("/media")
 	m.Controller.Routes(mediaGroup)
+	m.ApiController.Routes(mediaApiGroup)
 	m.Logger.Info("Media module routes registered")
 }
 

@@ -25,7 +25,8 @@
     "profile": "Perfil",
     "logout": "Cerrar sesión",
     "login": "Iniciar sesión",
-    "register": "Registrarse"
+    "register": "Registrarse",
+    "account": "Cuenta"
   },
   "posts": {
     "title": "Publicaciones",
@@ -45,7 +46,8 @@
     "post_updated": "Publicación actualizada con éxito",
     "title_column": "Título",
     "content_column": "Contenido",
-    "created_column": "Creado"
+    "created_column": "Creado",
+    "status_column": "Estado"
   },
   "errors": {
     "general_error": "Se produjo un error",

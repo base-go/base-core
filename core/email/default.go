@@ -2,7 +2,6 @@ package email
 
 import (
 	"base/core/config"
-	"fmt"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -20,11 +19,6 @@ func (s *DefaultSender) Send(msg Message) error {
 		"subject": msg.Subject,
 		"isHTML":  msg.IsHTML,
 	}).Info("Simulating email send")
-
-	fmt.Println("Email Content:")
-	fmt.Println("-------------------")
-	fmt.Println(msg.Body)
-	fmt.Println("-------------------")
 
 	return nil
 }

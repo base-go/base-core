@@ -3,6 +3,7 @@ package auth
 import (
 	"base/core/email"
 	"base/core/emitter"
+	"base/core/layout"
 	"base/core/logger"
 	"base/core/module"
 
@@ -12,41 +13,53 @@ import (
 
 type AuthModule struct {
 	module.DefaultModule
-	DB          *gorm.DB
-	Controller  *AuthController
-	Service     *AuthService
-	Logger      logger.Logger
-	EmailSender email.Sender
-	Emitter     *emitter.Emitter
+	DB            *gorm.DB
+	Controller    *AuthController
+	ApiController *ApiAuthController
+	Service       *AuthService
+	Logger        logger.Logger
+	EmailSender   email.Sender
+	Emitter       *emitter.Emitter
 }
 
-func NewAuthModule(db *gorm.DB, router *gin.RouterGroup, emailSender email.Sender, logger logger.Logger, emitter *emitter.Emitter) module.Module {
+func NewAuthModule(db *gorm.DB, webRouter, apiRouter *gin.RouterGroup, emailSender email.Sender, logger logger.Logger, emitter *emitter.Emitter, layoutEngine *layout.Engine) module.Module {
 	service := NewAuthService(db, emailSender, emitter)
-	controller := NewAuthController(service, emailSender, logger)
+	controller := NewAuthController(service, emailSender, logger, layoutEngine)
+	apiController := NewApiAuthController(service, emailSender, logger)
 
 	authModule := &AuthModule{
-		DB:          db,
-		Controller:  controller,
-		Service:     service,
-		Logger:      logger,
-		EmailSender: emailSender,
-		Emitter:     emitter,
+		DB:            db,
+		Controller:    controller,
+		ApiController: apiController,
+		Service:       service,
+		Logger:        logger,
+		EmailSender:   emailSender,
+		Emitter:       emitter,
 	}
 
 	return authModule
 }
 
-func (m *AuthModule) Routes(router *gin.RouterGroup) {
-	// Router is already /api/auth from start.go
-	m.Controller.Routes(router)
+// Routes implements the standard module interface for web routes
+func (m *AuthModule) Routes(webRouter *gin.RouterGroup) {
+	// Setup web routes for auth module
+	m.Controller.Routes(webRouter)
+}
+
+func (m *AuthModule) ApiRoutes(apiRouter *gin.RouterGroup) {
+	m.ApiController.Routes(apiRouter)
+}
+
+func (m *AuthModule) WebRoutes(webRouter *gin.RouterGroup) {
+	m.Routes(webRouter)
 }
 
 func (m *AuthModule) Migrate() error {
 	return m.DB.AutoMigrate(&AuthUser{})
 }
 
-func (m *AuthModule) GetModels() []interface{} {
-	return []interface{}{
+func (m *AuthModule) GetModels() []any {
+	return []any{
 		&AuthUser{},
 	}
 }

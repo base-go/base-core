@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt" // Added for Sprintf
 	"base/core/helper"
 	"base/core/types"
 	"net/http"
@@ -18,7 +17,7 @@ func isAPIRequest(c *gin.Context) bool {
 	if strings.HasPrefix(c.Request.URL.Path, "/api/") {
 		return true
 	}
-	
+
 	// Check Accept header for JSON
 	accept := c.GetHeader("Accept")
 	return strings.Contains(accept, "application/json")
@@ -31,20 +30,20 @@ func IsAuthenticated(c *gin.Context) bool {
 	if exists && userID != nil {
 		return true
 	}
-	
+
 	// Check for session
 	session := sessions.Default(c)
 	if session.Get("user_id") != nil {
 		return true
 	}
-	
+
 	// Check for token in cookie
 	token, err := c.Cookie("auth_token")
 	if err == nil && token != "" {
 		_, _, err := helper.ValidateJWT(token)
 		return err == nil
 	}
-	
+
 	// Check for Authorization header
 	authHeader := c.GetHeader("Authorization")
 	if authHeader != "" {
@@ -54,7 +53,7 @@ func IsAuthenticated(c *gin.Context) bool {
 			return err == nil
 		}
 	}
-	
+
 	return false
 }
 
@@ -68,14 +67,14 @@ func AuthMiddleware() gin.HandlerFunc {
 		if !isAPIRequest(c) {
 			session := sessions.Default(c)
 			userID := session.Get("user_id")
-			
+
 			if userID != nil {
 				// User is authenticated via session
 				c.Set("user_id", userID)
 				c.Next()
 				return
 			}
-			
+
 			// Check for token in cookie (fallback for web)
 			token, err := c.Cookie("auth_token")
 			if err == nil && token != "" {
@@ -87,20 +86,14 @@ func AuthMiddleware() gin.HandlerFunc {
 					return
 				}
 			}
-			
+
 			// No valid session or cookie, redirect to login
-			lang := c.GetString("lang")
-			if lang == "" {
-				// Fallback if lang is not found, though it should be set by LanguageMiddleware
-				// log.Warnf("Language not found in context during auth redirect, defaulting to 'en'")
-				lang = "en"
-			}
-			redirectURL := fmt.Sprintf("/%s/auth/login", lang)
+			redirectURL := "/auth/login"
 			c.Redirect(http.StatusFound, redirectURL)
 			c.Abort()
 			return
 		}
-		
+
 		// API request - check Authorization header
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -114,7 +107,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		parts := strings.SplitN(authHeader, " ", 2)
 		if !(len(parts) == 2 && parts[0] == "Bearer") {
 			log.Warnf("Authorization header format must be Bearer {token}")
-			
+
 			if isAPIRequest(c) {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, types.ErrorResponse{
 					Error: "Invalid authorization format",
@@ -129,7 +122,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		extend, userId, err := helper.ValidateJWT(parts[1])
 		if err != nil {
 			log.Warnf("Invalid or expired JWT: %s", err.Error())
-			
+
 			if isAPIRequest(c) {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, types.ErrorResponse{
 					Error: "Invalid or expired token",
@@ -154,14 +147,14 @@ func OptionalAuthMiddleware() gin.HandlerFunc {
 		if !isAPIRequest(c) {
 			session := sessions.Default(c)
 			userID := session.Get("user_id")
-			
+
 			if userID != nil {
 				// User is authenticated via session
 				c.Set("user_id", userID)
 				c.Next()
 				return
 			}
-			
+
 			// Check for token in cookie
 			token, err := c.Cookie("auth_token")
 			if err == nil && token != "" {
@@ -174,7 +167,7 @@ func OptionalAuthMiddleware() gin.HandlerFunc {
 				}
 			}
 		}
-		
+
 		// Check Authorization header (for API requests)
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -190,7 +183,54 @@ func OptionalAuthMiddleware() gin.HandlerFunc {
 				c.Set("extend", extend)
 			}
 		}
-		
+
+		c.Next()
+	}
+}
+
+// TemplateContextMiddleware adds common data to all templates
+func TemplateContextMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Create a map to store template context data
+		templateContext := make(map[string]interface{})
+
+		// Add session data to template context
+		session := sessions.Default(c)
+
+		// Add currentUser to template context if user is logged in
+		if session.Get("logged_in") == true {
+			// First try to get the full user object from session
+			user := session.Get("user")
+			if user != nil {
+				templateContext["currentUser"] = user
+			} else {
+				// Fallback to building a map from individual session values
+				currentUser := map[string]interface{}{
+					"Id":       session.Get("user_id"),
+					"Name":     session.Get("username"),
+					"Username": session.Get("username"),
+					"Email":    session.Get("email"),
+					"loggedIn": true,
+				}
+				
+				if avatarURL := session.Get("avatar_url"); avatarURL != nil {
+					currentUser["AvatarURL"] = avatarURL
+				}
+				
+				if lastLogin := session.Get("last_login"); lastLogin != nil {
+					currentUser["LastLogin"] = lastLogin
+				}
+				
+				templateContext["currentUser"] = currentUser
+			}
+		} else {
+			// Set currentUser to nil when not logged in
+			templateContext["currentUser"] = nil
+		}
+
+		// Set the template context in Gin context for controllers to access and extend
+		c.Set("templateContext", templateContext)
+
 		c.Next()
 	}
 }

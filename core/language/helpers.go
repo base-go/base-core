@@ -3,11 +3,11 @@ package language
 import (
 	"strings"
 
-	"base/core/template"
+	"base/core/layout"
 )
 
 // RegisterTemplateHelpers registers translation helper functions with the template engine
-func RegisterTemplateHelpers(engine *template.Engine, service *TranslationService) {
+func RegisterTemplateHelpers(engine *layout.Engine, service *TranslationService) {
 
 	// Add a helper function for translating text
 	engine.AddHelper("t", func(key string, data ...interface{}) string {
@@ -158,40 +158,6 @@ func RegisterTemplateHelpers(engine *template.Engine, service *TranslationServic
 		var translationService *TranslationService = service
 
 		return translationService.GetCurrentLanguage().Code == code
-	})
-
-	// Add a helper to generate URLs with language prefixes
-	engine.AddHelper("localizedUrl", func(path string, data ...interface{}) string {
-		// Remove leading slash if present
-		path = strings.TrimPrefix(path, "/")
-
-		// First try to get language directly from template data
-		if len(data) > 0 {
-			if templateData, ok := data[0].(map[string]interface{}); ok {
-				// Try to get language from template data
-				if lang, exists := templateData["_lang"]; exists {
-					if language, ok := lang.(Language); ok {
-						return "/" + language.Code + "/" + path
-					}
-				}
-
-				// Try to get TranslationService from template data
-				if ts, exists := templateData["_ts"]; exists {
-					if translationService, ok := ts.(*TranslationService); ok {
-						lang := translationService.GetCurrentLanguage()
-						if lang.Code != "" {
-							return "/" + lang.Code + "/" + path
-						}
-					}
-				}
-			}
-		}
-
-		// Fallback to the global service
-		var translationService *TranslationService = service
-
-		// Return path with current language prefix
-		return "/" + translationService.GetCurrentLanguage().Code + "/" + path
 	})
 
 }

@@ -1,7 +1,6 @@
 package emitter
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -34,7 +33,7 @@ func (e *Emitter) Emit(event string, data interface{}) {
 			defer wg.Done()
 			defer func() {
 				if r := recover(); r != nil {
-					fmt.Printf("Recovered from panic in listener for event %s: %v\n", event, r)
+
 				}
 			}()
 			listener(data)

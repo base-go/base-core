@@ -14,4 +14,4 @@
 - Addressed server startup issues related to "address already in use" errors by ensuring previous server instances are properly terminated.
 
 ### Removed
-- Extensive `fmt.Printf` logging statements from template parsing (`core/template/string_template.go`, `app/templates.go`, `core/template/template.go`) and language helper functions (`core/language/helpers.go`) to clean up server logs.
+

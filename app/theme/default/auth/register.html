@@ -5,7 +5,7 @@
   </h2>
   <p class="text-center text-sm text-gray-600 mb-6">
     {{tr "auth.or"}}
-    <a href="{{localizedUrl "/auth/login"}}" class="font-medium text-indigo-600 hover:text-indigo-700 transition duration-300">
+    <a href="/auth/login" class="font-medium text-indigo-600 hover:text-indigo-700 transition duration-300">
       {{tr "auth.login"}}
     </a>
   </p>
@@ -20,7 +20,7 @@
     <span class="block sm:inline" id="message-text"></span>
   </div>
 
-  <form class="space-y-5" id="register-form" method="POST" action="{{localizedUrl "/auth/register"}}">
+  <form class="space-y-5" id="register-form" method="POST" action="/auth/register">
     <div class="space-y-4">
       <div class="transition duration-300 ease-in-out transform hover:scale-[1.01]">
         <label for="name" class="block text-sm font-medium text-gray-700 mb-1">{{tr "auth.full_name"}}</label>
@@ -145,7 +145,7 @@
       
       // Attempt both API and form-based registration
       // First try the API endpoint with JSON
-      fetch('{{localizedUrl "/auth/register"}}', {
+      fetch('/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -178,7 +178,7 @@
             localStorage.setItem('auth_token', data.accessToken);
             
             // Redirect to posts page or dashboard
-            window.location.href = '{{localizedUrl "/posts"}}';
+            window.location.href = '/';
           } else {
             // Fallback to traditional form submission if no token
             submitFormTraditionally();
