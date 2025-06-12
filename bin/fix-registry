@@ -1,0 +1,137 @@
+#!/bin/bash
+
+# BaseUI Registry Fix Script
+# Helps resolve npm/bun registry connectivity issues
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+print_status() {
+    echo -e "${BLUE}[Registry Fix]${NC} $1"
+}
+
+print_success() {
+    echo -e "${GREEN}[Registry Fix]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[Registry Fix]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[Registry Fix]${NC} $1"
+}
+
+print_status "BaseUI Registry Fix Tool"
+echo ""
+
+# Detect package manager
+if command -v bun &> /dev/null; then
+    PACKAGE_MANAGER="bun"
+    print_status "Detected Bun package manager"
+elif command -v npm &> /dev/null; then
+    PACKAGE_MANAGER="npm"
+    print_status "Detected npm package manager"
+else
+    print_error "No package manager found. Please install Bun or npm."
+    exit 1
+fi
+
+echo ""
+print_status "Available registry options:"
+echo "1. Default registry (registry.npmjs.org)"
+echo "2. Taobao mirror (registry.npmmirror.com) - Good for China"
+echo "3. Yarn registry (registry.yarnpkg.com)"
+echo "4. Clear cache and reset"
+echo "5. Test current registry connection"
+echo ""
+
+read -p "Choose option (1-5): " choice
+
+case $choice in
+    1)
+        print_status "Setting default registry..."
+        if [ "$PACKAGE_MANAGER" = "bun" ]; then
+            # Bun uses environment variables for registry configuration
+            export BUN_CONFIG_REGISTRY="https://registry.npmjs.org"
+            echo 'export BUN_CONFIG_REGISTRY="https://registry.npmjs.org"' >> ~/.bunrc 2>/dev/null || true
+            print_success "Set Bun registry via environment variable"
+            print_warning "Add 'export BUN_CONFIG_REGISTRY=\"https://registry.npmjs.org\"' to your shell profile"
+        else
+            npm config set registry https://registry.npmjs.org
+            print_success "Set npm registry to default"
+        fi
+        ;;
+    2)
+        print_status "Setting Taobao mirror registry..."
+        if [ "$PACKAGE_MANAGER" = "bun" ]; then
+            export BUN_CONFIG_REGISTRY="https://registry.npmmirror.com"
+            echo 'export BUN_CONFIG_REGISTRY="https://registry.npmmirror.com"' >> ~/.bunrc 2>/dev/null || true
+            print_success "Set Bun registry to Taobao mirror via environment variable"
+            print_warning "Add 'export BUN_CONFIG_REGISTRY=\"https://registry.npmmirror.com\"' to your shell profile"
+        else
+            npm config set registry https://registry.npmmirror.com
+            print_success "Set npm registry to Taobao mirror"
+        fi
+        ;;
+    3)
+        print_status "Setting Yarn registry..."
+        if [ "$PACKAGE_MANAGER" = "bun" ]; then
+            export BUN_CONFIG_REGISTRY="https://registry.yarnpkg.com"
+            echo 'export BUN_CONFIG_REGISTRY="https://registry.yarnpkg.com"' >> ~/.bunrc 2>/dev/null || true
+            print_success "Set Bun registry to Yarn via environment variable"
+            print_warning "Add 'export BUN_CONFIG_REGISTRY=\"https://registry.yarnpkg.com\"' to your shell profile"
+        else
+            npm config set registry https://registry.yarnpkg.com
+            print_success "Set npm registry to Yarn"
+        fi
+        ;;
+    4)
+        print_status "Clearing cache and resetting..."
+        if [ "$PACKAGE_MANAGER" = "bun" ]; then
+            # Clear Bun cache
+            rm -rf ~/.bun/install/cache 2>/dev/null || true
+            # Remove registry setting
+            unset BUN_CONFIG_REGISTRY
+            # Remove from .bunrc if it exists
+            if [ -f ~/.bunrc ]; then
+                grep -v "BUN_CONFIG_REGISTRY" ~/.bunrc > ~/.bunrc.tmp 2>/dev/null && mv ~/.bunrc.tmp ~/.bunrc || rm ~/.bunrc
+            fi
+            print_success "Cleared Bun cache and reset registry"
+        else
+            npm cache clean --force
+            npm config delete registry
+            print_success "Cleared npm cache and reset registry"
+        fi
+        ;;
+    5)
+        print_status "Testing registry connection..."
+        if [ "$PACKAGE_MANAGER" = "bun" ]; then
+            CURRENT_REGISTRY=${BUN_CONFIG_REGISTRY:-"https://registry.npmjs.org"}
+        else
+            CURRENT_REGISTRY=$(npm config get registry)
+        fi
+        echo "Current registry: $CURRENT_REGISTRY"
+        
+        if curl -s --connect-timeout 5 "$CURRENT_REGISTRY" > /dev/null; then
+            print_success "Registry connection successful!"
+        else
+            print_error "Registry connection failed!"
+            print_warning "Try setting a different registry (options 1-3)"
+        fi
+        ;;
+    *)
+        print_error "Invalid option. Please choose 1-5."
+        exit 1
+        ;;
+esac
+
+echo ""
+print_status "Registry configuration updated!"
+print_warning "Now try running: ./bin/dev"

@@ -10,7 +10,7 @@
         </div>
         
         <div class="mt-5 md:mt-0 md:col-span-2">
-            <form action="/posts/{{.post.Id}}" method="POST" x-data="postForm()">
+            <form action="/posts/{{.post.Id}}" method="POST" v-scope="postForm()">
                 <input type="hidden" name="_method" value="PUT">
                 
                 <div class="shadow sm:rounded-md sm:overflow-hidden">
@@ -26,7 +26,7 @@
                                 Title
                             </label>
                             <div class="mt-1">
-                                <input type="text" name="title" id="title" x-model="title" required
+                                <input type="text" name="title" id="title" v-model="title" required
                                        value="{{.post.Title}}"
                                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md"
                                        placeholder="Enter post title">
@@ -38,12 +38,12 @@
                                 Content
                             </label>
                             <div class="mt-1">
-                                <textarea id="content" name="content" rows="6" x-model="content" required
+                                <textarea id="content" name="content" rows="6" v-model="content" required
                                           class="shadow-sm focus:ring-blue-500 focus:border-blue-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md"
                                           placeholder="Write your post content here...">{{.post.Content}}</textarea>
                             </div>
                             <p class="mt-2 text-sm text-gray-500">
-                                <span x-text="content.length"></span> characters
+                                <span v-text="content.length"></span> characters
                             </p>
                         </div>
 
@@ -52,7 +52,7 @@
                                 Status
                             </label>
                             <div class="mt-1">
-                                <input type="number" name="status" id="status" x-model="status" required
+                                <input type="number" name="status" id="status" v-model="status" required
                                        value="{{.post.Status}}"
                                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md"
                                        placeholder="Enter post status (e.g., 0 or 1)">

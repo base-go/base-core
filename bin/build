@@ -1,0 +1,98 @@
+#!/bin/bash
+
+# BaseUI Production Build Script
+
+set -e
+
+# Colors for output
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+print_status() {
+    echo -e "${BLUE}[BaseUI Build]${NC} $1"
+}
+
+print_success() {
+    echo -e "${GREEN}[BaseUI Build]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[BaseUI Build]${NC} $1"
+}
+
+# Check if we're in the correct directory
+if [ ! -f "main.go" ]; then
+    echo "main.go not found. Please run this script from the project root."
+    exit 1
+fi
+
+if [ ! -d "ui" ]; then
+    echo "ui/ directory not found. Please ensure BaseUI is set up."
+    exit 1
+fi
+
+print_status "Building BaseUI for production..."
+
+# Clean previous builds
+print_status "Cleaning previous builds..."
+rm -rf static/dist
+rm -f base-app
+
+# Detect package manager
+if command -v bun &> /dev/null; then
+    PACKAGE_MANAGER="bun"
+    INSTALL_CMD="bun install"
+    BUILD_CMD="bun run build"
+    print_status "Using Bun for build"
+else
+    PACKAGE_MANAGER="npm"
+    INSTALL_CMD="npm install" 
+    BUILD_CMD="npm run build"
+    print_status "Using npm for build"
+fi
+
+# Install dependencies if needed
+if [ ! -d "ui/node_modules" ]; then
+    print_warning "Installing dependencies with ${PACKAGE_MANAGER}..."
+    cd ui
+    $INSTALL_CMD
+    cd ..
+fi
+
+# Build frontend assets
+print_status "Building frontend assets with Vite (${PACKAGE_MANAGER})..."
+cd ui
+$BUILD_CMD
+cd ..
+
+if [ -d "static/dist" ]; then
+    print_success "Frontend assets built successfully!"
+else
+    echo "Frontend build failed!"
+    exit 1
+fi
+
+# Build Go binary
+print_status "Building Go binary..."
+export CGO_ENABLED=0
+export GOOS=linux
+export GOARCH=amd64
+
+go build -ldflags="-w -s" -o base-app main.go
+
+if [ -f "base-app" ]; then
+    print_success "Go binary built successfully!"
+else
+    echo "Go build failed!"
+    exit 1
+fi
+
+print_success "✨ Production build complete!"
+echo ""
+echo "📦 Build artifacts:"
+echo "   • Frontend: static/dist/"
+echo "   • Backend:  base-app"
+echo ""
+echo "🚀 Ready for deployment!"

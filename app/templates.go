@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"base/ui"
 	"base/core/layout"
 )
 
@@ -40,6 +41,11 @@ var embeddedTemplates embed.FS
 // RegisterTemplates loads all templates from the embedded filesystem
 // and registers them with the template engine
 func RegisterTemplates(engine *layout.Engine) error {
+	// Register UI components first
+	if engine.GetComponentRegistry() != nil {
+		ui.RegisterUIComponents(engine.GetComponentRegistry())
+	}
+	
 	// Register template helpers
 	registerHelpers(engine)
 
@@ -48,42 +54,45 @@ func RegisterTemplates(engine *layout.Engine) error {
 		return err
 	}
 
-	// Register all templates now that helpers are available
+	// Load templates from filesystem first, which includes proper component preprocessing
+	if err := engine.ReloadTemplates(); err != nil {
+		return err
+	}
+
+	// Register embedded templates as fallbacks for any missing templates
 	err := fs.WalkDir(embeddedTemplates, "theme/default", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 
-		if !d.IsDir() && strings.HasSuffix(path, ".html") {
-			data, err := embeddedTemplates.ReadFile(path)
-			if err != nil {
-				return err
-			}
-
+		if !d.IsDir() && (strings.HasSuffix(path, ".html") || strings.HasSuffix(path, ".bui")) {
 			rel, _ := filepath.Rel("theme/default", path)
 			templateName := rel
 			baseName := filepath.Base(path)
 
-			if err := engine.ParseString(templateName, string(data)); err != nil {
-				return err
-			}
-
-			// Only register basename alias if it doesn't conflict with existing full templates
-			if baseName != templateName && !strings.Contains(baseName, "landing.html") {
-				if err := engine.ParseString(baseName, string(data)); err != nil {
+			// Only register embedded template if filesystem version doesn't exist
+			if !engine.HasTemplate(templateName) && !engine.HasTemplate(baseName) {
+				data, err := embeddedTemplates.ReadFile(path)
+				if err != nil {
 					return err
+				}
+
+				if err := engine.ParseString(templateName, string(data)); err != nil {
+					return err
+				}
+
+				// Only register basename alias if it doesn't conflict with existing templates
+				if baseName != templateName && !strings.Contains(baseName, "landing.html") {
+					if err := engine.ParseString(baseName, string(data)); err != nil {
+						return err
+					}
 				}
 			}
 		}
 		return nil
 	})
 
-	if err != nil {
-		return err
-	}
-
-	// Load templates from filesystem after parsing embedded ones
-	return engine.ReloadTemplates()
+	return err
 }
 
 // registerHelpers registers template helper functions

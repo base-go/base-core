@@ -1,0 +1,77 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* BaseUI Core Styles */
+@layer base {
+  html {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+}
+
+@layer components {
+  /* Tooltip Positioning */
+  .top-tooltip { 
+    bottom: calc(100% + 5px); 
+    left: 50%; 
+    transform: translateX(-50%); 
+  }
+  
+  .bottom-tooltip { 
+    top: calc(100% + 5px); 
+    left: 50%; 
+    transform: translateX(-50%); 
+  }
+  
+  .left-tooltip { 
+    right: calc(100% + 5px); 
+    top: 50%; 
+    transform: translateY(-50%); 
+  }
+  
+  .right-tooltip { 
+    left: calc(100% + 5px); 
+    top: 50%; 
+    transform: translateY(-50%); 
+  }
+  
+  .tooltip-arrow {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: inherit;
+  }
+  
+  .top-tooltip .tooltip-arrow { 
+    bottom: -4px; 
+    left: 50%; 
+    transform: translateX(-50%) rotate(45deg); 
+  }
+  
+  .bottom-tooltip .tooltip-arrow { 
+    top: -4px; 
+    left: 50%; 
+    transform: translateX(-50%) rotate(45deg); 
+  }
+  
+  .left-tooltip .tooltip-arrow { 
+    right: -4px; 
+    top: 50%; 
+    transform: translateY(-50%) rotate(45deg); 
+  }
+  
+  .right-tooltip .tooltip-arrow { 
+    left: -4px; 
+    top: 50%; 
+    transform: translateY(-50%) rotate(45deg); 
+  }
+}
+
+@layer utilities {
+  /* Custom utility classes */
+  .transition-colors {
+    transition-property: color, background-color, border-color;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+}

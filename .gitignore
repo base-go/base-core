@@ -29,3 +29,4 @@ core/app/.DS_Store
 .DS_Store
 .env
 logs/app.log
+/ui/node_modules

@@ -2,6 +2,7 @@ package app
 
 import (
 	// MODULE_IMPORT_MARKER - Do not remove this comment because it's used by the CLI to add new module imports
+
 	"base/app/home"
 	"base/app/posts"
 

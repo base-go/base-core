@@ -3,17 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{.title}} - {{tr "auth.title"}}</title>
-    <script defer src="https://unpkg.com/alpinejs-component@latest/dist/component.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+    <title>{{.title}} - Auth</title>
+    <script type="module" src="https://unpkg.com/petite-vue?module"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+<script type="module">
+  import { createApp } from 'https://unpkg.com/petite-vue?module'
+  createApp().mount()
+</script>
 <body>
     <div class="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div class="sm:mx-auto sm:w-full sm:max-w-md">
             <div class="text-center mb-6">
-                <a href="/" class="text-2xl font-bold text-white">{{tr "auth.title"}}</a>
-                <p class="mt-2 text-white text-opacity-80">{{tr "auth.tagline"}}</p>
+                <a href="/" class="text-2xl font-bold text-white">Base App</a>
+                <p class="mt-2 text-white text-opacity-80">Authentication</p>
             </div>
         </div>
 
@@ -24,14 +28,14 @@
         </div>
 
         <div class="mt-8 text-center">
-            <a href="/" class="text-white hover:text-gray-200 transition-colors duration-300">← {{tr "common.back_to_home"}}</a>
+            <a href="/" class="text-white hover:text-gray-200 transition-colors duration-300">← Back to Home</a>
         </div>
 
         <div class="mt-4 text-center">
             <div class="inline-flex space-x-4">
-                <a href="/auth/login" class="text-white hover:text-gray-200 transition-colors duration-300">{{tr "auth.login"}}</a>
-                <a href="/auth/register" class="text-white hover:text-gray-200 transition-colors duration-300">{{tr "auth.register"}}</a>
-                <a href="/auth/forgot-password" class="text-white hover:text-gray-200 transition-colors duration-300">{{tr "auth.forgot_password"}}</a>
+                <a href="/auth/login" class="text-white hover:text-gray-200 transition-colors duration-300">Login</a>
+                <a href="/auth/register" class="text-white hover:text-gray-200 transition-colors duration-300">Register</a>
+                <a href="/auth/forgot-password" class="text-white hover:text-gray-200 transition-colors duration-300">Forgot Password</a>
             </div>
         </div>
     </div>

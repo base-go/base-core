@@ -1,0 +1,16 @@
+{{define "UserMenuDropdown"}}
+{{if .currentUser.loggedIn}}
+<{ Dropdown 
+  buttonText="{{.currentUser.Name}}"
+  buttonIcon="fas fa-user-circle"
+  items=(slice
+    (dict "type" "header" "label" "Account")
+    (dict "label" "Profile" "href" "/users/me" "icon" "fas fa-user")
+    (dict "type" "divider")
+    (dict "label" "Logout" "onclick" "logout()" "icon" "fas fa-sign-out-alt" "class" "text-red-600 hover:bg-red-50")
+  )
+}>
+{{else}}
+<{ AuthButtons }>
+{{end}}
+{{end}}

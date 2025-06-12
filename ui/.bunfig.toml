@@ -1,0 +1,13 @@
+[install]
+# Use faster registry
+registry = "https://registry.npmmirror.com"
+# Cache directory
+cache = false
+# Skip optional dependencies that cause platform issues
+optional = false
+# Disable peer dependency warnings
+peer = false
+
+[install.lockfile]
+# Use bun.lockb instead of package-lock.json
+print = "bun.lockb"

@@ -16,11 +16,13 @@ import (
 
 // Engine is the main template engine
 type Engine struct {
-	templates    *template.Template
-	templatesDir string
-	layoutsDir   string
-	sharedDir    string
-	funcMap      template.FuncMap
+	templates         *template.Template
+	templatesDir      string
+	layoutsDir        string
+	sharedDir         string
+	funcMap           template.FuncMap
+	componentRegistry *ComponentRegistry
+	componentParser   *ComponentParser
 }
 
 // Config holds configuration for the template engine
@@ -30,8 +32,20 @@ type Config struct {
 	SharedDir    string
 }
 
-// NewEngine creates a new template engine
+// NewEngine creates a new template engine and loads templates
 func NewEngine(config Config) *Engine {
+	engine := NewEngineWithoutLoading(config)
+
+	// Load templates
+	if err := engine.LoadTemplates(); err != nil {
+		fmt.Printf("ERROR: NewEngine - Failed to load templates: %v\n", err)
+	}
+
+	return engine
+}
+
+// NewEngineWithoutLoading creates a new template engine without loading templates
+func NewEngineWithoutLoading(config Config) *Engine {
 	engine := &Engine{
 		templatesDir: config.TemplatesDir,
 		layoutsDir:   config.LayoutsDir,
@@ -40,7 +54,19 @@ func NewEngine(config Config) *Engine {
 	}
 
 	engine.addDefaultHelpers()
+
+	// Initialize component registry
+	engine.componentRegistry = NewComponentRegistry(engine)
+
+	// Initialize component parser
+	engine.componentParser = NewComponentParser(engine.componentRegistry)
+
 	return engine
+}
+
+// LoadTemplates loads all templates (public method)
+func (e *Engine) LoadTemplates() error {
+	return e.loadTemplates()
 }
 
 func (e *Engine) addDefaultHelpers() {
@@ -73,12 +99,40 @@ func (e *Engine) ParseString(name string, content string) error {
 		e.templates = template.New("").Funcs(e.funcMap)
 	}
 
-	_, err := e.templates.New(name).Funcs(e.funcMap).Parse(content)
+	// Preprocess the template to transform custom component syntax
+	processedContent, err := e.PreprocessTemplate(content)
+	if err != nil {
+		return fmt.Errorf("error preprocessing template %s: %w", name, err)
+	}
+
+	_, err = e.templates.New(name).Funcs(e.funcMap).Parse(processedContent)
 	return err
+}
+
+// PreprocessTemplate transforms custom component syntax to standard Go template syntax
+func (e *Engine) PreprocessTemplate(content string) (string, error) {
+	if e.componentParser == nil {
+		e.componentParser = NewComponentParser(e.componentRegistry)
+	}
+
+	return e.componentParser.ParseTemplate(content)
 }
 
 func (e *Engine) ReloadTemplates() error {
 	return e.loadTemplates()
+}
+
+// GetComponentRegistry returns the component registry for this engine
+func (e *Engine) GetComponentRegistry() *ComponentRegistry {
+	return e.componentRegistry
+}
+
+// HasTemplate checks if a template with the given name exists
+func (e *Engine) HasTemplate(name string) bool {
+	if e.templates == nil {
+		return false
+	}
+	return e.templates.Lookup(name) != nil
 }
 
 func (e *Engine) loadTemplates() error {
@@ -107,7 +161,7 @@ func (e *Engine) loadTemplates() error {
 			if err != nil {
 				return err
 			}
-			if strings.HasSuffix(path, ".html") {
+			if strings.HasSuffix(path, ".html") || strings.HasSuffix(path, ".bui") {
 				allFiles = append(allFiles, path)
 			}
 			return nil
@@ -131,8 +185,14 @@ func (e *Engine) loadTemplates() error {
 
 			// Determine template name based on file path
 			var templateName string
-			if e.templatesDir != "" && strings.HasPrefix(file, e.templatesDir) {
-				// For files in templatesDir, use relative path from templatesDir
+			if e.layoutsDir != "" && strings.HasPrefix(file, e.layoutsDir) {
+				// For layout files, just use the base name
+				templateName = filepath.Base(file)
+			} else if e.sharedDir != "" && strings.HasPrefix(file, e.sharedDir) {
+				// For shared files, just use the base name
+				templateName = filepath.Base(file)
+			} else if e.templatesDir != "" && strings.HasPrefix(file, e.templatesDir) {
+				// For other files in templatesDir, use relative path from templatesDir
 				relPath, err := filepath.Rel(e.templatesDir, file)
 				if err == nil {
 					templateName = filepath.ToSlash(relPath)
@@ -140,18 +200,46 @@ func (e *Engine) loadTemplates() error {
 					templateName = filepath.Base(file)
 				}
 			} else {
-				// For layout and shared files, just use the base name
+				// Fallback to base name
 				templateName = filepath.Base(file)
 			}
 
-			// Parse and register with the determined name
-			_, parseErr := e.templates.New(templateName).Parse(string(content))
-			if parseErr != nil {
+			// Debug: Show template content before preprocessing
+			if strings.Contains(templateName, "landing.html") {
+				previewLen := 200
+				if len(content) < previewLen {
+					previewLen = len(content)
+				}
+				fmt.Printf("DEBUG: loadTemplates - Template %s content preview: %s\n", templateName, string(content[:previewLen]))
+			}
 
+			// Preprocess the template to transform custom component syntax
+			processedContent, err := e.PreprocessTemplate(string(content))
+			if err != nil {
+				fmt.Printf("ERROR: loadTemplates - Failed to preprocess template %s: %v\n", templateName, err)
+				continue
+			}
+
+			// Debug: Show if preprocessing changed anything
+			if strings.Contains(templateName, "landing.html") && string(content) != processedContent {
+				fmt.Printf("DEBUG: loadTemplates - Template %s was modified during preprocessing\n", templateName)
+			}
+
+			// Parse and register with the determined name
+			fmt.Printf("DEBUG: loadTemplates - Registering template: '%s' from file: %s\n", templateName, file)
+
+			_, err = e.templates.New(templateName).Parse(processedContent)
+			if err != nil {
+				fmt.Printf("ERROR: loadTemplates - Failed to parse template '%s': %v\n", templateName, err)
 				continue
 			}
 
 		}
+	}
+
+	fmt.Printf("DEBUG: loadTemplates - Loaded %d files so far\n", len(allFiles))
+	for _, file := range allFiles {
+		fmt.Printf("DEBUG: loadTemplates - File: %s\n", file)
 	}
 
 	// Automatically discover and load module-specific view templates with proper naming
@@ -175,18 +263,30 @@ func (e *Engine) loadTemplates() error {
 					// Read the file content
 					content, readErr := os.ReadFile(viewFile)
 					if readErr != nil {
-
 						continue
 					}
 
 					// Create a template name like "posts/index.html"
 					filename := filepath.Base(viewFile)
 					templateName := filepath.Join(moduleName, filename)
+					fmt.Printf("DEBUG: loadTemplates - Registering module template: '%s' from file: %s\n", templateName, viewFile)
+
+					// Process the template content with the component parser if available
+					templateContent := string(content)
+					if e.componentParser != nil {
+						processedContent, err := e.componentParser.ParseTemplate(templateContent)
+						if err != nil {
+							fmt.Printf("WARNING: loadTemplates - Component parsing for module template '%s' had issues: %v\n", templateName, err)
+							// Continue with the original content if there's an error
+						} else {
+							templateContent = processedContent
+						}
+					}
 
 					// Parse and register with the module-prefixed name
-					_, parseErr := e.templates.New(templateName).Parse(string(content))
+					_, parseErr := e.templates.New(templateName).Parse(templateContent)
 					if parseErr != nil {
-
+						fmt.Printf("ERROR: loadTemplates - Failed to parse module template '%s': %v\n", templateName, parseErr)
 						continue
 					}
 
@@ -248,6 +348,35 @@ func (e *Engine) Render(w io.Writer, name string, data any, ctx *gin.Context) er
 }
 
 func (e *Engine) RenderWithLayout(w io.Writer, templateName, layoutName string, data any, ctx *gin.Context) error {
+	fmt.Printf("DEBUG: RenderWithLayout - templateName: %s, layoutName: %s\n", templateName, layoutName)
+
+	// Check if templates are loaded
+	if e.templates == nil {
+		fmt.Printf("ERROR: RenderWithLayout - templates not loaded\n")
+		return fmt.Errorf("templates not loaded")
+	}
+
+	// Check if the specific template exists
+	tmpl := e.templates.Lookup(templateName)
+	if tmpl == nil {
+		fmt.Printf("ERROR: RenderWithLayout - template '%s' not found\n", templateName)
+		// List available templates for debugging
+		if e.templates != nil {
+			fmt.Printf("DEBUG: Available templates: ")
+			for _, t := range e.templates.Templates() {
+				fmt.Printf("%s ", t.Name())
+			}
+			fmt.Printf("\n")
+		}
+		return fmt.Errorf("template '%s' not found", templateName)
+	}
+
+	// Check if the layout exists
+	layoutTmpl := e.templates.Lookup(layoutName)
+	if layoutTmpl == nil {
+		fmt.Printf("ERROR: RenderWithLayout - layout '%s' not found\n", layoutName)
+		return fmt.Errorf("layout '%s' not found", layoutName)
+	}
 
 	// Convert data to map if it's not already
 	var templateData map[string]any

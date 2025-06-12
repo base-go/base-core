@@ -1,0 +1,23 @@
+{{define "LanguageDropdown"}}
+<{ Dropdown 
+  buttonText="{{ currentLanguage.Name }}"
+  buttonIcon="fas fa-globe"
+  items=(slice
+    {{ $currentLang := currentLanguage }}
+    {{ range supportedLanguages }}
+    (dict 
+      "label" "{{.Name}}" 
+      "onclick" "switchLanguage('{{.Code}}')"
+      "class" "{{if eq $currentLang.Code .Code}}bg-blue-50 text-blue-700{{else}}text-gray-700 hover:bg-gray-50{{end}}"
+      "icon" "{{if eq .Code "en"}}fi fi-us{{else if eq .Code "es"}}fi fi-es{{else if eq .Code "sq"}}fi fi-al{{else}}fas fa-language{{end}}"
+    )
+    {{ end }}
+  )
+}>
+
+<script>
+  function switchLanguage(langCode) {
+    window.location.href = '/switch-language/' + langCode;
+  }
+</script>
+{{end}}

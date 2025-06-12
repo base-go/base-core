@@ -1,67 +1,253 @@
 <!-- Hero Section -->
 <div class="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
     <div class="text-center">
+        <div class="mb-6">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 mb-4">
+                <i class="fas fa-rocket mr-2"></i>
+                BaseUI Framework v1.0
+            </span>
+        </div>
         <h1 class="text-4xl font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
-            {{.hero_title}}
+            Modern JavaScript
+            <span class="text-blue-600">meets Go SSR</span>
         </h1>
-        <p class="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-            {{.hero_subtitle}}
+        <p class="mt-3 max-w-2xl mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl">
+            Build powerful web applications with Vite, Tailwind CSS, shadcn/ui components, and seamless Go server-side rendering integration.
         </p>
-        <div class="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
-            <div class="rounded-md shadow">
-                <a href="/posts" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 md:py-4 md:text-lg md:px-10">
-                    {{tr "home.explore_posts"}}
-                </a>
-            </div>
-            <div class="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">
-                <a href="/auth/register" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-blue-600 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10">
-                    {{tr "home.get_started"}}
-                </a>
-            </div>
+        <div class="mt-8 flex flex-col sm:flex-row sm:justify-center gap-4">
+            <a href="/posts" class="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                <i class="fas fa-newspaper mr-2"></i>
+                Explore Posts
+            </a>
+            <a href="/auth/register" class="inline-flex items-center px-8 py-3 border border-gray-300 text-base font-medium rounded-md text-blue-600 bg-white hover:bg-gray-50 transition-colors">
+                <i class="fas fa-user-plus mr-2"></i>
+                Get Started
+            </a>
         </div>
     </div>
 </div>
 
-<!-- Features Section -->
-<div class="py-12 bg-white">
+<!-- BaseUI Components Showcase -->
+<div class="py-16 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="lg:text-center">
-            <h2 class="text-base text-blue-600 font-semibold tracking-wide uppercase">{{tr "home.features_title"}}</h2>
-            <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-                {{tr "home.features_subtitle"}}
+        <div class="text-center mb-16">
+            <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+                Interactive Components
+            </h2>
+            <p class="mt-4 text-lg text-gray-600">
+                Experience BaseUI components in action - all powered by modern JavaScript and Vite
             </p>
         </div>
 
-        <div class="mt-10">
-            <div class="space-y-10 md:space-y-0 md:grid md:grid-cols-3 md:gap-x-8 md:gap-y-10">
-                {{range .features}}
-                    <div class="relative">
-                        <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
-                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
-                        </div>
-                        <p class="ml-16 text-lg leading-6 font-medium text-gray-900">{{.title}}</p>
-                        <dd class="mt-2 ml-16 text-base text-gray-500">{{.description}}</dd>
-                    </div>
-                {{end}}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Dropdown Component -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-chevron-down text-blue-600 mr-2"></i>
+                    Dropdown Menu
+                </h3>
+                <p class="text-gray-600 mb-4">Object-oriented dropdown with keyboard navigation</p>
+                <{ LanguageDropdown }>
+            </div>
+
+            <!-- Toggle Component -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-toggle-on text-green-600 mr-2"></i>
+                    Toggle Switch
+                </h3>
+                <p class="text-gray-600 mb-4">Accessible toggle with smooth animations</p>
+                <div class="flex items-center justify-center">
+                    <{ Toggle label="Enable notifications" defaultEnabled=true onChange="console.log('Toggle changed!')" }>
+                </div>
+            </div>
+
+            <!-- User Menu Component -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-user-circle text-purple-600 mr-2"></i>
+                    User Menu
+                </h3>
+                <p class="text-gray-600 mb-4">Context-aware user dropdown menu</p>
+                <{ UserMenuDropdown }>
             </div>
         </div>
     </div>
 </div>
 
-<!-- CTA Section -->
-<div class="bg-blue-600">
-    <div class="max-w-2xl mx-auto text-center py-16 px-4 sm:py-20 sm:px-6 lg:px-8">
+<!-- Framework Features -->
+<div class="py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+                Framework Architecture
+            </h2>
+            <p class="mt-4 text-lg text-gray-600">
+                Built for modern development with proven technologies
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+            <!-- Frontend Stack -->
+            <div>
+                <div class="flex items-center mb-6">
+                    <div class="flex-shrink-0">
+                        <div class="flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
+                            <i class="fas fa-code"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-xl font-bold text-gray-900">Modern Frontend</h3>
+                    </div>
+                </div>
+                <ul class="space-y-3">
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-3"></i>
+                        <span><strong>Vite</strong> - Lightning fast build tool with HMR</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-3"></i>
+                        <span><strong>Tailwind CSS</strong> - Utility-first styling</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-3"></i>
+                        <span><strong>shadcn/ui</strong> - High-quality components</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-3"></i>
+                        <span><strong>TypeScript</strong> - Optional type safety</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Backend Stack -->
+            <div>
+                <div class="flex items-center mb-6">
+                    <div class="flex-shrink-0">
+                        <div class="flex items-center justify-center h-12 w-12 rounded-md bg-green-500 text-white">
+                            <i class="fas fa-server"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-xl font-bold text-gray-900">Powerful Backend</h3>
+                    </div>
+                </div>
+                <ul class="space-y-3">
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-3"></i>
+                        <span><strong>Go</strong> - High-performance server-side rendering</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-3"></i>
+                        <span><strong>Gin</strong> - Fast HTTP web framework</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-3"></i>
+                        <span><strong>Custom Templates</strong> - Component-based rendering</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-3"></i>
+                        <span><strong>Multi-language</strong> - i18n support built-in</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Development Experience -->
+<div class="py-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+                Developer Experience
+            </h2>
+            <p class="mt-4 text-lg text-gray-600">
+                Everything you need for productive development
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="text-center">
+                <div class="flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 text-blue-600 mx-auto mb-4">
+                    <i class="fas fa-bolt text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Hot Module Reload</h3>
+                <p class="text-gray-600">Instant updates during development with Vite's HMR</p>
+            </div>
+
+            <div class="text-center">
+                <div class="flex items-center justify-center h-16 w-16 rounded-full bg-green-100 text-green-600 mx-auto mb-4">
+                    <i class="fas fa-puzzle-piece text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Component System</h3>
+                <p class="text-gray-600">Reusable Go components with JavaScript integration</p>
+            </div>
+
+            <div class="text-center">
+                <div class="flex items-center justify-center h-16 w-16 rounded-full bg-purple-100 text-purple-600 mx-auto mb-4">
+                    <i class="fas fa-rocket text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Production Ready</h3>
+                <p class="text-gray-600">Optimized builds with code splitting and tree shaking</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Code Example -->
+<div class="py-16 bg-white">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+                Simple to Use
+            </h2>
+            <p class="mt-4 text-lg text-gray-600">
+                Get started with just a few commands
+            </p>
+        </div>
+
+        <div class="bg-gray-900 rounded-lg p-6 overflow-x-auto">
+            <div class="text-gray-300 font-mono text-sm">
+                <div class="text-green-400 mb-2"># Start development servers</div>
+                <div class="mb-4">
+                    <span class="text-yellow-400">cd</span> ui/ && <span class="text-yellow-400">npm</span> run dev<br>
+                    <span class="text-yellow-400">go</span> run main.go
+                </div>
+                
+                <div class="text-green-400 mb-2"># Add shadcn/ui components</div>
+                <div class="mb-4">
+                    <span class="text-yellow-400">npx</span> shadcn-ui@latest add button<br>
+                    <span class="text-yellow-400">npx</span> shadcn-ui@latest add dropdown-menu
+                </div>
+
+                <div class="text-green-400 mb-2"># Build for production</div>
+                <div>
+                    <span class="text-yellow-400">npm</span> run build
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Call to Action -->
+<div class="bg-gradient-to-r from-blue-600 to-purple-600">
+    <div class="max-w-4xl mx-auto text-center py-16 px-4 sm:py-20 sm:px-6 lg:px-8">
         <h2 class="text-3xl font-extrabold text-white sm:text-4xl">
-            <span class="block">{{tr "home.cta_title"}}</span>
-            <span class="block">{{tr "home.cta_subtitle"}}</span>
+            Ready to Build Something Amazing?
         </h2>
-        <p class="mt-4 text-lg leading-6 text-blue-200">
-            {{tr "home.cta_description"}}
+        <p class="mt-4 text-xl text-blue-100">
+            Join the BaseUI community and start building modern web applications today
         </p>
-        <a href="/auth/register" class="mt-8 w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-blue-600 bg-white hover:bg-blue-50 sm:w-auto">
-            {{tr "home.join_now"}}
-        </a>
+        <div class="mt-8 flex flex-col sm:flex-row sm:justify-center gap-4">
+            <a href="/auth/register" class="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-blue-600 bg-white hover:bg-gray-50 transition-colors">
+                <i class="fas fa-rocket mr-2"></i>
+                Get Started Free
+            </a>
+            <a href="/posts" class="inline-flex items-center px-8 py-3 border border-white text-base font-medium rounded-md text-white hover:bg-white hover:text-blue-600 transition-colors">
+                <i class="fas fa-book mr-2"></i>
+                View Documentation
+            </a>
+        </div>
     </div>
 </div>

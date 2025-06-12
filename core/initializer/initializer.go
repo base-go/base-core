@@ -243,11 +243,7 @@ func initTemplateSystem(log logger.Logger) (*layout.Engine, *language.Translatio
 		LayoutsDir:   "app/theme/default/layouts",
 		SharedDir:    "app/theme/default/shared",
 	}
-	templateEngine := layout.NewEngine(templateConfig)
-	templateEngine.RegisterDefaultHelpers()
-
-	log.Info("Template engine initialized successfully")
-	// Initialize translation service
+	// Initialize translation service first
 	translationService := language.NewTranslationService()
 
 	// This will be implemented by the app
@@ -255,7 +251,19 @@ func initTemplateSystem(log logger.Logger) (*layout.Engine, *language.Translatio
 	// 	log.Error("Failed to load translations: " + err.Error())
 	// }
 
+	// Create template engine without loading templates yet
+	templateEngine := layout.NewEngineWithoutLoading(templateConfig)
+	templateEngine.RegisterDefaultHelpers()
+
+	// Register template helpers BEFORE loading templates
 	language.RegisterTemplateHelpers(templateEngine, translationService)
+
+	// Now load templates with all helpers registered
+	if err := templateEngine.LoadTemplates(); err != nil {
+		log.Info("Failed to load templates: " + err.Error())
+	}
+
+	log.Info("Template engine initialized successfully")
 
 	// This will be implemented by the app
 	// if err := app.RegisterTemplates(templateEngine); err != nil {
@@ -369,7 +377,7 @@ func initializeCoreModules(deps *CoreDependencies) map[string]module.Module {
 	// Initialize auth module
 	coreModules["auth"] = auth.NewAuthModule(
 		deps.DB,
-		deps.WebRouter,
+		deps.PublicRouter, // Use PublicRouter for auth routes (login/register should not require authentication)
 		deps.APIRouter,
 		deps.EmailSender,
 		deps.Logger,

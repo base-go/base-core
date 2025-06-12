@@ -1,0 +1,40 @@
+{
+  "name": "@base/ui",
+  "version": "1.0.0",
+  "description": "BaseUI - Modern JavaScript framework for Base applications",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "watch": "vite build --watch",
+    "install:bun": "bun install",
+    "dev:bun": "bun run dev",
+    "build:bun": "bun run build"
+  },
+  "dependencies": {
+    "tailwindcss": "^3.4.0",
+    "autoprefixer": "^10.4.16",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.0.0",
+    "tailwind-merge": "^2.0.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "postcss": "^8.4.32",
+    "cssnano": "^6.0.2"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "main": "./dist/baseui.umd.js",
+  "module": "./dist/baseui.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist/baseui.es.js",
+      "require": "./dist/baseui.umd.js"
+    },
+    "./style.css": "./dist/style.css"
+  }
+}

@@ -1,6 +1,7 @@
 package layout
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-contrib/sessions"
@@ -74,6 +75,7 @@ func (v *ViewBuilder) Render(ctx *gin.Context) {
 	// Add template context data from middleware if available
 	if templateContext, exists := ctx.Get("templateContext"); exists {
 		if contextMap, ok := templateContext.(map[string]interface{}); ok {
+			fmt.Printf("DEBUG: ViewBuilder - Template context from middleware: %+v\n", contextMap)
 			for key, value := range contextMap {
 				// Don't overwrite existing values set by controllers
 				if _, exists := v.data[key]; !exists {
@@ -81,6 +83,8 @@ func (v *ViewBuilder) Render(ctx *gin.Context) {
 				}
 			}
 		}
+	} else {
+		fmt.Printf("DEBUG: ViewBuilder - No template context found in Gin context\n")
 	}
 
 	// Also add session data directly for backward compatibility
@@ -105,11 +109,23 @@ func (v *ViewBuilder) Render(ctx *gin.Context) {
 
 	v.data["session"] = sessionData
 
+	fmt.Printf("DEBUG: ViewBuilder - Final template data keys: %+v\n", getMapKeys(v.data))
+	fmt.Printf("DEBUG: ViewBuilder - currentUser value: %+v\n", v.data["currentUser"])
+
 	if v.layoutName != "" {
 		v.engine.RenderWithLayout(ctx.Writer, v.template, v.layoutName, v.data, ctx)
 	} else {
 		v.engine.Render(ctx.Writer, v.template, v.data, ctx)
 	}
+}
+
+// Helper function to get map keys for debugging
+func getMapKeys(m map[string]any) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
 }
 
 // RedirectBuilder provides a simple API for redirects
@@ -174,9 +190,9 @@ func (c *Controller) Redirect(url string) *RedirectBuilder {
 
 // Layout constants for easy reference
 const (
-	AppLayout     = "layouts/app.html"
-	AuthLayout    = "layouts/auth.html"
-	LandingLayout = "layouts/landing.html"
+	AppLayout     = "app.html"
+	AuthLayout    = "auth.html"
+	LandingLayout = "landing.html"
 )
 
 // Helper functions for creating controllers with specific layouts

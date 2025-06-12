@@ -3,26 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{.title}} - {{tr "landing.welcome"}}</title>
-    <script defer src="https://unpkg.com/alpinejs-component@latest/dist/component.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>{{.title}} - BaseUI Framework</title>
+    <meta name="description" content="Modern JavaScript framework meets Go SSR - Build powerful web applications with Vite, Tailwind CSS, and shadcn/ui components">
+    <meta name="keywords" content="BaseUI, Go, Vite, Tailwind CSS, shadcn/ui, web framework, SSR">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{{.title}} - BaseUI Framework">
+    <meta property="og:description" content="Modern JavaScript framework meets Go SSR">
+    <meta property="og:image" content="/static/images/baseui-og.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@6.6.6/css/flag-icons.min.css">
+    
+    <!-- BaseUI Assets -->
+    <!-- Vite Development (for now, will auto-detect later) -->
+    <script type="module" src="http://localhost:5173/@vite/client"></script>
+    <script type="module" src="http://localhost:5173/src/main.js"></script>
 </head>
-<body class="bg-gray-50">
-    <nav class="bg-white shadow">
+<body class="bg-gray-50 antialiased">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
+                <!-- Logo/Brand -->
                 <div class="flex items-center">
-                    <a href="/" class="text-xl font-bold text-gray-900">Landing App</a>
+                    <a href="/" class="flex items-center space-x-2 text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors">
+                        <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-cube text-white text-sm"></i>
+                        </div>
+                        <span>BaseUI</span>
+                    </a>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <a href="/posts" class="text-gray-700 hover:text-gray-900">{{tr "navigation.posts"}}</a>
+
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="/posts" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">
+                        <i class="fas fa-newspaper mr-1"></i>
+                        Documentation
+                    </a>
+                    <a href="https://github.com" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">
+                        <i class="fab fa-github mr-1"></i>
+                        GitHub
+                    </a>
                     
                     <!-- Language Selector -->
-                    {{template "components/language_selector.html" .}}
+                    <{ LanguageDropdown }>
                     
-                    <!-- User Profile / Auth Buttons -->
-                    {{template "components/user_profile.html" .}}
+                    <!-- Auth/User Menu -->
+                    {{if .logged_in}}
+                        <{ UserMenuDropdown }>
+                    {{else}}
+                        <div class="flex items-center space-x-4">
+                            <a href="/auth/login" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">
+                                Sign In
+                            </a>
+                            <a href="/auth/register" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                                Get Started
+                            </a>
+                        </div>
+                    {{end}}
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center">
+                    <button data-sidebar-toggle class="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Menu -->
+        <div data-sidebar class="md:hidden fixed inset-0 z-40 hidden">
+            <div data-sidebar-overlay class="fixed inset-0 bg-gray-600 bg-opacity-75"></div>
+            <div class="relative flex-1 flex flex-col max-w-xs w-full bg-white shadow-xl">
+                <div class="flex items-center justify-between p-4 border-b border-gray-200">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-cube text-white text-sm"></i>
+                        </div>
+                        <span class="text-xl font-bold text-gray-900">BaseUI</span>
+                    </div>
+                    <button data-sidebar-toggle class="p-2 rounded-md text-gray-400 hover:text-gray-500">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="flex-1 overflow-y-auto py-4">
+                    <nav class="px-4 space-y-2">
+                        <a href="/posts" class="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
+                            <i class="fas fa-newspaper mr-3"></i>
+                            Documentation
+                        </a>
+                        <a href="https://github.com" class="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
+                            <i class="fab fa-github mr-3"></i>
+                            GitHub
+                        </a>
+                        {{if not .logged_in}}
+                            <div class="pt-4 border-t border-gray-200 space-y-2">
+                                <a href="/auth/login" class="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
+                                    <i class="fas fa-sign-in-alt mr-3"></i>
+                                    Sign In
+                                </a>
+                                <a href="/auth/register" class="flex items-center px-3 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors">
+                                    <i class="fas fa-user-plus mr-3"></i>
+                                    Get Started
+                                </a>
+                            </div>
+                        {{end}}
+                    </nav>
                 </div>
             </div>
         </div>
@@ -32,9 +125,69 @@
         {{safe .Content}}
     </main>
 
-    <footer class="bg-gray-800 text-white py-8 mt-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <p>&copy; 2024 Base App. Built with Go and Alpine.js.</p>
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <!-- Brand -->
+                <div class="col-span-1 md:col-span-2">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-cube text-white text-sm"></i>
+                        </div>
+                        <span class="text-xl font-bold">BaseUI</span>
+                    </div>
+                    <p class="text-gray-300 mb-4 max-w-md">
+                        Modern JavaScript framework that seamlessly integrates with Go server-side rendering. 
+                        Build powerful web applications with Vite, Tailwind CSS, and shadcn/ui.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="https://github.com" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-github text-xl"></i>
+                        </a>
+                        <a href="https://twitter.com" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-twitter text-xl"></i>
+                        </a>
+                        <a href="https://discord.com" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-discord text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Framework -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Framework</h3>
+                    <ul class="space-y-2">
+                        <li><a href="/posts" class="text-gray-300 hover:text-white transition-colors">Documentation</a></li>
+                        <li><a href="/posts" class="text-gray-300 hover:text-white transition-colors">Getting Started</a></li>
+                        <li><a href="/posts" class="text-gray-300 hover:text-white transition-colors">Components</a></li>
+                        <li><a href="/posts" class="text-gray-300 hover:text-white transition-colors">Examples</a></li>
+                    </ul>
+                </div>
+
+                <!-- Community -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Community</h3>
+                    <ul class="space-y-2">
+                        <li><a href="https://github.com" class="text-gray-300 hover:text-white transition-colors">GitHub</a></li>
+                        <li><a href="https://discord.com" class="text-gray-300 hover:text-white transition-colors">Discord</a></li>
+                        <li><a href="/posts" class="text-gray-300 hover:text-white transition-colors">Blog</a></li>
+                        <li><a href="/posts" class="text-gray-300 hover:text-white transition-colors">Changelog</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bottom Bar -->
+            <div class="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-400 text-sm">
+                    &copy; 2024 BaseUI Framework. Built with Go, Vite, and modern web technologies.
+                </p>
+                <div class="flex items-center space-x-6 mt-4 md:mt-0">
+                    <a href="/privacy" class="text-gray-400 hover:text-white text-sm transition-colors">Privacy Policy</a>
+                    <a href="/terms" class="text-gray-400 hover:text-white text-sm transition-colors">Terms of Service</a>
+                    <{ LanguageDropdown }>
+                </div>
+            </div>
         </div>
     </footer>
 </body>

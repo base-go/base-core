@@ -1,0 +1,110 @@
+#!/bin/bash
+
+# BaseUI Dependency Installation Script
+# Handles registry issues and platform-specific problems
+
+set -e
+
+# Colors for output
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+print_status() {
+    echo -e "${BLUE}[Install]${NC} $1"
+}
+
+print_success() {
+    echo -e "${GREEN}[Install]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[Install]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[Install]${NC} $1"
+}
+
+# Check if we're in the right directory
+if [ ! -f "package.json" ]; then
+    print_error "package.json not found. Please run this from the ui/ directory."
+    exit 1
+fi
+
+print_status "Installing BaseUI dependencies..."
+
+# Try different methods in order of preference
+METHODS=(
+    "bun_taobao"
+    "npm_taobao" 
+    "bun_yarn"
+    "npm_yarn"
+    "bun_default"
+    "npm_default"
+)
+
+for method in "${METHODS[@]}"; do
+    print_status "Trying method: $method"
+    
+    case $method in
+        "bun_taobao")
+            if command -v bun &> /dev/null; then
+                BUN_CONFIG_REGISTRY=https://registry.npmmirror.com bun install --ignore-scripts && break
+            fi
+            ;;
+        "npm_taobao")
+            if command -v npm &> /dev/null; then
+                npm install --registry=https://registry.npmmirror.com --ignore-scripts && break
+            fi
+            ;;
+        "bun_yarn")
+            if command -v bun &> /dev/null; then
+                BUN_CONFIG_REGISTRY=https://registry.yarnpkg.com bun install --ignore-scripts && break
+            fi
+            ;;
+        "npm_yarn")
+            if command -v npm &> /dev/null; then
+                npm install --registry=https://registry.yarnpkg.com --ignore-scripts && break
+            fi
+            ;;
+        "bun_default")
+            if command -v bun &> /dev/null; then
+                bun install --ignore-scripts && break
+            fi
+            ;;
+        "npm_default")
+            if command -v npm &> /dev/null; then
+                npm install --ignore-scripts && break
+            fi
+            ;;
+    esac
+    
+    print_warning "Method $method failed, trying next..."
+    sleep 2
+done
+
+if [ -d "node_modules" ]; then
+    print_success "Dependencies installed successfully!"
+    
+    # Create a simple status file
+    echo "Dependencies installed at: $(date)" > .install-status
+    
+    print_status "Installed packages:"
+    if command -v bun &> /dev/null; then
+        bun pm ls 2>/dev/null | head -10 || echo "Package list not available"
+    else
+        npm list --depth=0 2>/dev/null | head -10 || echo "Package list not available"
+    fi
+else
+    print_error "All installation methods failed!"
+    print_error "This might be due to:"
+    echo "  • Network connectivity issues"
+    echo "  • npm registry outages"
+    echo "  • Firewall blocking package downloads"
+    echo ""
+    echo "Try again later or check your internet connection."
+    exit 1
+fi

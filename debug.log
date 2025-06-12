@@ -1,0 +1,822 @@
+2025-06-12 19:28:47  ℹ️  INFO   core/start.go:47  Starting application initialization  {"version": "0.0.1", "environment": "debug"}
+2025-06-12 19:28:47  ℹ️  INFO   core/start.go:58  Database initialized successfully
+2025-06-12 19:28:47  ℹ️  INFO   core/start.go:63  Initializing main application
+time="2025-06-12T19:28:47+02:00" level=info msg="Initializing email sender with provider: postmark"
+DEBUG: Registered .bui component: AuthButtons from app/theme/default/components/auth_buttons.bui
+DEBUG: Registered .bui component: LanguageSelector from app/theme/default/components/language_selector.bui
+DEBUG: Registered .bui component: UserProfile from app/theme/default/components/user_profile.bui
+DEBUG: ParseTemplate - Input contains 2 component-like patterns
+DEBUG: ParseTemplate - Found patterns: [<{ LanguageSelector }> <{ UserProfile }>]
+DEBUG: ParseTemplate - Processing component: LanguageSelector with attributes: 
+DEBUG: ParseTemplate - Replacing '<{ LanguageSelector }>' with '{{component "LanguageSelector"}}'
+DEBUG: ParseTemplate - Processing component: UserProfile with attributes: 
+DEBUG: ParseTemplate - Replacing '<{ UserProfile }>' with '{{component "UserProfile"}}'
+DEBUG: ParseTemplate - Template was modified during processing
+DEBUG: loadTemplates - Registering template: 'app.html' from file: app/theme/default/layouts/app.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'auth.html' from file: app/theme/default/layouts/auth.html
+DEBUG: ParseTemplate - Input contains 2 component-like patterns
+DEBUG: ParseTemplate - Found patterns: [<{ LanguageSelector }> <{ UserProfile }>]
+DEBUG: ParseTemplate - Processing component: LanguageSelector with attributes: 
+DEBUG: ParseTemplate - Replacing '<{ LanguageSelector }>' with '{{component "LanguageSelector"}}'
+DEBUG: ParseTemplate - Processing component: UserProfile with attributes: 
+DEBUG: ParseTemplate - Replacing '<{ UserProfile }>' with '{{component "UserProfile"}}'
+DEBUG: ParseTemplate - Template was modified during processing
+DEBUG: loadTemplates - Registering template: 'landing.html' from file: app/theme/default/layouts/landing.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'auth/forgot-password.html' from file: app/theme/default/auth/forgot-password.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'auth/login.html' from file: app/theme/default/auth/login.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'auth/register.html' from file: app/theme/default/auth/register.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'auth/reset-password.html' from file: app/theme/default/auth/reset-password.html
+DEBUG: ParseTemplate - Input contains 2 component-like patterns
+DEBUG: ParseTemplate - Found patterns: [<{ Button 
+    text="Login" 
+    type="link" 
+    href="/auth/login" 
+    class="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium" 
+  }> <{ Button 
+    text="Register" 
+    type="link" 
+    href="/auth/register" 
+    class="bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700" 
+  }>]
+DEBUG: ParseTemplate - Processing component: Button with attributes: text="Login" 
+    type="link" 
+    href="/auth/login" 
+    class="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium" 
+  
+DEBUG: ParseTemplate - Replacing '<{ Button 
+    text="Login" 
+    type="link" 
+    href="/auth/login" 
+    class="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium" 
+  }>' with '{{component "Button" (dict "text" "Login" "type" "link" "href" "/auth/login" "class" "text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium")}}'
+DEBUG: ParseTemplate - Processing component: Button with attributes: text="Register" 
+    type="link" 
+    href="/auth/register" 
+    class="bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700" 
+  
+DEBUG: ParseTemplate - Replacing '<{ Button 
+    text="Register" 
+    type="link" 
+    href="/auth/register" 
+    class="bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700" 
+  }>' with '{{component "Button" (dict "text" "Register" "type" "link" "href" "/auth/register" "class" "bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700")}}'
+DEBUG: ParseTemplate - Template was modified during processing
+DEBUG: loadTemplates - Registering template: 'components/auth_buttons.bui' from file: app/theme/default/components/auth_buttons.bui
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'components/language_selector.bui' from file: app/theme/default/components/language_selector.bui
+DEBUG: ParseTemplate - Input contains 1 component-like patterns
+DEBUG: ParseTemplate - Found patterns: [<{ AuthButtons }>]
+DEBUG: ParseTemplate - Processing component: AuthButtons with attributes: 
+DEBUG: ParseTemplate - Replacing '<{ AuthButtons }>' with '{{component "AuthButtons"}}'
+DEBUG: ParseTemplate - Template was modified during processing
+DEBUG: loadTemplates - Registering template: 'components/user_profile.bui' from file: app/theme/default/components/user_profile.bui
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'email/password-changed.html' from file: app/theme/default/email/password-changed.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'email/password-reset.html' from file: app/theme/default/email/password-reset.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'email/register.html' from file: app/theme/default/email/register.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'error.html' from file: app/theme/default/error.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'examples/components.html' from file: app/theme/default/examples/components.html
+DEBUG: ParseTemplate - Input contains 2 component-like patterns
+DEBUG: ParseTemplate - Found patterns: [<{ LanguageSelector }> <{ UserProfile }>]
+DEBUG: ParseTemplate - Processing component: LanguageSelector with attributes: 
+DEBUG: ParseTemplate - Replacing '<{ LanguageSelector }>' with '{{component "LanguageSelector"}}'
+DEBUG: ParseTemplate - Processing component: UserProfile with attributes: 
+DEBUG: ParseTemplate - Replacing '<{ UserProfile }>' with '{{component "UserProfile"}}'
+DEBUG: ParseTemplate - Template was modified during processing
+DEBUG: loadTemplates - Registering template: 'app.html' from file: app/theme/default/layouts/app.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'auth.html' from file: app/theme/default/layouts/auth.html
+DEBUG: ParseTemplate - Input contains 2 component-like patterns
+DEBUG: ParseTemplate - Found patterns: [<{ LanguageSelector }> <{ UserProfile }>]
+DEBUG: ParseTemplate - Processing component: LanguageSelector with attributes: 
+DEBUG: ParseTemplate - Replacing '<{ LanguageSelector }>' with '{{component "LanguageSelector"}}'
+DEBUG: ParseTemplate - Processing component: UserProfile with attributes: 
+DEBUG: ParseTemplate - Replacing '<{ UserProfile }>' with '{{component "UserProfile"}}'
+DEBUG: ParseTemplate - Template was modified during processing
+DEBUG: loadTemplates - Registering template: 'landing.html' from file: app/theme/default/layouts/landing.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'user/me.html' from file: app/theme/default/user/me.html
+DEBUG: loadTemplates - Loaded 19 files so far
+DEBUG: loadTemplates - File: app/theme/default/layouts/app.html
+DEBUG: loadTemplates - File: app/theme/default/layouts/auth.html
+DEBUG: loadTemplates - File: app/theme/default/layouts/landing.html
+DEBUG: loadTemplates - File: app/theme/default/auth/forgot-password.html
+DEBUG: loadTemplates - File: app/theme/default/auth/login.html
+DEBUG: loadTemplates - File: app/theme/default/auth/register.html
+DEBUG: loadTemplates - File: app/theme/default/auth/reset-password.html
+DEBUG: loadTemplates - File: app/theme/default/components/auth_buttons.bui
+DEBUG: loadTemplates - File: app/theme/default/components/language_selector.bui
+DEBUG: loadTemplates - File: app/theme/default/components/user_profile.bui
+DEBUG: loadTemplates - File: app/theme/default/email/password-changed.html
+DEBUG: loadTemplates - File: app/theme/default/email/password-reset.html
+DEBUG: loadTemplates - File: app/theme/default/email/register.html
+DEBUG: loadTemplates - File: app/theme/default/error.html
+DEBUG: loadTemplates - File: app/theme/default/examples/components.html
+DEBUG: loadTemplates - File: app/theme/default/layouts/app.html
+DEBUG: loadTemplates - File: app/theme/default/layouts/auth.html
+DEBUG: loadTemplates - File: app/theme/default/layouts/landing.html
+DEBUG: loadTemplates - File: app/theme/default/user/me.html
+DEBUG: loadTemplates - Registering module template: 'home/index.html' from file: app/home/views/index.html
+DEBUG: ParseTemplate - Input contains 1 component-like patterns
+DEBUG: ParseTemplate - Found patterns: [<{ Button class="bg-green-500" text="Click me" onclick="alert('Hello')" }>]
+DEBUG: ParseTemplate - Processing component: Button with attributes: class="bg-green-500" text="Click me" onclick="alert('Hello')" 
+DEBUG: ParseTemplate - Replacing '<{ Button class="bg-green-500" text="Click me" onclick="alert('Hello')" }>' with '{{component "Button" (dict "class" "bg-green-500" "text" "Click me" "onclick" "alert('Hello')")}}'
+DEBUG: ParseTemplate - Template was modified during processing
+DEBUG: loadTemplates - Registering module template: 'posts/edit.html' from file: app/posts/views/edit.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering module template: 'posts/index.html' from file: app/posts/views/index.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering module template: 'posts/new.html' from file: app/posts/views/new.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering module template: 'posts/show.html' from file: app/posts/views/show.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+2025-06-12 19:28:47  ℹ️  INFO   initializer/initializer.go:266  Template engine initialized successfully
+2025-06-12 19:28:47  ℹ️  INFO   home/module.go:26  Initializing home module
+2025-06-12 19:28:47  ℹ️  INFO   initializer/initializer.go:305  Setting up routes for module  {"module": "home"}
+2025-06-12 19:28:47  ℹ️  INFO   home/module.go:44  Setting up home module routes
+2025-06-12 19:28:47  ℹ️  INFO   home/module.go:49  Home module routes registered
+2025-06-12 19:28:47  ℹ️  INFO   initializer/initializer.go:305  Setting up routes for module  {"module": "posts"}
+2025-06-12 19:28:47  ℹ️  INFO   initializer/initializer.go:311  Setting up API routes for module  {"module": "posts"}
+2025-06-12 19:28:47  ℹ️  INFO   initializer/initializer.go:305  Setting up routes for module  {"module": "auth"}
+2025-06-12 19:28:47  ℹ️  INFO   initializer/initializer.go:305  Setting up routes for module  {"module": "users"}
+2025-06-12 19:28:47  ℹ️  INFO   initializer/initializer.go:311  Setting up API routes for module  {"module": "users"}
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: ParseTemplate - Input contains 2 component-like patterns
+DEBUG: ParseTemplate - Found patterns: [<{ LanguageSelector }> <{ UserProfile }>]
+DEBUG: ParseTemplate - Processing component: LanguageSelector with attributes: 
+DEBUG: ParseTemplate - Replacing '<{ LanguageSelector }>' with '{{component "LanguageSelector"}}'
+DEBUG: ParseTemplate - Processing component: UserProfile with attributes: 
+DEBUG: ParseTemplate - Replacing '<{ UserProfile }>' with '{{component "UserProfile"}}'
+DEBUG: ParseTemplate - Template was modified during processing
+DEBUG: loadTemplates - Registering template: 'app.html' from file: app/theme/default/layouts/app.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'auth.html' from file: app/theme/default/layouts/auth.html
+DEBUG: ParseTemplate - Input contains 2 component-like patterns
+DEBUG: ParseTemplate - Found patterns: [<{ LanguageSelector }> <{ UserProfile }>]
+DEBUG: ParseTemplate - Processing component: LanguageSelector with attributes: 
+DEBUG: ParseTemplate - Replacing '<{ LanguageSelector }>' with '{{component "LanguageSelector"}}'
+DEBUG: ParseTemplate - Processing component: UserProfile with attributes: 
+DEBUG: ParseTemplate - Replacing '<{ UserProfile }>' with '{{component "UserProfile"}}'
+DEBUG: ParseTemplate - Template was modified during processing
+DEBUG: loadTemplates - Registering template: 'landing.html' from file: app/theme/default/layouts/landing.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'auth/forgot-password.html' from file: app/theme/default/auth/forgot-password.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'auth/login.html' from file: app/theme/default/auth/login.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'auth/register.html' from file: app/theme/default/auth/register.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'auth/reset-password.html' from file: app/theme/default/auth/reset-password.html
+DEBUG: ParseTemplate - Input contains 2 component-like patterns
+DEBUG: ParseTemplate - Found patterns: [<{ Button 
+    text="Login" 
+    type="link" 
+    href="/auth/login" 
+    class="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium" 
+  }> <{ Button 
+    text="Register" 
+    type="link" 
+    href="/auth/register" 
+    class="bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700" 
+  }>]
+DEBUG: ParseTemplate - Processing component: Button with attributes: text="Login" 
+    type="link" 
+    href="/auth/login" 
+    class="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium" 
+  
+DEBUG: ParseTemplate - Replacing '<{ Button 
+    text="Login" 
+    type="link" 
+    href="/auth/login" 
+    class="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium" 
+  }>' with '{{component "Button" (dict "text" "Login" "type" "link" "href" "/auth/login" "class" "text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium")}}'
+DEBUG: ParseTemplate - Processing component: Button with attributes: text="Register" 
+    type="link" 
+    href="/auth/register" 
+    class="bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700" 
+  
+DEBUG: ParseTemplate - Replacing '<{ Button 
+    text="Register" 
+    type="link" 
+    href="/auth/register" 
+    class="bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700" 
+  }>' with '{{component "Button" (dict "text" "Register" "type" "link" "href" "/auth/register" "class" "bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700")}}'
+DEBUG: ParseTemplate - Template was modified during processing
+DEBUG: loadTemplates - Registering template: 'components/auth_buttons.bui' from file: app/theme/default/components/auth_buttons.bui
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'components/language_selector.bui' from file: app/theme/default/components/language_selector.bui
+DEBUG: ParseTemplate - Input contains 1 component-like patterns
+DEBUG: ParseTemplate - Found patterns: [<{ AuthButtons }>]
+DEBUG: ParseTemplate - Processing component: AuthButtons with attributes: 
+DEBUG: ParseTemplate - Replacing '<{ AuthButtons }>' with '{{component "AuthButtons"}}'
+DEBUG: ParseTemplate - Template was modified during processing
+DEBUG: loadTemplates - Registering template: 'components/user_profile.bui' from file: app/theme/default/components/user_profile.bui
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'email/password-changed.html' from file: app/theme/default/email/password-changed.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'email/password-reset.html' from file: app/theme/default/email/password-reset.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'email/register.html' from file: app/theme/default/email/register.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'error.html' from file: app/theme/default/error.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'examples/components.html' from file: app/theme/default/examples/components.html
+DEBUG: ParseTemplate - Input contains 2 component-like patterns
+DEBUG: ParseTemplate - Found patterns: [<{ LanguageSelector }> <{ UserProfile }>]
+DEBUG: ParseTemplate - Processing component: LanguageSelector with attributes: 
+DEBUG: ParseTemplate - Replacing '<{ LanguageSelector }>' with '{{component "LanguageSelector"}}'
+DEBUG: ParseTemplate - Processing component: UserProfile with attributes: 
+DEBUG: ParseTemplate - Replacing '<{ UserProfile }>' with '{{component "UserProfile"}}'
+DEBUG: ParseTemplate - Template was modified during processing
+DEBUG: loadTemplates - Registering template: 'app.html' from file: app/theme/default/layouts/app.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'auth.html' from file: app/theme/default/layouts/auth.html
+DEBUG: ParseTemplate - Input contains 2 component-like patterns
+DEBUG: ParseTemplate - Found patterns: [<{ LanguageSelector }> <{ UserProfile }>]
+DEBUG: ParseTemplate - Processing component: LanguageSelector with attributes: 
+DEBUG: ParseTemplate - Replacing '<{ LanguageSelector }>' with '{{component "LanguageSelector"}}'
+DEBUG: ParseTemplate - Processing component: UserProfile with attributes: 
+DEBUG: ParseTemplate - Replacing '<{ UserProfile }>' with '{{component "UserProfile"}}'
+DEBUG: ParseTemplate - Template was modified during processing
+DEBUG: loadTemplates - Registering template: 'landing.html' from file: app/theme/default/layouts/landing.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering template: 'user/me.html' from file: app/theme/default/user/me.html
+DEBUG: loadTemplates - Loaded 19 files so far
+DEBUG: loadTemplates - File: app/theme/default/layouts/app.html
+DEBUG: loadTemplates - File: app/theme/default/layouts/auth.html
+DEBUG: loadTemplates - File: app/theme/default/layouts/landing.html
+DEBUG: loadTemplates - File: app/theme/default/auth/forgot-password.html
+DEBUG: loadTemplates - File: app/theme/default/auth/login.html
+DEBUG: loadTemplates - File: app/theme/default/auth/register.html
+DEBUG: loadTemplates - File: app/theme/default/auth/reset-password.html
+DEBUG: loadTemplates - File: app/theme/default/components/auth_buttons.bui
+DEBUG: loadTemplates - File: app/theme/default/components/language_selector.bui
+DEBUG: loadTemplates - File: app/theme/default/components/user_profile.bui
+DEBUG: loadTemplates - File: app/theme/default/email/password-changed.html
+DEBUG: loadTemplates - File: app/theme/default/email/password-reset.html
+DEBUG: loadTemplates - File: app/theme/default/email/register.html
+DEBUG: loadTemplates - File: app/theme/default/error.html
+DEBUG: loadTemplates - File: app/theme/default/examples/components.html
+DEBUG: loadTemplates - File: app/theme/default/layouts/app.html
+DEBUG: loadTemplates - File: app/theme/default/layouts/auth.html
+DEBUG: loadTemplates - File: app/theme/default/layouts/landing.html
+DEBUG: loadTemplates - File: app/theme/default/user/me.html
+DEBUG: loadTemplates - Registering module template: 'home/index.html' from file: app/home/views/index.html
+DEBUG: ParseTemplate - Input contains 1 component-like patterns
+DEBUG: ParseTemplate - Found patterns: [<{ Button class="bg-green-500" text="Click me" onclick="alert('Hello')" }>]
+DEBUG: ParseTemplate - Processing component: Button with attributes: class="bg-green-500" text="Click me" onclick="alert('Hello')" 
+DEBUG: ParseTemplate - Replacing '<{ Button class="bg-green-500" text="Click me" onclick="alert('Hello')" }>' with '{{component "Button" (dict "class" "bg-green-500" "text" "Click me" "onclick" "alert('Hello')")}}'
+DEBUG: ParseTemplate - Template was modified during processing
+DEBUG: loadTemplates - Registering module template: 'posts/edit.html' from file: app/posts/views/edit.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering module template: 'posts/index.html' from file: app/posts/views/index.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering module template: 'posts/new.html' from file: app/posts/views/new.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: loadTemplates - Registering module template: 'posts/show.html' from file: app/posts/views/show.html
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+2025-06-12 19:28:47  ℹ️  INFO   core/start.go:77  Swagger documentation enabled
+2025-06-12 19:28:47  ℹ️  INFO   core/start.go:90  Initializing WebSocket module
+2025-06-12 19:28:47  ℹ️  INFO   core/start.go:105  Application Started Successfully!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔖 Version:      0.0.1
+🌍 Environment:  debug
+🔌 Server:       0.0.0.0:8000
+🌐 App URL:      http://localhost:8000
+🔗 API URL:      http://localhost:8000/api
+📚 Swagger Docs: http://localhost:8000/swagger/index.html
+📦 Modules:      5
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DEBUG: ViewBuilder - Template context from middleware: map[currentUser:<nil>]
+DEBUG: ViewBuilder - Final template data keys: [currentUser session title hero_title hero_subtitle features]
+DEBUG: ViewBuilder - currentUser value: <nil>
+DEBUG: RenderWithLayout - templateName: home/index.html, layoutName: landing.html
+DEBUG: component helper called for: Button with props: [map[class:bg-green-500 onclick:alert('Hello') text:Click me]]
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered Button successfully
+DEBUG: component helper called for: Card with props: [map[content:1,234 total users title:Users]]
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered Card successfully
+DEBUG: component helper called for: Card with props: [map[content:567 orders today title:Orders]]
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered Card successfully
+DEBUG: component helper called for: Card with props: [map[content:$12,345 this month title:Revenue]]
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered Card successfully
+DEBUG: component helper called for: Grid with props: [map[class:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 content:<div class="bg-white rounded-lg shadow max-w-sm" v-scope="{&#34;loading&#34;:false}">
+	
+	<div class="px-6 py-4 border-b">
+		<h3 class="text-lg font-medium text-gray-900">Users</h3>
+		
+	</div>
+	
+	<div class="px-6 py-4">
+		1,234 total users
+		
+	</div>
+	
+</div><div class="bg-white rounded-lg shadow max-w-sm" v-scope="{&#34;loading&#34;:false}">
+	
+	<div class="px-6 py-4 border-b">
+		<h3 class="text-lg font-medium text-gray-900">Orders</h3>
+		
+	</div>
+	
+	<div class="px-6 py-4">
+		567 orders today
+		
+	</div>
+	
+</div><div class="bg-white rounded-lg shadow max-w-sm" v-scope="{&#34;loading&#34;:false}">
+	
+	<div class="px-6 py-4 border-b">
+		<h3 class="text-lg font-medium text-gray-900">Revenue</h3>
+		
+	</div>
+	
+	<div class="px-6 py-4">
+		$12,345 this month
+		
+	</div>
+	
+</div>]]
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered Grid successfully
+DEBUG: component helper called for: Container with props: [map[content:
+        <h1 class="text-2xl font-bold mb-6">Dashboard</h1>
+        <div class="grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 grid grid-cols-1 gap-4">
+	<div class="bg-white rounded-lg shadow max-w-sm" v-scope="{&#34;loading&#34;:false}">
+	
+	<div class="px-6 py-4 border-b">
+		<h3 class="text-lg font-medium text-gray-900">Users</h3>
+		
+	</div>
+	
+	<div class="px-6 py-4">
+		1,234 total users
+		
+	</div>
+	
+</div><div class="bg-white rounded-lg shadow max-w-sm" v-scope="{&#34;loading&#34;:false}">
+	
+	<div class="px-6 py-4 border-b">
+		<h3 class="text-lg font-medium text-gray-900">Orders</h3>
+		
+	</div>
+	
+	<div class="px-6 py-4">
+		567 orders today
+		
+	</div>
+	
+</div><div class="bg-white rounded-lg shadow max-w-sm" v-scope="{&#34;loading&#34;:false}">
+	
+	<div class="px-6 py-4 border-b">
+		<h3 class="text-lg font-medium text-gray-900">Revenue</h3>
+		
+	</div>
+	
+	<div class="px-6 py-4">
+		$12,345 this month
+		
+	</div>
+	
+</div>
+</div>
+    ]]
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered Container successfully
+DEBUG: component helper called for: LanguageSelector with props: []
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered LanguageSelector successfully
+DEBUG: component helper called for: UserProfile with props: []
+DEBUG: ParseTemplate - Input contains 1 component-like patterns
+DEBUG: ParseTemplate - Found patterns: [<{ AuthButtons }>]
+DEBUG: ParseTemplate - Processing component: AuthButtons with attributes: 
+DEBUG: ParseTemplate - Replacing '<{ AuthButtons }>' with '{{component "AuthButtons"}}'
+DEBUG: ParseTemplate - Template was modified during processing
+DEBUG: component helper called for: AuthButtons with props: []
+DEBUG: ParseTemplate - Input contains 2 component-like patterns
+DEBUG: ParseTemplate - Found patterns: [<{ Button 
+    text="Login" 
+    type="link" 
+    href="/auth/login" 
+    class="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium" 
+  }> <{ Button 
+    text="Register" 
+    type="link" 
+    href="/auth/register" 
+    class="bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700" 
+  }>]
+DEBUG: ParseTemplate - Processing component: Button with attributes: text="Login" 
+    type="link" 
+    href="/auth/login" 
+    class="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium" 
+  
+DEBUG: ParseTemplate - Replacing '<{ Button 
+    text="Login" 
+    type="link" 
+    href="/auth/login" 
+    class="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium" 
+  }>' with '{{component "Button" (dict "text" "Login" "type" "link" "href" "/auth/login" "class" "text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium")}}'
+DEBUG: ParseTemplate - Processing component: Button with attributes: text="Register" 
+    type="link" 
+    href="/auth/register" 
+    class="bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700" 
+  
+DEBUG: ParseTemplate - Replacing '<{ Button 
+    text="Register" 
+    type="link" 
+    href="/auth/register" 
+    class="bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700" 
+  }>' with '{{component "Button" (dict "href" "/auth/register" "class" "bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700" "text" "Register" "type" "link")}}'
+DEBUG: ParseTemplate - Template was modified during processing
+DEBUG: component helper called for: Button with props: [map[class:text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium href:/auth/login text:Login type:link]]
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered Button successfully
+DEBUG: component helper called for: Button with props: [map[class:bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 href:/auth/register text:Register type:link]]
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered Button successfully
+DEBUG: component helper rendered AuthButtons successfully
+DEBUG: component helper rendered UserProfile successfully
+2025-06-12 19:28:52  ℹ️  INFO   middleware/logger.go:112  HTTP Request  {"method": "GET", "path": "/", "status": 200, "latency": "1.78675ms", "request": "", "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Welcome - Welcome to Base</title>\n    <script type=\"module\" src=\"https://unpkg.com/petite-vue?module\"></script>\n    <script src=\"https://cdn.tailwindcss.com\"></script>\n</head>\n<script type=\"module\">\n  import { createApp } from 'https://unpkg.com/petite-vue?module'\n  createApp().mount()\n</script>\n<body class=\"bg-gray-50\">\n    <nav class=\"bg-white shadow\">\n        <div class=\"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8\">\n            <div class=\"flex justify-between h-16\">\n                <div class=\"flex items-center\">\n                    <a href=\"/\" class=\"text-xl font-bold text-gray-900\">Landing App</a>\n                </div>\n                <div class=\"flex items-center space-x-4\">\n                    <a href=\"/posts\" class=\"text-gray-700 hover:text-gray-900\">Posts</a>\n                    \n                    \n                    \n&lt;{ Dr... [truncated]", "error": ""}
+DEBUG: ViewBuilder - Template context from middleware: map[currentUser:map[Email:flakerimi@gmail.com Id:4 Name:baseal Username:baseal loggedIn:true]]
+DEBUG: ViewBuilder - Final template data keys: [title hero_title hero_subtitle features currentUser session]
+DEBUG: ViewBuilder - currentUser value: map[Email:flakerimi@gmail.com Id:4 Name:baseal Username:baseal loggedIn:true]
+DEBUG: RenderWithLayout - templateName: home/index.html, layoutName: landing.html
+DEBUG: component helper called for: Button with props: [map[class:bg-green-500 onclick:alert('Hello') text:Click me]]
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered Button successfully
+DEBUG: component helper called for: Card with props: [map[content:1,234 total users title:Users]]
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered Card successfully
+DEBUG: component helper called for: Card with props: [map[content:567 orders today title:Orders]]
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered Card successfully
+DEBUG: component helper called for: Card with props: [map[content:$12,345 this month title:Revenue]]
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered Card successfully
+DEBUG: component helper called for: Grid with props: [map[class:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 content:<div class="bg-white rounded-lg shadow max-w-sm" v-scope="{&#34;loading&#34;:false}">
+	
+	<div class="px-6 py-4 border-b">
+		<h3 class="text-lg font-medium text-gray-900">Users</h3>
+		
+	</div>
+	
+	<div class="px-6 py-4">
+		1,234 total users
+		
+	</div>
+	
+</div><div class="bg-white rounded-lg shadow max-w-sm" v-scope="{&#34;loading&#34;:false}">
+	
+	<div class="px-6 py-4 border-b">
+		<h3 class="text-lg font-medium text-gray-900">Orders</h3>
+		
+	</div>
+	
+	<div class="px-6 py-4">
+		567 orders today
+		
+	</div>
+	
+</div><div class="bg-white rounded-lg shadow max-w-sm" v-scope="{&#34;loading&#34;:false}">
+	
+	<div class="px-6 py-4 border-b">
+		<h3 class="text-lg font-medium text-gray-900">Revenue</h3>
+		
+	</div>
+	
+	<div class="px-6 py-4">
+		$12,345 this month
+		
+	</div>
+	
+</div>]]
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered Grid successfully
+DEBUG: component helper called for: Container with props: [map[content:
+        <h1 class="text-2xl font-bold mb-6">Dashboard</h1>
+        <div class="grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 grid grid-cols-1 gap-4">
+	<div class="bg-white rounded-lg shadow max-w-sm" v-scope="{&#34;loading&#34;:false}">
+	
+	<div class="px-6 py-4 border-b">
+		<h3 class="text-lg font-medium text-gray-900">Users</h3>
+		
+	</div>
+	
+	<div class="px-6 py-4">
+		1,234 total users
+		
+	</div>
+	
+</div><div class="bg-white rounded-lg shadow max-w-sm" v-scope="{&#34;loading&#34;:false}">
+	
+	<div class="px-6 py-4 border-b">
+		<h3 class="text-lg font-medium text-gray-900">Orders</h3>
+		
+	</div>
+	
+	<div class="px-6 py-4">
+		567 orders today
+		
+	</div>
+	
+</div><div class="bg-white rounded-lg shadow max-w-sm" v-scope="{&#34;loading&#34;:false}">
+	
+	<div class="px-6 py-4 border-b">
+		<h3 class="text-lg font-medium text-gray-900">Revenue</h3>
+		
+	</div>
+	
+	<div class="px-6 py-4">
+		$12,345 this month
+		
+	</div>
+	
+</div>
+</div>
+    ]]
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered Container successfully
+DEBUG: component helper called for: LanguageSelector with props: []
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered LanguageSelector successfully
+DEBUG: component helper called for: UserProfile with props: []
+DEBUG: ParseTemplate - Input contains 1 component-like patterns
+DEBUG: ParseTemplate - Found patterns: [<{ AuthButtons }>]
+DEBUG: ParseTemplate - Processing component: AuthButtons with attributes: 
+DEBUG: ParseTemplate - Replacing '<{ AuthButtons }>' with '{{component "AuthButtons"}}'
+DEBUG: ParseTemplate - Template was modified during processing
+DEBUG: component helper called for: AuthButtons with props: []
+DEBUG: ParseTemplate - Input contains 2 component-like patterns
+DEBUG: ParseTemplate - Found patterns: [<{ Button 
+    text="Login" 
+    type="link" 
+    href="/auth/login" 
+    class="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium" 
+  }> <{ Button 
+    text="Register" 
+    type="link" 
+    href="/auth/register" 
+    class="bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700" 
+  }>]
+DEBUG: ParseTemplate - Processing component: Button with attributes: text="Login" 
+    type="link" 
+    href="/auth/login" 
+    class="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium" 
+  
+DEBUG: ParseTemplate - Replacing '<{ Button 
+    text="Login" 
+    type="link" 
+    href="/auth/login" 
+    class="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium" 
+  }>' with '{{component "Button" (dict "text" "Login" "type" "link" "href" "/auth/login" "class" "text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium")}}'
+DEBUG: ParseTemplate - Processing component: Button with attributes: text="Register" 
+    type="link" 
+    href="/auth/register" 
+    class="bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700" 
+  
+DEBUG: ParseTemplate - Replacing '<{ Button 
+    text="Register" 
+    type="link" 
+    href="/auth/register" 
+    class="bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700" 
+  }>' with '{{component "Button" (dict "text" "Register" "type" "link" "href" "/auth/register" "class" "bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700")}}'
+DEBUG: ParseTemplate - Template was modified during processing
+DEBUG: component helper called for: Button with props: [map[class:text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium href:/auth/login text:Login type:link]]
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered Button successfully
+DEBUG: component helper called for: Button with props: [map[class:bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 href:/auth/register text:Register type:link]]
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered Button successfully
+DEBUG: component helper rendered AuthButtons successfully
+DEBUG: component helper rendered UserProfile successfully
+2025-06-12 19:28:54  ℹ️  INFO   middleware/logger.go:112  HTTP Request  {"method": "GET", "path": "/", "status": 200, "latency": "2.464958ms", "request": "", "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Welcome - Welcome to Base</title>\n    <script type=\"module\" src=\"https://unpkg.com/petite-vue?module\"></script>\n    <script src=\"https://cdn.tailwindcss.com\"></script>\n</head>\n<script type=\"module\">\n  import { createApp } from 'https://unpkg.com/petite-vue?module'\n  createApp().mount()\n</script>\n<body class=\"bg-gray-50\">\n    <nav class=\"bg-white shadow\">\n        <div class=\"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8\">\n            <div class=\"flex justify-between h-16\">\n                <div class=\"flex items-center\">\n                    <a href=\"/\" class=\"text-xl font-bold text-gray-900\">Landing App</a>\n                </div>\n                <div class=\"flex items-center space-x-4\">\n                    <a href=\"/posts\" class=\"text-gray-700 hover:text-gray-900\">Posts</a>\n                    \n                    \n                    \n&lt;{ Dr... [truncated]", "error": ""}
+2025-06-12 19:28:54  ℹ️  INFO   middleware/logger.go:112  HTTP Request  {"method": "GET", "path": "/.well-known/appspecific/com.chrome.devtools.json", "status": 404, "latency": "7.666µs", "request": "", "response": "", "error": ""}
+DEBUG: ViewBuilder - Template context from middleware: map[currentUser:map[Email:flakerimi@gmail.com Id:4 Name:baseal Username:baseal loggedIn:true]]
+DEBUG: ViewBuilder - Final template data keys: [hero_subtitle features currentUser session title hero_title]
+DEBUG: ViewBuilder - currentUser value: map[Email:flakerimi@gmail.com Id:4 Name:baseal Username:baseal loggedIn:true]
+DEBUG: RenderWithLayout - templateName: home/index.html, layoutName: landing.html
+DEBUG: component helper called for: Button with props: [map[class:bg-green-500 onclick:alert('Hello') text:Click me]]
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered Button successfully
+DEBUG: component helper called for: Card with props: [map[content:1,234 total users title:Users]]
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered Card successfully
+DEBUG: component helper called for: Card with props: [map[content:567 orders today title:Orders]]
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered Card successfully
+DEBUG: component helper called for: Card with props: [map[content:$12,345 this month title:Revenue]]
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered Card successfully
+DEBUG: component helper called for: Grid with props: [map[class:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 content:<div class="bg-white rounded-lg shadow max-w-sm" v-scope="{&#34;loading&#34;:false}">
+	
+	<div class="px-6 py-4 border-b">
+		<h3 class="text-lg font-medium text-gray-900">Users</h3>
+		
+	</div>
+	
+	<div class="px-6 py-4">
+		1,234 total users
+		
+	</div>
+	
+</div><div class="bg-white rounded-lg shadow max-w-sm" v-scope="{&#34;loading&#34;:false}">
+	
+	<div class="px-6 py-4 border-b">
+		<h3 class="text-lg font-medium text-gray-900">Orders</h3>
+		
+	</div>
+	
+	<div class="px-6 py-4">
+		567 orders today
+		
+	</div>
+	
+</div><div class="bg-white rounded-lg shadow max-w-sm" v-scope="{&#34;loading&#34;:false}">
+	
+	<div class="px-6 py-4 border-b">
+		<h3 class="text-lg font-medium text-gray-900">Revenue</h3>
+		
+	</div>
+	
+	<div class="px-6 py-4">
+		$12,345 this month
+		
+	</div>
+	
+</div>]]
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered Grid successfully
+DEBUG: component helper called for: Container with props: [map[content:
+        <h1 class="text-2xl font-bold mb-6">Dashboard</h1>
+        <div class="grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 grid grid-cols-1 gap-4">
+	<div class="bg-white rounded-lg shadow max-w-sm" v-scope="{&#34;loading&#34;:false}">
+	
+	<div class="px-6 py-4 border-b">
+		<h3 class="text-lg font-medium text-gray-900">Users</h3>
+		
+	</div>
+	
+	<div class="px-6 py-4">
+		1,234 total users
+		
+	</div>
+	
+</div><div class="bg-white rounded-lg shadow max-w-sm" v-scope="{&#34;loading&#34;:false}">
+	
+	<div class="px-6 py-4 border-b">
+		<h3 class="text-lg font-medium text-gray-900">Orders</h3>
+		
+	</div>
+	
+	<div class="px-6 py-4">
+		567 orders today
+		
+	</div>
+	
+</div><div class="bg-white rounded-lg shadow max-w-sm" v-scope="{&#34;loading&#34;:false}">
+	
+	<div class="px-6 py-4 border-b">
+		<h3 class="text-lg font-medium text-gray-900">Revenue</h3>
+		
+	</div>
+	
+	<div class="px-6 py-4">
+		$12,345 this month
+		
+	</div>
+	
+</div>
+</div>
+    ]]
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered Container successfully
+DEBUG: component helper called for: LanguageSelector with props: []
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered LanguageSelector successfully
+DEBUG: component helper called for: UserProfile with props: []
+DEBUG: ParseTemplate - Input contains 1 component-like patterns
+DEBUG: ParseTemplate - Found patterns: [<{ AuthButtons }>]
+DEBUG: ParseTemplate - Processing component: AuthButtons with attributes: 
+DEBUG: ParseTemplate - Replacing '<{ AuthButtons }>' with '{{component "AuthButtons"}}'
+DEBUG: ParseTemplate - Template was modified during processing
+DEBUG: component helper called for: AuthButtons with props: []
+DEBUG: ParseTemplate - Input contains 2 component-like patterns
+DEBUG: ParseTemplate - Found patterns: [<{ Button 
+    text="Login" 
+    type="link" 
+    href="/auth/login" 
+    class="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium" 
+  }> <{ Button 
+    text="Register" 
+    type="link" 
+    href="/auth/register" 
+    class="bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700" 
+  }>]
+DEBUG: ParseTemplate - Processing component: Button with attributes: text="Login" 
+    type="link" 
+    href="/auth/login" 
+    class="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium" 
+  
+DEBUG: ParseTemplate - Replacing '<{ Button 
+    text="Login" 
+    type="link" 
+    href="/auth/login" 
+    class="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium" 
+  }>' with '{{component "Button" (dict "text" "Login" "type" "link" "href" "/auth/login" "class" "text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium")}}'
+DEBUG: ParseTemplate - Processing component: Button with attributes: text="Register" 
+    type="link" 
+    href="/auth/register" 
+    class="bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700" 
+  
+DEBUG: ParseTemplate - Replacing '<{ Button 
+    text="Register" 
+    type="link" 
+    href="/auth/register" 
+    class="bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700" 
+  }>' with '{{component "Button" (dict "href" "/auth/register" "class" "bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700" "text" "Register" "type" "link")}}'
+DEBUG: ParseTemplate - Template was modified during processing
+DEBUG: component helper called for: Button with props: [map[class:text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium href:/auth/login text:Login type:link]]
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered Button successfully
+DEBUG: component helper called for: Button with props: [map[class:bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 href:/auth/register text:Register type:link]]
+DEBUG: ParseTemplate - Input contains 0 component-like patterns
+DEBUG: ParseTemplate - Template was NOT modified during processing
+DEBUG: component helper rendered Button successfully
+DEBUG: component helper rendered AuthButtons successfully
+DEBUG: component helper rendered UserProfile successfully
+2025-06-12 19:30:36  ℹ️  INFO   middleware/logger.go:112  HTTP Request  {"method": "GET", "path": "/", "status": 200, "latency": "1.678041ms", "request": "", "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Welcome - Welcome to Base</title>\n    <script type=\"module\" src=\"https://unpkg.com/petite-vue?module\"></script>\n    <script src=\"https://cdn.tailwindcss.com\"></script>\n</head>\n<script type=\"module\">\n  import { createApp } from 'https://unpkg.com/petite-vue?module'\n  createApp().mount()\n</script>\n<body class=\"bg-gray-50\">\n    <nav class=\"bg-white shadow\">\n        <div class=\"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8\">\n            <div class=\"flex justify-between h-16\">\n                <div class=\"flex items-center\">\n                    <a href=\"/\" class=\"text-xl font-bold text-gray-900\">Landing App</a>\n                </div>\n                <div class=\"flex items-center space-x-4\">\n                    <a href=\"/posts\" class=\"text-gray-700 hover:text-gray-900\">Posts</a>\n                    \n                    \n                    \n&lt;{ Dr... [truncated]", "error": ""}
+2025-06-12 19:30:36  ℹ️  INFO   middleware/logger.go:112  HTTP Request  {"method": "GET", "path": "/.well-known/appspecific/com.chrome.devtools.json", "status": 404, "latency": "8.875µs", "request": "", "response": "", "error": ""}
+signal: killed
