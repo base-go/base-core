@@ -1,0 +1,351 @@
+package translation
+
+import (
+	"base/core/storage"
+	"net/http"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+)
+
+type TranslationController struct {
+	Service *TranslationService
+	Storage *storage.ActiveStorage
+}
+
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
+
+func NewTranslationController(service *TranslationService, storage *storage.ActiveStorage) *TranslationController {
+	return &TranslationController{
+		Service: service,
+		Storage: storage,
+	}
+}
+
+func (c *TranslationController) Routes(router *gin.RouterGroup) {
+	translationGroup := router.Group("/translations")
+	{
+		// CRUD operations
+		translationGroup.GET("", c.List)
+		translationGroup.POST("", c.Create)
+		translationGroup.GET("/:id", c.Get)
+		translationGroup.PUT("/:id", c.Update)
+		translationGroup.DELETE("/:id", c.Delete)
+
+		// Bulk operations
+		translationGroup.POST("/bulk", c.BulkUpdate)
+
+		// Model-specific operations
+		translationGroup.GET("/model/:model/:model_id", c.GetForModel)
+		translationGroup.GET("/model/:model/:model_id/:language", c.GetForModelAndLanguage)
+
+		// Utility endpoints
+		translationGroup.GET("/languages", c.GetSupportedLanguages)
+	}
+}
+
+// List godoc
+// @Summary List translations
+// @Description Get a paginated list of translations with optional filtering
+// @Tags Translations
+// @Security ApiKeyAuth
+// @Produce json
+// @Param page query int false "Page number"
+// @Param limit query int false "Number of items per page"
+// @Param model query string false "Filter by model name"
+// @Param model_id query int false "Filter by model ID"
+// @Success 200 {object} types.PaginatedResponse
+// @Failure 500 {object} types.ErrorResponse
+// @Router /translations [get]
+func (c *TranslationController) List(ctx *gin.Context) {
+	var page, limit *int
+	var modelId *uint
+
+	if pageStr := ctx.Query("page"); pageStr != "" {
+		if pageNum, err := strconv.Atoi(pageStr); err == nil && pageNum > 0 {
+			page = &pageNum
+		} else {
+			ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid page number"})
+			return
+		}
+	}
+
+	if limitStr := ctx.Query("limit"); limitStr != "" {
+		if limitNum, err := strconv.Atoi(limitStr); err == nil && limitNum > 0 {
+			limit = &limitNum
+		} else {
+			ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid limit number"})
+			return
+		}
+	}
+
+	// Handle model_id filter
+	if modelIdStr := ctx.Query("model_id"); modelIdStr != "" {
+		if modelIdNum, err := strconv.ParseUint(modelIdStr, 10, 32); err == nil {
+			modelIdUint := uint(modelIdNum)
+			modelId = &modelIdUint
+		} else {
+			ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid model_id"})
+			return
+		}
+	}
+
+	// Get model filter
+	model := ctx.Query("model")
+
+	paginatedResponse, err := c.Service.GetAll(page, limit, model, modelId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to fetch translations: " + err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, paginatedResponse)
+}
+
+// Get godoc
+// @Summary Get translation by ID
+// @Description Get a single translation by its ID
+// @Tags Translations
+// @Security ApiKeyAuth
+// @Produce json
+// @Param id path int true "Translation ID"
+// @Success 200 {object} translation.TranslationResponse
+// @Failure 400 {object} types.ErrorResponse
+// @Failure 404 {object} types.ErrorResponse
+// @Failure 500 {object} types.ErrorResponse
+// @Router /translations/{id} [get]
+func (c *TranslationController) Get(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid translation ID"})
+		return
+	}
+
+	translation, err := c.Service.GetByID(uint(id))
+	if err != nil {
+		if err.Error() == "translation not found" {
+			ctx.JSON(http.StatusNotFound, ErrorResponse{Error: err.Error()})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to fetch translation: " + err.Error()})
+		}
+		return
+	}
+
+	ctx.JSON(http.StatusOK, translation)
+}
+
+// Create godoc
+// @Summary Create translation
+// @Description Create a new translation
+// @Tags Translations
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param translation body 	translation.CreateTranslationRequest true "Translation data"
+// @Success 201 {object} translation.TranslationResponse
+// @Failure 400 {object} types.ErrorResponse
+// @Failure 500 {object} types.ErrorResponse
+// @Router /translations [post]
+func (c *TranslationController) Create(ctx *gin.Context) {
+	var request CreateTranslationRequest
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid request data: " + err.Error()})
+		return
+	}
+
+	translation, err := c.Service.Create(&request)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to create translation: " + err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, translation)
+}
+
+// Update godoc
+// @Summary Update translation
+// @Description Update an existing translation
+// @Tags Translations
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "Translation ID"
+// @Param translation body translation.UpdateTranslationRequest true "Translation data"
+// @Success 200 {object} translation.TranslationResponse
+// @Failure 400 {object} types.ErrorResponse
+// @Failure 404 {object} types.ErrorResponse
+// @Failure 500 {object} types.ErrorResponse
+// @Router /translations/{id} [put]
+func (c *TranslationController) Update(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid translation ID"})
+		return
+	}
+
+	var request UpdateTranslationRequest
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid request data: " + err.Error()})
+		return
+	}
+
+	request.Id = uint(id)
+	translation, err := c.Service.Update(&request)
+	if err != nil {
+		if err.Error() == "translation not found" {
+			ctx.JSON(http.StatusNotFound, ErrorResponse{Error: err.Error()})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to update translation: " + err.Error()})
+		}
+		return
+	}
+
+	ctx.JSON(http.StatusOK, translation)
+}
+
+// Delete godoc
+// @Summary Delete translation
+// @Description Delete a translation by ID
+// @Tags Translations
+// @Security ApiKeyAuth
+// @Param id path int true "Translation ID"
+// @Success 204
+// @Failure 400 {object} types.ErrorResponse
+// @Failure 404 {object} types.ErrorResponse
+// @Failure 500 {object} types.ErrorResponse
+// @Router /translations/{id} [delete]
+func (c *TranslationController) Delete(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid translation ID"})
+		return
+	}
+
+	err = c.Service.Delete(uint(id))
+	if err != nil {
+		if err.Error() == "translation not found" {
+			ctx.JSON(http.StatusNotFound, ErrorResponse{Error: err.Error()})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to delete translation: " + err.Error()})
+		}
+		return
+	}
+
+	ctx.Status(http.StatusNoContent)
+}
+
+// BulkUpdate godoc
+// @Summary Bulk update translations
+// @Description Update multiple translations for a model at once
+// @Tags Translations
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param bulk body translation.BulkTranslationRequest true "Bulk translation data"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} types.ErrorResponse
+// @Failure 500 {object} types.ErrorResponse
+// @Router /translations/bulk [post]
+func (c *TranslationController) BulkUpdate(ctx *gin.Context) {
+	var request BulkTranslationRequest
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid request data: " + err.Error()})
+		return
+	}
+
+	err := c.Service.BulkUpdate(&request)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to update translations: " + err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "Translations updated successfully"})
+}
+
+// GetForModel godoc
+// @Summary Get translations for model
+// @Description Get all translations for a specific model and model ID
+// @Tags Translations
+// @Security ApiKeyAuth
+// @Produce json
+// @Param model path string true "Model name"
+// @Param model_id path int true "Model ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} types.ErrorResponse
+// @Failure 500 {object} types.ErrorResponse
+// @Router /translations/model/{model}/{model_id} [get]
+func (c *TranslationController) GetForModel(ctx *gin.Context) {
+	model := ctx.Param("model")
+	modelIdStr := ctx.Param("model_id")
+
+	modelId, err := strconv.ParseUint(modelIdStr, 10, 32)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid model ID"})
+		return
+	}
+
+	translations, err := c.Service.GetTranslationsForModel(model, uint(modelId), "")
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to fetch translations: " + err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, translations)
+}
+
+// GetForModelAndLanguage godoc
+// @Summary Get translations for model and language
+// @Description Get translations for a specific model, model ID, and language
+// @Tags Translations
+// @Security ApiKeyAuth
+// @Produce json
+// @Param model path string true "Model name"
+// @Param model_id path int true "Model ID"
+// @Param language path string true "Language code"
+// @Success 200 {object} translation.TranslationResponse
+// @Failure 400 {object} types.ErrorResponse
+// @Failure 500 {object} types.ErrorResponse
+// @Router /translations/model/{model}/{model_id}/{language} [get]
+func (c *TranslationController) GetForModelAndLanguage(ctx *gin.Context) {
+	model := ctx.Param("model")
+	modelIdStr := ctx.Param("model_id")
+	language := ctx.Param("language")
+
+	modelId, err := strconv.ParseUint(modelIdStr, 10, 32)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid model ID"})
+		return
+	}
+
+	translations, err := c.Service.GetTranslationsForModel(model, uint(modelId), language)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to fetch translations: " + err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, translations)
+}
+
+// GetSupportedLanguages godoc
+// @Summary Get supported languages
+// @Description Get a list of all languages that have translations in the system
+// @Tags Translations
+// @Security ApiKeyAuth
+// @Produce json
+// @Success 200 {array} string
+// @Failure 500 {object} types.ErrorResponse
+// @Router /translations/languages [get]
+func (c *TranslationController) GetSupportedLanguages(ctx *gin.Context) {
+	languages, err := c.Service.GetSupportedLanguages()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to fetch supported languages: " + err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, languages)
+}

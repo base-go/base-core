@@ -1,11 +1,11 @@
 package oauth
 
 import (
+	"base/core/logger"
 	"base/core/module"
 	"base/core/storage"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -18,7 +18,7 @@ type OAuthModule struct {
 	ActiveStorage *storage.ActiveStorage
 }
 
-func NewOAuthModule(db *gorm.DB, router *gin.RouterGroup, logger *logrus.Logger, activeStorage *storage.ActiveStorage) module.Module {
+func NewOAuthModule(db *gorm.DB, router *gin.RouterGroup, logger logger.Logger, activeStorage *storage.ActiveStorage) module.Module {
 	config := LoadConfig()
 	ValidateConfig(config)
 
@@ -33,7 +33,6 @@ func NewOAuthModule(db *gorm.DB, router *gin.RouterGroup, logger *logrus.Logger,
 		ActiveStorage: activeStorage,
 	}
 
-	oauthModule.Routes(router)
 	return oauthModule
 }
 

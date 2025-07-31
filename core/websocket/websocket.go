@@ -2,12 +2,12 @@ package websocket
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	log "github.com/sirupsen/logrus"
 )
 
 var upgrader = websocket.Upgrader{
@@ -187,7 +187,7 @@ func (c *Client) readPump(hub *Hub) {
 		_, message, err := c.Conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Errorf("error: %v", err)
+				fmt.Printf("WebSocket error: %v\n", err)
 			}
 			break
 		}
@@ -201,7 +201,7 @@ func (c *Client) readPump(hub *Hub) {
 			// Prepare the message for broadcasting
 			msgBytes, err := json.Marshal(msg)
 			if err != nil {
-				log.Errorf("Failed to marshal message: %v", err)
+				fmt.Printf("Failed to marshal message: %v\n", err)
 				continue
 			}
 
@@ -255,13 +255,13 @@ func (c *Client) writePump() {
 
 // ServeWs handles WebSocket requests from the peer
 func ServeWs(hub *Hub, c *gin.Context) {
-	log.Info("Received WebSocket connection request")
+	fmt.Println("Received WebSocket connection request")
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		log.Errorf("Failed to upgrade connection to WebSocket: %v", err)
+		fmt.Printf("Failed to upgrade connection to WebSocket: %v\n", err)
 		return
 	}
-	log.Info("WebSocket connection established")
+	fmt.Println("WebSocket connection established")
 
 	client := &Client{
 		ID:       c.Query("id"),

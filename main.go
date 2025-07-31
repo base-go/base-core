@@ -1,11 +1,10 @@
 package main
 
 import (
-	"base/core"
+	"base/app"
 	_ "base/docs" // Import the Swagger docs
 	"fmt"
 	"net"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -15,9 +14,8 @@ import (
 )
 
 // @title Base API
-// @version 1.0
+// @version 2.0.0
 // @description This is the API documentation for Base
-// @host localhost:8001
 // @BasePath /api
 // @schemes http https
 // @produces json
@@ -63,25 +61,24 @@ func main() {
 	// Disable Gin's default logger
 	gin.SetMode(gin.ReleaseMode)
 
-	// Bootstrap the application
-	app, err := core.StartApplication()
+	// Bootstrap the application using the new clean architecture
+	application, err := app.NewApplication()
 	if err != nil {
 		log.Fatalf("Failed to bootstrap application: %v", err)
 	}
 
-	// Get local IP and format server address
+	// Get local IP and format server address from config
 	localIP := getLocalIP()
-	addr := app.Config.ServerAddress
-	if strings.HasPrefix(addr, ":") {
-		addr = "0.0.0.0" + addr
-	}
+	serverPort := application.Core.Config.ServerPort
 
 	fmt.Printf("\nServer is running at:\n")
-	fmt.Printf("- Local:   http://localhost%s\n", strings.TrimPrefix(addr, "0.0.0.0"))
-	fmt.Printf("- Network: http://%s%s\n\n", localIP, strings.TrimPrefix(addr, "0.0.0.0"))
+	fmt.Printf("- ✅ Local:   http://localhost%s\n", serverPort)
+	fmt.Printf("- ✅ Swagger: http://localhost%s/swagger/index.html\n\n", serverPort)
+	fmt.Printf("- 🚀 Network: http://%s%s\n", localIP, serverPort)
+	fmt.Printf("- 🚀 Network Swagger: http://%s%s/swagger/index.html\n\n", localIP, serverPort)
 
-	// Start the server
-	if err := app.Router.Run(app.Config.ServerAddress); err != nil {
+	// Start the server using the new application structure
+	if err := application.Run(); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }

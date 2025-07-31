@@ -18,6 +18,11 @@ type Module interface {
 // DefaultModule provides a default implementation for the Module interface.
 type DefaultModule struct{}
 
+// Translatable is an interface that modules can implement to define translatable fields
+type Translatable interface {
+	TranslatedFields() []string
+}
+
 func (DefaultModule) Init() error {
 	return nil // Default implementation does nothing
 }

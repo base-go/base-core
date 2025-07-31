@@ -2,20 +2,20 @@ package middleware
 
 import (
 	"base/core/helper"
+	"base/core/logger"
 	"base/core/types"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
 )
 
 // AuthMiddleware checks for Bearer token authentication
-func AuthMiddleware() gin.HandlerFunc {
+func AuthMiddleware(log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			log.Warnf("Authorization header is required")
+			log.Warn("Authorization header is required")
 			c.AbortWithStatusJSON(http.StatusUnauthorized, types.ErrorResponse{
 				Error: "Authorization header is required",
 			})
@@ -24,7 +24,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		parts := strings.SplitN(authHeader, " ", 2)
 		if !(len(parts) == 2 && parts[0] == "Bearer") {
-			log.Warnf("Authorization header format must be Bearer {token}")
+			log.Warn("Authorization header format must be Bearer {token}")
 			c.AbortWithStatusJSON(http.StatusUnauthorized, types.ErrorResponse{
 				Error: "Invalid authorization format",
 			})
@@ -33,7 +33,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		extend, userId, err := helper.ValidateJWT(parts[1])
 		if err != nil {
-			log.Warnf("Invalid or expired JWT: %s", err.Error())
+			log.Warn("Invalid or expired JWT", logger.String("error", err.Error()))
 			c.AbortWithStatusJSON(http.StatusUnauthorized, types.ErrorResponse{
 				Error: "Invalid or expired token",
 			})

@@ -1,4 +1,4 @@
-package auth
+package authentication
 
 import (
 	"base/core/email"
@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type AuthModule struct {
+type AuthenticationModule struct {
 	module.DefaultModule
 	DB          *gorm.DB
 	Controller  *AuthController
@@ -20,11 +20,11 @@ type AuthModule struct {
 	Emitter     *emitter.Emitter
 }
 
-func NewAuthModule(db *gorm.DB, router *gin.RouterGroup, emailSender email.Sender, logger logger.Logger, emitter *emitter.Emitter) module.Module {
+func NewAuthenticationModule(db *gorm.DB, router *gin.RouterGroup, emailSender email.Sender, logger logger.Logger, emitter *emitter.Emitter) module.Module {
 	service := NewAuthService(db, emailSender, emitter)
 	controller := NewAuthController(service, emailSender, logger)
 
-	authModule := &AuthModule{
+	authModule := &AuthenticationModule{
 		DB:          db,
 		Controller:  controller,
 		Service:     service,
@@ -36,16 +36,16 @@ func NewAuthModule(db *gorm.DB, router *gin.RouterGroup, emailSender email.Sende
 	return authModule
 }
 
-func (m *AuthModule) Routes(router *gin.RouterGroup) {
+func (m *AuthenticationModule) Routes(router *gin.RouterGroup) {
 	// Router is already /api/auth from start.go
 	m.Controller.Routes(router)
 }
 
-func (m *AuthModule) Migrate() error {
+func (m *AuthenticationModule) Migrate() error {
 	return m.DB.AutoMigrate(&AuthUser{})
 }
 
-func (m *AuthModule) GetModels() []interface{} {
+func (m *AuthenticationModule) GetModels() []interface{} {
 	return []interface{}{
 		&AuthUser{},
 	}

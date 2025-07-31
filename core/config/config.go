@@ -1,11 +1,10 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
-
-	"github.com/sirupsen/logrus"
 )
 
 // Config holds the application configuration.
@@ -24,6 +23,7 @@ type Config struct {
 	ApiKey               string
 	JWTSecret            string
 	ServerAddress        string
+	ServerPort           string
 	CORSAllowedOrigins   []string
 	Version              string
 	EmailProvider        string
@@ -51,16 +51,18 @@ type Config struct {
 
 // NewConfig returns a new Config instance with default values.
 func NewConfig() *Config {
-	serverAddr := getEnvWithLog("SERVER_ADDRESS", ":8001")
+	serverAddr := getEnvWithLog("SERVER_ADDRESS", "localhost")
+	serverPort := getEnvWithLog("SERVER_PORT", ":8080")
 	baseURL := getEnvWithLog("APPHOST", "http://localhost")
 
-	// Extract port from serverAddr and append to baseURL if not already present
-	if serverAddr != "" && serverAddr[0] == ':' {
-		port := serverAddr[1:]
-		if !strings.HasSuffix(baseURL, port) {
-			baseURL = strings.TrimSuffix(baseURL, ":8080") // Remove default port if present
-			baseURL = baseURL + ":" + port
-		}
+	// Ensure port starts with :
+	if serverPort != "" && serverPort[0] != ':' {
+		serverPort = ":" + serverPort
+	}
+
+	// Append port to baseURL if not already present
+	if !strings.Contains(baseURL, ":") || strings.HasSuffix(baseURL, "localhost") {
+		baseURL = baseURL + serverPort
 	}
 
 	config := &Config{
@@ -78,6 +80,7 @@ func NewConfig() *Config {
 		ApiKey:             getEnvWithLog("API_KEY", "test_api_key"),
 		JWTSecret:          getEnvWithLog("JWT_SECRET", "secret"),
 		ServerAddress:      serverAddr,
+		ServerPort:         serverPort,
 		CORSAllowedOrigins: strings.Split(getEnvWithLog("CORS_ALLOWED_ORIGINS", ""), ","),
 		Version:            getEnvWithLog("APP_VERSION", "0.0.1"),
 
@@ -109,7 +112,7 @@ func NewConfig() *Config {
 	smtpPortStr := getEnvWithLog("SMTP_PORT", "587")
 	smtpPort, err := strconv.Atoi(smtpPortStr)
 	if err != nil {
-		logrus.Warnf("Invalid SMTP_PORT value: %s. Using default: 587", smtpPortStr)
+		fmt.Printf("Invalid SMTP_PORT value: %s. Using default: 587\n", smtpPortStr)
 		smtpPort = 587
 	}
 	config.SMTPPort = smtpPort
@@ -117,15 +120,15 @@ func NewConfig() *Config {
 	storageSizeStr := getEnvWithLog("STORAGE_MAX_SIZE", "10485760")
 	storageSize, err := strconv.ParseInt(storageSizeStr, 10, 64)
 	if err != nil {
-		logrus.Warnf("Invalid STORAGE_MAX_SIZE value: %s. Using default: 10MB", storageSizeStr)
+		fmt.Printf("Invalid STORAGE_MAX_SIZE value: %s. Using default: 10MB\n", storageSizeStr)
 		storageSize = 10 << 20
 	}
 	config.StorageMaxSize = storageSize
 
 	return config
 }
-func (c *Config) GetStorageConfig() map[string]interface{} {
-	return map[string]interface{}{
+func (c *Config) GetStorageConfig() map[string]any {
+	return map[string]any{
 		"provider":    c.StorageProvider,
 		"api_key":     c.StorageAPIKey,
 		"api_secret":  c.StorageAPISecret,
@@ -149,11 +152,3 @@ func getEnvWithLog(key, fallback string) string {
 	}
 	return fallback
 }
-
-// maskString masks a string for secure logging
-// func maskString(s string) string {
-// 	if len(s) <= 4 {
-// 		return "****"
-// 	}
-// 	return s[:4] + "****"
-// }

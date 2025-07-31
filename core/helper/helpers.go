@@ -8,8 +8,8 @@ import (
 )
 
 // GenerateJWT is a wrapper around types.GenerateJWT for backward compatibility
-func GenerateJWT(userID uint, extend interface{}) (string, error) {
-	return types.GenerateJWT(userID, extend)
+func GenerateJWT(userID uint) (string, error) {
+	return types.GenerateJWT(userID, nil)
 }
 
 func ValidateJWT(tokenString string) (interface{}, uint, error) {
@@ -25,10 +25,9 @@ func ValidateJWT(tokenString string) (interface{}, uint, error) {
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		userID := uint(claims["user_id"].(float64))
-		extend := claims["extend"]
 
-		return extend, userID, nil
+		return nil, userID, nil
 	}
 
-	return 0, 0, jwt.ErrSignatureInvalid
+	return nil, 0, jwt.ErrSignatureInvalid
 }

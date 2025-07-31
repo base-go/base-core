@@ -1,20 +1,15 @@
 package core
 
 import (
-	"base/app"
-	coreapp "base/core/app"
 	"base/core/config"
 	"base/core/database"
 	"base/core/email"
 	"base/core/emitter"
 	"base/core/logger"
 	"base/core/middleware"
-	"base/core/module"
 	"base/core/storage"
-	"base/core/websocket"
-	"time"
-
 	"fmt"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -22,111 +17,108 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-type Application struct {
-	Config  *config.Config
-	DB      *database.Database
-	Router  *gin.Engine
-	WSHub   *websocket.Hub
-	Modules map[string]module.Module
-	Logger  logger.Logger
-	Emitter *emitter.Emitter
+// CoreApplication represents the core infrastructure
+type CoreApplication struct {
+	Config      *config.Config
+	DB          *database.Database
+	Router      *gin.Engine
+	Logger      logger.Logger
+	Emitter     *emitter.Emitter
+	Storage     *storage.ActiveStorage
+	EmailSender email.Sender
 }
 
-var Emitter = emitter.New() // This ensures Emitter is created once
-
-// StartApplication initializes and starts the application
-func StartApplication() (*Application, error) {
+// StartCore initializes only the core infrastructure and returns it
+// This should be called by the app layer, not the other way around
+func StartCore() (*CoreApplication, error) {
 	// Initialize config
 	cfg := config.NewConfig()
 
-	// Initialize logger first
+	// Initialize logger
 	logConfig := logger.Config{
 		Environment: cfg.Env,
 		LogPath:     "logs",
 		Level:       "debug",
 	}
-	appLogger, err := logger.NewLogger(logConfig)
+	log, err := logger.NewLogger(logConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize logger: %w", err)
 	}
 
-	appLogger.Info("Starting application initialization",
+	log.Info("🚀 Starting Core Infrastructure",
 		logger.String("version", cfg.Version),
 		logger.String("environment", cfg.Env))
 
-	// Initialize the database
+	// Initialize database
 	db, err := database.InitDB(cfg)
 	if err != nil {
-		appLogger.Error("Failed to initialize database",
-			logger.String("error", err.Error()))
+		log.Error("Failed to initialize database", logger.String("error", err.Error()))
 		return nil, fmt.Errorf("database initialization failed: %w", err)
 	}
-	appLogger.Info("Database initialized successfully")
+	log.Info("Database initialized successfully")
 
-	// Initialize email sender
-	emailSender, err := email.NewSender(cfg)
-	if err != nil {
-		appLogger.Error("Failed to initialize email sender",
-			logger.String("error", err.Error()))
-		return nil, fmt.Errorf("email sender initialization failed: %w", err)
-	}
-	appLogger.Info("Email sender initialized successfully")
+	// Initialize emitter
+	emitter := &emitter.Emitter{}
 
-	// Initialize storage service
-	appLogger.Info("Initializing storage service")
+	// Initialize storage
 	storageConfig := storage.Config{
 		Provider:  cfg.StorageProvider,
 		Path:      cfg.StoragePath,
 		BaseURL:   cfg.StorageBaseURL,
 		APIKey:    cfg.StorageAPIKey,
 		APISecret: cfg.StorageAPISecret,
-		AccountID: cfg.StorageAccountID,
 		Endpoint:  cfg.StorageEndpoint,
 		Bucket:    cfg.StorageBucket,
 		CDN:       cfg.CDN,
-		Region:    cfg.StorageRegion,
 	}
-
 	activeStorage, err := storage.NewActiveStorage(db.DB, storageConfig)
 	if err != nil {
-		appLogger.Error("Failed to initialize storage service",
-			logger.String("error", err.Error()))
-		return nil, fmt.Errorf("storage service initialization failed: %w", err)
+		log.Error("Failed to initialize storage", logger.String("error", err.Error()))
+		return nil, fmt.Errorf("storage initialization failed: %w", err)
+	}
+	log.Info("Storage initialized successfully")
+
+	// Initialize email sender
+	emailSender, err := email.NewSender(cfg)
+	if err != nil {
+		log.Error("Failed to initialize email sender", logger.String("error", err.Error()))
+		// Continue without email functionality
+		emailSender = nil
 	}
 
-	// Register attachments configuration
-	activeStorage.RegisterAttachment("users", storage.AttachmentConfig{
-		Field:             "avatar",
-		Path:              "users",
-		AllowedExtensions: []string{".jpg", ".jpeg", ".png", ".gif", ".webp"},
-		MaxFileSize:       2 << 20, // 2MB
-		Multiple:          false,
-	})
+	// Core services are initialized on-demand in the app layer
+	log.Info("Core infrastructure ready for service initialization")
 
-	activeStorage.RegisterAttachment("users", storage.AttachmentConfig{
-		Field:             "documents",
-		Path:              "users",
-		AllowedExtensions: []string{".pdf", ".doc", ".docx"},
-		MaxFileSize:       10 << 20, // 10MB
-		Multiple:          true,
-	})
+	// Setup router with core middleware
+	router := setupCoreRouter(cfg, log)
 
-	appLogger.Info("Storage service initialized successfully",
-		logger.String("provider", cfg.StorageProvider),
-		logger.String("path", cfg.StoragePath))
+	coreApp := &CoreApplication{
+		Config:      cfg,
+		DB:          db,
+		Router:      router,
+		Logger:      log,
+		Emitter:     emitter,
+		Storage:     activeStorage,
+		EmailSender: emailSender,
+	}
 
-	// Set up Gin
+	log.Info("✅ Core infrastructure ready")
+	return coreApp, nil
+}
+
+// setupCoreRouter initializes Gin router with core middleware only
+func setupCoreRouter(cfg *config.Config, log logger.Logger) *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Recovery())
 
-	// Set up middleware
-	router.Use(middleware.Logger(appLogger))
+	// Add logger middleware
+	router.Use(middleware.Logger(log))
 
-	// Set up static file serving
+	// Setup static file serving
 	router.Static("/static", "./static")
 	router.Static("/storage", "./storage")
 
-	// Set up CORS
+	// Setup CORS
 	corsConfig := cors.Config{
 		AllowOrigins:     cfg.CORSAllowedOrigins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -137,53 +129,12 @@ func StartApplication() (*Application, error) {
 	}
 	router.Use(cors.New(corsConfig))
 
-	// Set up Swagger
+	// Setup Swagger
 	router.GET("/swagger/*any",
 		ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.PersistAuthorization(true)))
-	appLogger.Info("Swagger documentation enabled")
+	log.Info("Swagger documentation enabled")
 
-	// Create API router group with API key requirement for all routes
-	apiGroup := router.Group("/api")
-	apiGroup.Use(middleware.APIKeyMiddleware())
-	// Add header middleware to extract and process Base- prefixed headers
-	apiGroup.Use(middleware.HeaderMiddleware())
-
-	// Create auth group for login/register (only requires API key)
-	authGroup := apiGroup.Group("/auth")
-
-	// Create protected group that requires Bearer token
-	protectedGroup := apiGroup.Group("/")
-	protectedGroup.Use(middleware.AuthMiddleware())
-
-	// Initialize core modules with all dependencies
-	appLogger.Info("Initializing core modules")
-
-	core := coreapp.NewCore(
-		db.DB,
-		protectedGroup, // Use protected group for most routes
-		authGroup,      // Pass auth group for auth routes
-		emailSender,
-		appLogger,
-		activeStorage,
-		Emitter,
-	)
-	modules := core.Modules
-	appLogger.Info("Core modules initialized", logger.Int("count", len(modules)))
-
-	// Register core module routes
-	//core.RegisterRoutes()
-
-	// Initialize application modules
-	appLogger.Info("Initializing application modules")
-	appInitializer := &app.AppModuleInitializer{
-		Router:  protectedGroup, // Use protected group for app modules
-		Logger:  appLogger,
-		Emitter: Emitter,
-		Storage: activeStorage,
-	}
-	appInitializer.InitializeModules(db.DB)
-
-	// Add health check route
+	// Add health check routes
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status":  "ok",
@@ -191,7 +142,6 @@ func StartApplication() (*Application, error) {
 		})
 	})
 
-	// Add ping route
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
@@ -200,31 +150,19 @@ func StartApplication() (*Application, error) {
 		})
 	})
 
-	// Initialize WebSocket module
-	appLogger.Info("Initializing WebSocket module")
-	wsHub := websocket.InitWebSocketModule(apiGroup)
+	return router
+}
 
-	// Create application instance
-	application := &Application{
-		Config:  cfg,
-		DB:      db,
-		Router:  router,
-		WSHub:   wsHub,
-		Modules: modules,
-		Logger:  appLogger,
-		Emitter: Emitter,
+// Run starts the core application server
+func (app *CoreApplication) Run() error {
+	port := app.Config.ServerPort
+	if app.Config.ServerPort != "" {
+		port = app.Config.ServerPort
 	}
 
-	appLogger.Info("Application Started Successfully!\n" +
-		"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
-		"🔖 Version:      " + cfg.Version + "\n" +
-		"🌍 Environment:  " + cfg.Env + "\n" +
-		"🔌 Server:       " + cfg.ServerAddress + "\n" +
-		"🌐 App URL:      " + cfg.BaseURL + "\n" +
-		"🔗 API URL:      " + cfg.BaseURL + "/api\n" +
-		"📚 Swagger Docs: " + cfg.BaseURL + "/swagger/index.html\n" +
-		"📦 Modules:      " + fmt.Sprintf("%d", len(modules)) + "\n" +
-		"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	app.Logger.Info("🌐 Core server starting",
+		logger.String("port", port),
+		logger.String("swagger", app.Config.BaseURL+"/swagger/index.html"))
 
-	return application, nil
+	return app.Router.Run(port)
 }

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -51,7 +50,6 @@ func GetContextUint(c *gin.Context, key string) uint {
 	var uintValue uint
 	_, err := fmt.Sscanf(strValue, "%d", &uintValue)
 	if err != nil {
-		log.Warnf("Failed to convert context value %s to uint: %v", strValue, err)
 		return 0
 	}
 	
@@ -69,7 +67,6 @@ func GetContextInt(c *gin.Context, key string) int {
 
 	intValue, err := strconv.Atoi(strValue)
 	if err != nil {
-		log.Warnf("Failed to convert context value %s to int: %v", strValue, err)
 		return 0
 	}
 
@@ -100,7 +97,6 @@ func GetContextFloat(c *gin.Context, key string) float64 {
 	
 	floatValue, err := strconv.ParseFloat(strValue, 64)
 	if err != nil {
-		log.Warnf("Failed to convert context value %s to float: %v", strValue, err)
 		return 0
 	}
 	

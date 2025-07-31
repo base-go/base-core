@@ -1,14 +1,14 @@
 package oauth
 
 import (
-	"base/core/app/users"
+	"base/core/app/profile"
 	"time"
 
 	"gorm.io/gorm"
 )
 
 type OAuthUser struct {
-	users.User     `gorm:"embedded"`
+	profile.User   `gorm:"embedded"`
 	Provider       string    `gorm:"column:provider"`
 	ProviderID     string    `gorm:"column:provider_id"`
 	AccessToken    string    `gorm:"column:access_token"`

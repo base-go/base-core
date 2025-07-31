@@ -1,4 +1,4 @@
-package users
+package profile
 
 import (
 	"base/core/logger"
@@ -24,10 +24,10 @@ func NewUserController(service *UserService, logger logger.Logger) *UserControll
 }
 
 func (c *UserController) Routes(router *gin.RouterGroup) {
-	router.GET("/users/me", c.Get)
-	router.PUT("/users/me", c.Update)
-	router.PUT("/users/me/avatar", c.UpdateAvatar)
-	router.PUT("/users/me/password", c.UpdatePassword)
+	router.GET("/profile", c.Get)
+	router.PUT("/profile", c.Update)
+	router.PUT("/profile/avatar", c.UpdateAvatar)
+	router.PUT("/profile/password", c.UpdatePassword)
 }
 
 // @Summary Get user from Authenticated User Token

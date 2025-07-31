@@ -44,17 +44,30 @@ func LoadConfig() *OAuthConfig {
 
 func ValidateConfig(config *OAuthConfig) {
 	log.Println("Validating OAuth configuration")
-	if config.Google.ClientID == "" || config.Google.ClientSecret == "" {
-		log.Fatal("Missing Google Client ID or Secret")
+	
+	// Check if at least one provider is configured
+	hasProvider := false
+	if config.Google.ClientID != "" && config.Google.ClientSecret != "" {
+		hasProvider = true
+		log.Println("Google OAuth provider configured")
 	}
-	if config.Facebook.ClientID == "" || config.Facebook.ClientSecret == "" {
-		log.Fatal("Missing Facebook Client ID or Secret")
+	if config.Facebook.ClientID != "" && config.Facebook.ClientSecret != "" {
+		hasProvider = true
+		log.Println("Facebook OAuth provider configured")
 	}
-	if config.Apple.ClientID == "" || config.Apple.ClientSecret == "" {
-		log.Fatal("Missing Apple Client ID or Secret")
+	if config.Apple.ClientID != "" && config.Apple.ClientSecret != "" {
+		hasProvider = true
+		log.Println("Apple OAuth provider configured")
 	}
+	
+	if !hasProvider {
+		log.Println("Warning: No OAuth providers configured. OAuth functionality will be disabled.")
+	}
+	
 	if config.JWTSecret == "" {
-		log.Fatal("Missing JWT Secret")
+		log.Println("Warning: JWT Secret not configured. Using default for development.")
+		config.JWTSecret = "default-jwt-secret-for-development"
 	}
+	
 	log.Println("OAuth configuration validated successfully")
 }

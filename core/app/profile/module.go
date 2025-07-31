@@ -1,4 +1,4 @@
-package users
+package profile
 
 import (
 	"base/core/logger"

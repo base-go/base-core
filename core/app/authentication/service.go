@@ -1,4 +1,4 @@
-package auth
+package authentication
 
 import (
 	"bytes"
@@ -10,8 +10,7 @@ import (
 	"text/template"
 	"time"
 
-	"base/app"
-	"base/core/app/users"
+	"base/core/app/profile"
 	"base/core/email"
 	"base/core/emitter"
 	"base/core/helper"
@@ -71,7 +70,7 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 
 	now := time.Now()
 	user := AuthUser{
-		User: users.User{
+		User: profile.User{
 			Email:    req.Email,
 			Password: string(hashedPassword),
 			Name:     req.Name,
@@ -99,7 +98,7 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 	}
 
 	// Generate JWT token
-	token, err := helper.GenerateJWT(user.User.Id, nil)
+	token, err := helper.GenerateJWT(user.User.Id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
@@ -125,16 +124,13 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 	// 	}
 	// }()
 
-	extended := app.Extend(user.User.Id)
-
-	userResponse := users.ToResponse(&user.User)
+	userResponse := profile.ToResponse(&user.User)
 	userResponse.LastLogin = now.Format(time.RFC3339)
 
 	return &AuthResponse{
 		UserResponse: *userResponse,
 		AccessToken:  token,
 		Exp:          now.Add(24 * time.Hour).Unix(),
-		Extend:       extended,
 	}, nil
 }
 
@@ -153,14 +149,13 @@ func (s *AuthService) Login(req *LoginRequest) (*AuthResponse, error) {
 
 	// Proceed with generating token and response
 	now := time.Now()
-	extendData := app.Extend(user.User.Id)
-	token, err := helper.GenerateJWT(user.User.Id, extendData)
+	token, err := helper.GenerateJWT(user.User.Id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
 
 	// Create the response
-	userResponse := users.ToResponse(&user.User)
+	userResponse := profile.ToResponse(&user.User)
 	if user.LastLogin != nil {
 		userResponse.LastLogin = user.LastLogin.Format(time.RFC3339)
 	}
@@ -169,7 +164,6 @@ func (s *AuthService) Login(req *LoginRequest) (*AuthResponse, error) {
 		UserResponse: *userResponse,
 		AccessToken:  token,
 		Exp:          now.Add(24 * time.Hour).Unix(),
-		Extend:       app.Extend(user.User.Id),
 	}
 
 	// Prepare the login event
