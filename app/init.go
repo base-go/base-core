@@ -1,9 +1,9 @@
 package app
 
 import (
-	// MODULE_IMPORT_MARKER - Do not remove this comment because it's used by the CLI to add new module imports
-	"base/app/category"
 	"base/core/module"
+	// MODULE_IMPORT_MARKER
+
 )
 
 // AppModules implements module.AppModuleProvider interface
@@ -14,10 +14,7 @@ type AppModules struct{}
 func (am *AppModules) GetAppModules(deps module.Dependencies) map[string]module.Module {
 	modules := make(map[string]module.Module)
 
-	// Add app-specific modules here - the CLI will add them automatically
-	// MODULE_INITIALIZER_MARKER - Do not remove this comment because it's used by the CLI to add new module initializers
-	modules["category"] = category.NewModule(deps.DB)
-
+	modules["categories"] = categories.NewCategoryModule(deps.DB)	modules["comments"] = comments.NewCommentModule(deps.DB)	// MODULE_INITIALIZER_MARKER
 	return modules
 }
 

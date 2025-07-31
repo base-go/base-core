@@ -1,7 +1,7 @@
 package main
 
 import (
-	"base/app"
+	"base/core"
 	_ "base/docs" // Import the Swagger docs
 	"fmt"
 	"net"
@@ -62,7 +62,7 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 
 	// Bootstrap the application using the new clean architecture
-	application, err := app.NewApplication()
+	application, err := core.NewApplication()
 	if err != nil {
 		log.Fatalf("Failed to bootstrap application: %v", err)
 	}

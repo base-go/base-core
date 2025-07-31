@@ -66,6 +66,7 @@ Base is a modern Go web framework designed for rapid development and maintainabl
   - belongs_to (One-to-one with foreign key in this model)
   - has_one (One-to-one with foreign key in other model)
   - has_many (One-to-many)
+  - **Automatic Relationship Detection**: Fields ending with `_id` automatically generate relationships
 - Auto-Migration
 - Transaction Support
 - Connection Management
@@ -175,6 +176,13 @@ base g post \
   gallery:attachment \
   author:belongsTo:User \
   comments:hasMany:Comment
+
+# Generate with automatic relationship detection
+base g article \
+  title:string \
+  content:text \
+  category_id:uint \      # Automatically creates Category relationship
+  author_id:uint          # Automatically creates Author relationship
 
 # Generate with specialized attachments
 base g document \
@@ -360,12 +368,36 @@ base g post title:string content:text
 
 # Creates:
 app/
-└── post/
+├── models/
+│   └── post.go        # Model with automatic relationships
+└── posts/
     ├── controller.go  # RESTful endpoints
     ├── service.go     # Business logic
     ├── module.go      # Registration
-    └── types.go       # Types and DTOs
+    └── validator.go   # Input validation
 ```
+
+#### Automatic Relationship Detection
+
+Base automatically detects and creates relationships when field names end with `_id`:
+
+```bash
+# This command:
+base g article title:string content:text category_id:uint author_id:uint
+
+# Automatically generates:
+type Article struct {
+    Id         uint     `json:"id" gorm:"primarykey"`
+    Title      string   `json:"title"`
+    Content    string   `json:"content"`
+    CategoryId uint     `json:"category_id"`
+    Category   Category `json:"category,omitempty" gorm:"foreignKey:CategoryId"`
+    AuthorId   uint     `json:"author_id"`  
+    Author     Author   `json:"author,omitempty" gorm:"foreignKey:AuthorId"`
+}
+```
+
+This eliminates the need to manually specify relationships - just use the `_id` suffix convention!
 
 The module is automatically registered in `app/init.go` and integrated with the dependency injection system.
 
