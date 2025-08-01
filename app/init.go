@@ -3,7 +3,6 @@ package app
 import (
 	"base/core/module"
 	// MODULE_IMPORT_MARKER
-
 )
 
 // AppModules implements module.AppModuleProvider interface
@@ -14,7 +13,7 @@ type AppModules struct{}
 func (am *AppModules) GetAppModules(deps module.Dependencies) map[string]module.Module {
 	modules := make(map[string]module.Module)
 
-	modules["categories"] = categories.NewCategoryModule(deps.DB)	modules["comments"] = comments.NewCommentModule(deps.DB)	// MODULE_INITIALIZER_MARKER
+	// MODULE_INITIALIZER_MARKER
 	return modules
 }
 
