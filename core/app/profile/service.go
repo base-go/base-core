@@ -13,13 +13,13 @@ import (
 	"gorm.io/gorm"
 )
 
-type UserService struct {
+type ProfileService struct {
 	db            *gorm.DB
 	logger        logger.Logger
 	activeStorage *storage.ActiveStorage
 }
 
-func NewUserService(db *gorm.DB, logger logger.Logger, activeStorage *storage.ActiveStorage) *UserService {
+func NewProfileService(db *gorm.DB, logger logger.Logger, activeStorage *storage.ActiveStorage) *ProfileService {
 	if db == nil {
 		panic("db is required")
 	}
@@ -39,7 +39,7 @@ func NewUserService(db *gorm.DB, logger logger.Logger, activeStorage *storage.Ac
 		Multiple:          false,
 	})
 
-	return &UserService{
+	return &ProfileService{
 		db:            db,
 		logger:        logger,
 		activeStorage: activeStorage,
@@ -47,11 +47,11 @@ func NewUserService(db *gorm.DB, logger logger.Logger, activeStorage *storage.Ac
 }
 
 // Helper method to convert user to response
-func (s *UserService) toResponse(user *User) *UserResponse {
+func (s *ProfileService) ToResponse(user *User) *UserResponse {
 	return ToResponse(user)
 }
 
-func (s *UserService) GetByID(id uint) (*UserResponse, error) {
+func (s *ProfileService) GetByID(id uint) (*UserResponse, error) {
 	var user User
 	if err := s.db.First(&user, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -65,10 +65,10 @@ func (s *UserService) GetByID(id uint) (*UserResponse, error) {
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 
-	return s.toResponse(&user), nil
+	return s.ToResponse(&user), nil
 }
 
-func (s *UserService) Update(id uint, req *UpdateRequest) (*UserResponse, error) {
+func (s *ProfileService) Update(id uint, req *UpdateRequest) (*UserResponse, error) {
 	var user User
 	if err := s.db.First(&user, id).Error; err != nil {
 		s.logger.Error("Failed to find user for update",
@@ -77,8 +77,11 @@ func (s *UserService) Update(id uint, req *UpdateRequest) (*UserResponse, error)
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 
-	if req.Name != "" {
-		user.Name = req.Name
+	if req.FirstName != "" {
+		user.FirstName = req.FirstName
+	}
+	if req.LastName != "" {
+		user.LastName = req.LastName
 	}
 	if req.Username != "" {
 		user.Username = req.Username
@@ -94,10 +97,10 @@ func (s *UserService) Update(id uint, req *UpdateRequest) (*UserResponse, error)
 		return nil, fmt.Errorf("failed to update user: %w", err)
 	}
 
-	return s.toResponse(&user), nil
+	return s.ToResponse(&user), nil
 }
 
-func (s *UserService) UpdateAvatar(ctx context.Context, id uint, avatarFile *multipart.FileHeader) (*UserResponse, error) {
+func (s *ProfileService) UpdateAvatar(ctx context.Context, id uint, avatarFile *multipart.FileHeader) (*UserResponse, error) {
 	var user User
 	if err := s.db.First(&user, id).Error; err != nil {
 		return nil, err
@@ -115,10 +118,10 @@ func (s *UserService) UpdateAvatar(ctx context.Context, id uint, avatarFile *mul
 		return nil, fmt.Errorf("failed to update user: %w", err)
 	}
 
-	return s.toResponse(&user), nil
+	return s.ToResponse(&user), nil
 }
 
-func (s *UserService) RemoveAvatar(ctx context.Context, id uint) (*UserResponse, error) {
+func (s *ProfileService) RemoveAvatar(ctx context.Context, id uint) (*UserResponse, error) {
 	tx := s.db.Begin()
 	defer func() {
 		if r := recover(); r != nil {
@@ -151,10 +154,10 @@ func (s *UserService) RemoveAvatar(ctx context.Context, id uint) (*UserResponse,
 		return nil, err
 	}
 
-	return s.toResponse(&user), nil
+	return s.ToResponse(&user), nil
 }
 
-func (s *UserService) UpdatePassword(id uint, req *UpdatePasswordRequest) error {
+func (s *ProfileService) UpdatePassword(id uint, req *UpdatePasswordRequest) error {
 	var user User
 	if err := s.db.First(&user, id).Error; err != nil {
 		s.logger.Error("Failed to find user for password update",

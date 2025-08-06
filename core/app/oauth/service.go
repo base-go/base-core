@@ -131,9 +131,10 @@ func (s *OAuthService) processUser(email, name, username, pictureURL, provider, 
 			// Create new user
 			user = OAuthUser{
 				User: profile.User{
-					Email:    email,
-					Name:     name,
-					Username: s.generateUniqueUsername(username),
+					Email:     email,
+					FirstName: name[:strings.Index(name, " ")],
+					LastName:  name[strings.Index(name, " ")+1:],
+					Username:  s.generateUniqueUsername(username),
 				},
 				Provider:       provider,
 				ProviderID:     providerID,
@@ -161,7 +162,8 @@ func (s *OAuthService) processUser(email, name, username, pictureURL, provider, 
 		}
 	} else {
 		// Update existing user
-		user.Name = name
+		user.User.FirstName = name[:strings.Index(name, " ")]
+		user.User.LastName = name[strings.Index(name, " ")+1:]
 		user.Provider = provider
 		user.ProviderID = providerID
 		user.AccessToken = token

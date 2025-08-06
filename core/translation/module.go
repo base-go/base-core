@@ -44,6 +44,6 @@ func (m *Module) Migrate() error {
 	return m.DB.AutoMigrate(&Translation{})
 }
 
-func (m *Module) GetModels() []interface{} {
-	return []interface{}{&Translation{}}
+func (m *Module) GetModels() []any {
+	return []any{&Translation{}}
 }

@@ -49,7 +49,7 @@ func (c *TranslationController) Routes(router *gin.RouterGroup) {
 // List godoc
 // @Summary List translations
 // @Description Get a paginated list of translations with optional filtering
-// @Tags Translations
+// @Tags Core/Translations
 // @Security ApiKeyAuth
 // @Produce json
 // @Param page query int false "Page number"
@@ -107,7 +107,7 @@ func (c *TranslationController) List(ctx *gin.Context) {
 // Get godoc
 // @Summary Get translation by ID
 // @Description Get a single translation by its ID
-// @Tags Translations
+// @Tags Core/Translations
 // @Security ApiKeyAuth
 // @Produce json
 // @Param id path int true "Translation ID"
@@ -140,7 +140,7 @@ func (c *TranslationController) Get(ctx *gin.Context) {
 // Create godoc
 // @Summary Create translation
 // @Description Create a new translation
-// @Tags Translations
+// @Tags Core/Translations
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
@@ -168,7 +168,7 @@ func (c *TranslationController) Create(ctx *gin.Context) {
 // Update godoc
 // @Summary Update translation
 // @Description Update an existing translation
-// @Tags Translations
+// @Tags Core/Translations
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
@@ -210,7 +210,7 @@ func (c *TranslationController) Update(ctx *gin.Context) {
 // Delete godoc
 // @Summary Delete translation
 // @Description Delete a translation by ID
-// @Tags Translations
+// @Tags Core/Translations
 // @Security ApiKeyAuth
 // @Param id path int true "Translation ID"
 // @Success 204
@@ -242,7 +242,7 @@ func (c *TranslationController) Delete(ctx *gin.Context) {
 // BulkUpdate godoc
 // @Summary Bulk update translations
 // @Description Update multiple translations for a model at once
-// @Tags Translations
+// @Tags Core/Translations
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
@@ -270,7 +270,7 @@ func (c *TranslationController) BulkUpdate(ctx *gin.Context) {
 // GetForModel godoc
 // @Summary Get translations for model
 // @Description Get all translations for a specific model and model ID
-// @Tags Translations
+// @Tags Core/Translations
 // @Security ApiKeyAuth
 // @Produce json
 // @Param model path string true "Model name"
@@ -301,7 +301,7 @@ func (c *TranslationController) GetForModel(ctx *gin.Context) {
 // GetForModelAndLanguage godoc
 // @Summary Get translations for model and language
 // @Description Get translations for a specific model, model ID, and language
-// @Tags Translations
+// @Tags Core/Translations
 // @Security ApiKeyAuth
 // @Produce json
 // @Param model path string true "Model name"
@@ -334,7 +334,7 @@ func (c *TranslationController) GetForModelAndLanguage(ctx *gin.Context) {
 // GetSupportedLanguages godoc
 // @Summary Get supported languages
 // @Description Get a list of all languages that have translations in the system
-// @Tags Translations
+// @Tags Core/Translations
 // @Security ApiKeyAuth
 // @Produce json
 // @Success 200 {array} string

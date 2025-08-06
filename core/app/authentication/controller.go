@@ -62,7 +62,7 @@ func (c *AuthController) Register(ctx *gin.Context) {
 		To:      []string{user.Email},
 		From:    "no-reply@base.al",
 		Subject: "Welcome to Base",
-		Body:    c.getWelcomeEmailBody(user.Name),
+		Body:    c.getWelcomeEmailBody(user.FirstName),
 		IsHTML:  true,
 	}
 

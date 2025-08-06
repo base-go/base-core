@@ -2,8 +2,9 @@ package app
 
 import (
 	"base/core/module"
-	// MODULE_IMPORT_MARKER
 )
+
+// MODULE_IMPORT_MARKER
 
 // AppModules implements module.AppModuleProvider interface
 type AppModules struct{}

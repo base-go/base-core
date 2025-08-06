@@ -12,8 +12,8 @@ import (
 type UserModule struct {
 	module.DefaultModule
 	DB            *gorm.DB
-	Controller    *UserController
-	Service       *UserService
+	Controller    *ProfileController
+	Service       *ProfileService
 	Logger        logger.Logger
 	ActiveStorage *storage.ActiveStorage
 }
@@ -25,8 +25,8 @@ func NewUserModule(
 	activeStorage *storage.ActiveStorage,
 ) module.Module {
 	// Initialize service with active storage
-	service := NewUserService(db, logger, activeStorage)
-	controller := NewUserController(service, logger)
+	service := NewProfileService(db, logger, activeStorage)
+	controller := NewProfileController(service, logger)
 
 	usersModule := &UserModule{
 		DB:            db,
@@ -52,8 +52,8 @@ func (m *UserModule) Migrate() error {
 	return nil
 }
 
-func (m *UserModule) GetModels() []interface{} {
-	return []interface{}{
+func (m *UserModule) GetModels() []any {
+	return []any{
 		&User{},
 	}
 }
