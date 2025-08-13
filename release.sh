@@ -42,11 +42,13 @@ rsync -av --exclude='.git' \
     --exclude='docs.md' \
     --exclude='*.test' \
     --exclude='.DS_Store' \
-    --exclude='base' \
     --exclude='basecmd' \
     --exclude='.claude' \
     --exclude='packages' \
     ./ "$RELEASE_DIR/"
+
+# Remove binary executables but keep source files
+rm -f "$RELEASE_DIR/base"
 
 # Create clean archive
 echo "Creating clean archive..."
