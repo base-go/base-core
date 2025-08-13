@@ -1,12 +1,11 @@
 package authorization
 
 import (
+	"base/core/router"
 	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
-
-	"github.com/gin-gonic/gin"
 )
 
 var (
@@ -17,8 +16,8 @@ var (
 	ErrResourceAccessDenied = errors.New("resource access denied")
 )
 
-// GetUserIdFromContext extracts the user ID from the Gin context
-func GetUserIdFromContext(c *gin.Context) (uint64, error) {
+// GetUserIdFromContext extracts the user ID from the context
+func GetUserIdFromContext(c *router.Context) (uint64, error) {
 	userIdValue, exists := c.Get("user_id")
 	if !exists {
 		return 0, ErrMissingUserId
@@ -42,8 +41,8 @@ func GetUserIdFromContext(c *gin.Context) (uint64, error) {
 	}
 }
 
-// GetOrganizationIdFromContext extracts the organization ID from the Gin context or headers
-func GetOrganizationIdFromContext(c *gin.Context) (uint64, error) {
+// GetOrganizationIdFromContext extracts the organization ID from the context or headers
+func GetOrganizationIdFromContext(c *router.Context) (uint64, error) {
 	// First try to get from context
 	orgIdValue, exists := c.Get("organization_id")
 	if exists {
@@ -77,285 +76,195 @@ func GetOrganizationIdFromContext(c *gin.Context) (uint64, error) {
 }
 
 // AuthMiddleware creates a middleware function that checks if the user has permission to access a resource
-func AuthMiddleware(resourceType string, action string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// Get the authorization service from the Gin context
-		authzServiceValue, exists := c.Get("authz_service")
-		if !exists {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"error": "authorization service not found",
-			})
-			return
-		}
-
-		authzService, ok := authzServiceValue.(*AuthorizationService)
-		if !ok {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"error": "invalid authorization service",
-			})
-			return
-		}
-
-		// Get user ID from context
-		userId, err := GetUserIdFromContext(c)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-
-		// Get organization ID
-		orgId, err := GetOrganizationIdFromContext(c)
-		if err != nil {
-			// For global endpoints that don't require an organization ID
-			if action == "read" && (resourceType == "auth" || resourceType == "user") {
-				c.Next()
-				return
+func AuthMiddleware(resourceType string, action string) router.MiddlewareFunc {
+	return func(next router.HandlerFunc) router.HandlerFunc {
+		return func(c *router.Context) error {
+			// Get the authorization service from the context
+			authzServiceValue, exists := c.Get("authz_service")
+			if !exists {
+				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
+					"error": "authorization service not found",
+				})
+				return nil
 			}
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
 
-		// Check if the user has permission to perform the action on the resource type
-		hasPermission, err := authzService.HasPermission(userId, orgId, resourceType, action)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"error": fmt.Sprintf("error checking permission: %v", err),
-			})
-			return
-		}
+			authzService, ok := authzServiceValue.(*AuthorizationService)
+			if !ok {
+				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
+					"error": "invalid authorization service",
+				})
+				return nil
+			}
 
-		if !hasPermission {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": "permission denied",
-			})
-			return
-		}
+			// Get user ID from context
+			userId, err := GetUserIdFromContext(c)
+			if err != nil {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]any{
+					"error": err.Error(),
+				})
+				return nil
+			}
 
-		// All checks passed
-		c.Next()
+			// Get organization ID
+			orgId, err := GetOrganizationIdFromContext(c)
+			if err != nil {
+				// For global endpoints that don't require an organization ID
+				if action == "read" && (resourceType == "auth" || resourceType == "user") {
+					return next(c)
+				}
+				c.AbortWithStatusJSON(http.StatusBadRequest, map[string]any{
+					"error": err.Error(),
+				})
+				return nil
+			}
+
+			// Check if the user has permission to perform the action on the resource type
+			hasPermission, err := authzService.HasPermission(userId, orgId, resourceType, action)
+			if err != nil {
+				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
+					"error": fmt.Sprintf("error checking permission: %v", err),
+				})
+				return nil
+			}
+
+			if !hasPermission {
+				c.AbortWithStatusJSON(http.StatusForbidden, map[string]any{
+					"error": ErrPermissionDenied.Error(),
+				})
+				return nil
+			}
+
+			return next(c)
+		}
 	}
 }
 
-// ResourceAccessMiddleware checks if the user has access to a specific resource
-func ResourceAccessMiddleware(resourceType string, action string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// Get the resource ID from the URL parameter
-		resourceId := c.Param("id")
-		if resourceId == "" {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-				"error": ErrMissingResourceId.Error(),
-			})
-			return
+// ResourceAuthMiddleware creates a middleware function that checks if the user has permission to access a specific resource
+func ResourceAuthMiddleware(resourceType string, action string, resourceIdParam string) router.MiddlewareFunc {
+	return func(next router.HandlerFunc) router.HandlerFunc {
+		return func(c *router.Context) error {
+			// Get the authorization service from the context
+			authzServiceValue, exists := c.Get("authz_service")
+			if !exists {
+				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
+					"error": "authorization service not found",
+				})
+				return nil
+			}
+
+			authzService, ok := authzServiceValue.(*AuthorizationService)
+			if !ok {
+				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
+					"error": "invalid authorization service",
+				})
+				return nil
+			}
+
+			// Get user ID from context
+			userId, err := GetUserIdFromContext(c)
+			if err != nil {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]any{
+					"error": err.Error(),
+				})
+				return nil
+			}
+
+			// Get organization ID
+			orgId, err := GetOrganizationIdFromContext(c)
+			if err != nil {
+				c.AbortWithStatusJSON(http.StatusBadRequest, map[string]any{
+					"error": err.Error(),
+				})
+				return nil
+			}
+
+			// Get resource ID from URL parameters
+			resourceId := c.Param(resourceIdParam)
+			if resourceId == "" {
+				c.AbortWithStatusJSON(http.StatusBadRequest, map[string]any{
+					"error": ErrMissingResourceId.Error(),
+				})
+				return nil
+			}
+
+			// Check if the user has permission to access the specific resource
+			hasPermission, err := authzService.HasResourcePermission(userId, orgId, resourceType, resourceId, action)
+			if err != nil {
+				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
+					"error": fmt.Sprintf("error checking resource permission: %v", err),
+				})
+				return nil
+			}
+
+			if !hasPermission {
+				c.AbortWithStatusJSON(http.StatusForbidden, map[string]any{
+					"error": ErrResourceAccessDenied.Error(),
+				})
+				return nil
+			}
+
+			return next(c)
 		}
-
-		// Get the authorization service
-		authzServiceValue, exists := c.Get("authz_service")
-		if !exists {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"error": "authorization service not found",
-			})
-			return
-		}
-
-		authzService, ok := authzServiceValue.(*AuthorizationService)
-		if !ok {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"error": "invalid authorization service",
-			})
-			return
-		}
-
-		// Get user ID
-		userId, err := GetUserIdFromContext(c)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-
-		// Get organization ID
-		orgId, err := GetOrganizationIdFromContext(c)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-
-		// Check resource-specific permission
-		hasPermission, err := authzService.HasResourcePermission(userId, orgId, resourceType, resourceId, action)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"error": fmt.Sprintf("error checking resource permission: %v", err),
-			})
-			return
-		}
-
-		if !hasPermission {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": ErrResourceAccessDenied.Error(),
-			})
-			return
-		}
-
-		// Store the allowed resource IDs in context for later filtering
-		resourceIds, defaultScope, err := authzService.GetAccessibleResources(userId, orgId, resourceType)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"error": fmt.Sprintf("error getting accessible resources: %v", err),
-			})
-			return
-		}
-
-		// Store the permission scope in the context
-		c.Set("permission_scope", defaultScope)
-		c.Set("accessible_resources", resourceIds)
-
-		// All checks passed
-		c.Next()
 	}
 }
 
-// ScopeFilterMiddleware applies access scope filtering to queries
-func ScopeFilterMiddleware(resourceType string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// First execute the request handler
-		c.Next()
-
-		// After handler execution, check if we need to filter results
-		permissionScope, exists := c.Get("permission_scope")
-		if !exists {
-			return // No filtering needed
-		}
-
-		scope, ok := permissionScope.(string)
-		if !ok || scope == AccessScopeAll {
-			return // All access or invalid scope format, no filtering needed
-		}
-
-		// Check if we need to filter based on the response
-		// This is a simple example and would need to be adapted to your response structure
-		var response interface{}
-		if v, exists := c.Get("response_data"); exists {
-			response = v
-		} else {
-			return // No response data to filter
-		}
-
-		// Apply filtering based on scope and response type
-		// This would depend on your specific application structure
-		filteredResponse := applyFilterByScope(response, resourceType, scope, c)
-		c.Set("response_data", filteredResponse)
-	}
-}
-
-// applyFilterByScope filters response data based on permission scope
-// This is a placeholder implementation that would need to be customized
-func applyFilterByScope(data interface{}, resourceType, scope string, c *gin.Context) interface{} {
-	// Example implementation - would need to be customized for your data structures
-	userId, _ := GetUserIdFromContext(c)
-
-	switch scope {
-	case AccessScopeOwn:
-		// Filter for only resources owned by the current user
-		return filterOwnResources(data, resourceType, userId)
-
-	case AccessScopeTeam:
-		// Filter for resources within the user's team/department
-		department := getUserDepartment(c)
-		return filterTeamResources(data, resourceType, department)
-
-	default:
-		// Default to returning everything
-		return data
-	}
-}
-
-func filterOwnResources(data interface{}, resourceType string, userId uint64) interface{} {
-	// Handle different resource types
-	switch resourceType {
-	case "project":
-		if projects, ok := data.([]map[string]interface{}); ok {
-			filtered := make([]map[string]interface{}, 0)
-			for _, project := range projects {
-				if ownerID, exists := project["owner_id"].(uint64); exists && ownerID == userId {
-					filtered = append(filtered, project)
-				}
+// RequireRole creates a middleware function that checks if the user has a specific role
+func RequireRole(roleName string) router.MiddlewareFunc {
+	return func(next router.HandlerFunc) router.HandlerFunc {
+		return func(c *router.Context) error {
+			// Get the authorization service from the context
+			authzServiceValue, exists := c.Get("authz_service")
+			if !exists {
+				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
+					"error": "authorization service not found",
+				})
+				return nil
 			}
-			return filtered
-		}
-	case "employee":
-		if employees, ok := data.([]map[string]interface{}); ok {
-			filtered := make([]map[string]interface{}, 0)
-			for _, employee := range employees {
-				if empID, exists := employee["user_id"].(uint64); exists && empID == userId {
-					filtered = append(filtered, employee)
-				}
+
+			authzService, ok := authzServiceValue.(*AuthorizationService)
+			if !ok {
+				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
+					"error": "invalid authorization service",
+				})
+				return nil
 			}
-			return filtered
-		}
-	case "absence":
-		if absences, ok := data.([]map[string]interface{}); ok {
-			filtered := make([]map[string]interface{}, 0)
-			for _, absence := range absences {
-				if absenceUserID, exists := absence["user_id"].(uint64); exists && absenceUserID == userId {
-					filtered = append(filtered, absence)
-				}
+
+			// Get user ID from context
+			userId, err := GetUserIdFromContext(c)
+			if err != nil {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]any{
+					"error": err.Error(),
+				})
+				return nil
 			}
-			return filtered
+
+			// Get organization ID
+			orgId, err := GetOrganizationIdFromContext(c)
+			if err != nil {
+				c.AbortWithStatusJSON(http.StatusBadRequest, map[string]any{
+					"error": err.Error(),
+				})
+				return nil
+			}
+
+			// TODO: Implement HasRole method in AuthorizationService or use alternative approach
+			// For now, just check if user has general permission
+			hasPermission, err := authzService.HasPermission(userId, orgId, "role", "read")
+			if err != nil {
+				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
+					"error": fmt.Sprintf("error checking role permission: %v", err),
+				})
+				return nil
+			}
+
+			if !hasPermission {
+				c.AbortWithStatusJSON(http.StatusForbidden, map[string]any{
+					"error": "insufficient role permissions",
+				})
+				return nil
+			}
+
+			return next(c)
 		}
 	}
-	return data
-}
-
-func filterTeamResources(data interface{}, resourceType string, department string) interface{} {
-	// Handle different resource types
-	switch resourceType {
-	case "project":
-		if projects, ok := data.([]map[string]interface{}); ok {
-			filtered := make([]map[string]interface{}, 0)
-			for _, project := range projects {
-				if projectDept, exists := project["department"].(string); exists && projectDept == department {
-					filtered = append(filtered, project)
-				}
-			}
-			return filtered
-		}
-	case "employee":
-		if employees, ok := data.([]map[string]interface{}); ok {
-			filtered := make([]map[string]interface{}, 0)
-			for _, employee := range employees {
-				if empDept, exists := employee["department"].(string); exists && empDept == department {
-					filtered = append(filtered, employee)
-				}
-			}
-			return filtered
-		}
-	case "absence":
-		if absences, ok := data.([]map[string]interface{}); ok {
-			filtered := make([]map[string]interface{}, 0)
-			for _, absence := range absences {
-				if absenceDept, exists := absence["department"].(string); exists && absenceDept == department {
-					filtered = append(filtered, absence)
-				}
-			}
-			return filtered
-		}
-	}
-	return data
-}
-
-func getUserDepartment(c *gin.Context) string {
-	// Get department from context if available
-	if dept, exists := c.Get("user_department"); exists {
-		if department, ok := dept.(string); ok {
-			return department
-		}
-	}
-	return ""
 }

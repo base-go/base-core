@@ -1,12 +1,12 @@
 package websocket
 
 import (
+	"base/core/router"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"sync"
 
-	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
 
@@ -29,10 +29,10 @@ type Client struct {
 
 // Message represents a message structure
 type Message struct {
-	Type     string      `json:"type"`
-	Content  interface{} `json:"content"`
-	Room     string      `json:"room"`
-	Nickname string      `json:"nickname"`
+	Type     string `json:"type"`
+	Content  any    `json:"content"`
+	Room     string `json:"room"`
+	Nickname string `json:"nickname"`
 }
 
 // Hub maintains the set of active clients and broadcasts messages to the clients
@@ -232,29 +232,23 @@ func (c *Client) writePump() {
 		c.Conn.Close()
 	}()
 
-	for {
-		select {
-		case message, ok := <-c.Send:
-			if !ok {
-				c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
-				return
-			}
+	for message := range c.Send {
+		w, err := c.Conn.NextWriter(websocket.TextMessage)
+		if err != nil {
+			return
+		}
+		if _, err := w.Write(message); err != nil {
+			return
+		}
 
-			w, err := c.Conn.NextWriter(websocket.TextMessage)
-			if err != nil {
-				return
-			}
-			w.Write(message)
-
-			if err := w.Close(); err != nil {
-				return
-			}
+		if err := w.Close(); err != nil {
+			return
 		}
 	}
 }
 
 // ServeWs handles WebSocket requests from the peer
-func ServeWs(hub *Hub, c *gin.Context) {
+func ServeWs(hub *Hub, c *router.Context) {
 	fmt.Println("Received WebSocket connection request")
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
@@ -278,7 +272,7 @@ func ServeWs(hub *Hub, c *gin.Context) {
 }
 
 // BroadcastMessage sends a message to all connected clients
-func (h *Hub) BroadcastMessage(messageType string, content interface{}) {
+func (h *Hub) BroadcastMessage(messageType string, content any) {
 	message := Message{
 		Type:     messageType,
 		Content:  content,
@@ -290,7 +284,7 @@ func (h *Hub) BroadcastMessage(messageType string, content interface{}) {
 }
 
 // InitWebSocketModule initializes the WebSocket module
-func InitWebSocketModule(router *gin.RouterGroup) *Hub {
+func InitWebSocketModule(router *router.RouterGroup) *Hub {
 	hub := NewHub()
 	go hub.Run()
 	SetupWebSocketRoutes(router, hub)
@@ -298,11 +292,11 @@ func InitWebSocketModule(router *gin.RouterGroup) *Hub {
 }
 
 // SetupWebSocketRoutes sets up the WebSocket routes
-func SetupWebSocketRoutes(router *gin.RouterGroup, hub *Hub) {
+func SetupWebSocketRoutes(router *router.RouterGroup, hub *Hub) {
 	router.GET("/ws", WebSocketHandler(hub))
 }
 
-// WebSocketHandler returns a gin.HandlerFunc for handling WebSocket connections
+// WebSocketHandler returns a router.HandlerFunc for handling WebSocket connections
 // @Summary Connect to WebSocket
 // @Description Establishes a WebSocket connection, check example at: /static/chat.html
 // @Security ApiKeyAuth
@@ -316,9 +310,10 @@ func SetupWebSocketRoutes(router *gin.RouterGroup, hub *Hub) {
 // @Success 101 {string} string "Switching Protocols"
 // @Failure 400 {object} ErrorResponse
 // @Router /ws [get]
-func WebSocketHandler(hub *Hub) gin.HandlerFunc {
-	return func(c *gin.Context) {
+func WebSocketHandler(hub *Hub) router.HandlerFunc {
+	return func(c *router.Context) error {
 		ServeWs(hub, c)
+		return nil
 	}
 }
 

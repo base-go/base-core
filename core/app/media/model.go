@@ -110,9 +110,9 @@ func (item *Media) ToResponse() *MediaResponse {
 var _ storage.Attachable = (*Media)(nil)
 
 // GetAttachmentConfig returns the attachment configuration for the model
-func (item *Media) GetAttachmentConfig() map[string]interface{} {
-	return map[string]interface{}{
-		"file": map[string]interface{}{
+func (item *Media) GetAttachmentConfig() map[string]any {
+	return map[string]any{
+		"file": map[string]any{
 			"path":       "media/:id/:filename",
 			"validators": []string{"image", "audio"},
 			"min_size":   1,                 // 1 byte

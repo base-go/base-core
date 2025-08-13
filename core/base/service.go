@@ -35,7 +35,7 @@ func (bs *Service) LogError(operation string, err error, context ...logger.Field
 		logger.String("operation", operation),
 		logger.String("error", err.Error()),
 	}, context...)
-	
+
 	bs.Logger.Error("Service error", fields...)
 }
 
@@ -45,19 +45,19 @@ func (bs *Service) LogInfo(operation string, message string, context ...logger.F
 		logger.String("operation", operation),
 		logger.String("message", message),
 	}, context...)
-	
+
 	bs.Logger.Info("Service operation", fields...)
 }
 
 // EmitEvent emits an event through the event emitter
-func (bs *Service) EmitEvent(eventName string, data interface{}) {
+func (bs *Service) EmitEvent(eventName string, data any) {
 	if bs.Emitter != nil {
 		bs.Emitter.Emit(eventName, data)
 	}
 }
 
 // CreatePaginatedResponse creates a paginated response
-func (bs *Service) CreatePaginatedResponse(data interface{}, total int64, page int, limit int) *types.PaginatedResponse {
+func (bs *Service) CreatePaginatedResponse(data any, total int64, page int, limit int) *types.PaginatedResponse {
 	totalPages := int(math.Ceil(float64(total) / float64(limit)))
 	if totalPages == 0 {
 		totalPages = 1
@@ -120,7 +120,7 @@ func (bs *Service) WithTransaction(fn func(*gorm.DB) error) error {
 }
 
 // FindByID is a generic function to find a record by ID
-func (bs *Service) FindByID(model interface{}, id uint, preloads ...string) error {
+func (bs *Service) FindByID(model any, id uint, preloads ...string) error {
 	if err := bs.ValidateID(id); err != nil {
 		return err
 	}
@@ -134,31 +134,31 @@ func (bs *Service) FindByID(model interface{}, id uint, preloads ...string) erro
 }
 
 // Count counts records matching the given conditions
-func (bs *Service) Count(model interface{}, conditions ...interface{}) (int64, error) {
+func (bs *Service) Count(model any, conditions ...any) (int64, error) {
 	var count int64
 	query := bs.DB.Model(model)
-	
+
 	if len(conditions) > 0 {
 		query = query.Where(conditions[0], conditions[1:]...)
 	}
-	
+
 	return count, query.Count(&count).Error
 }
 
 // Delete performs a soft delete on a record
-func (bs *Service) Delete(model interface{}, id uint) error {
+func (bs *Service) Delete(model any, id uint) error {
 	if err := bs.ValidateID(id); err != nil {
 		return err
 	}
-	
+
 	return bs.DB.Delete(model, id).Error
 }
 
 // HardDelete performs a hard delete on a record
-func (bs *Service) HardDelete(model interface{}, id uint) error {
+func (bs *Service) HardDelete(model any, id uint) error {
 	if err := bs.ValidateID(id); err != nil {
 		return err
 	}
-	
+
 	return bs.DB.Unscoped().Delete(model, id).Error
 }

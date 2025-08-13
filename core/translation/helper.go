@@ -36,7 +36,7 @@ func (h *Helper) GetTranslationsForModel(modelName string, modelId uint, languag
 }
 
 // AddTranslatedFieldsToResponse enriches a response struct with translated fields
-func (h *Helper) AddTranslatedFieldsToResponse(response interface{}, modelName string, modelId uint, language string) error {
+func (h *Helper) AddTranslatedFieldsToResponse(response any, modelName string, modelId uint, language string) error {
 	translations, err := h.GetTranslationsForModel(modelName, modelId, language)
 	if err != nil {
 		return err
@@ -57,7 +57,7 @@ func (h *Helper) AddTranslatedFieldsToResponse(response interface{}, modelName s
 	}
 
 	// Create a map to store translated values
-	translatedFields := make(map[string]interface{})
+	translatedFields := make(map[string]any)
 	for key, value := range translations {
 		translatedFields[key] = value
 	}

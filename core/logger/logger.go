@@ -171,6 +171,10 @@ func Any(key string, value any) Field {
 	return zap.Any(key, value)
 }
 
+func Duration(key string, value time.Duration) Field {
+	return zap.Duration(key, value)
+}
+
 // Logger interface implementation
 func (l *ZapLogger) Info(msg string, fields ...Field) {
 	l.logger.Info(msg, fields...)

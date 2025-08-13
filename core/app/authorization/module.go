@@ -3,9 +3,9 @@ package authorization
 import (
 	"base/core/logger"
 	"base/core/module"
+	"base/core/router"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	gormLogger "gorm.io/gorm/logger"
 )
@@ -18,7 +18,7 @@ type AuthorizationModule struct {
 	Logger     logger.Logger
 }
 
-func NewAuthorizationModule(db *gorm.DB, router *gin.RouterGroup, logger logger.Logger) module.Module {
+func NewAuthorizationModule(db *gorm.DB, router *router.RouterGroup, logger logger.Logger) module.Module {
 	service := NewAuthorizationService(db)
 	controller := NewAuthorizationController(service, logger)
 
@@ -32,7 +32,7 @@ func NewAuthorizationModule(db *gorm.DB, router *gin.RouterGroup, logger logger.
 	return authzModule
 }
 
-func (m *AuthorizationModule) Routes(router *gin.RouterGroup) {
+func (m *AuthorizationModule) Routes(router *router.RouterGroup) {
 	// Router is already within api group from start.go
 	m.Logger.Info("Registering authorization module routes")
 	m.Controller.Routes(router)
@@ -60,33 +60,37 @@ func (m *AuthorizationModule) Migrate() error {
 	return nil
 }
 
+func (m *AuthorizationModule) GetObject(foreignKey string, dbTableName string) []any {
+
+	var result []any
+	query := m.DB.Table(dbTableName).Where(foreignKey)
+	query.Find(&result)
+	return result
+}
+
 // seedDefaultData creates default roles and permissions if they don't exist
 func (m *AuthorizationModule) seedDefaultData() error {
 	// Define default roles (for system-wide usage with 0 OrganizationId)
 	defaultRoles := []Role{
 		{
-			Name:           "Owner",
-			Description:    "Full access to all resources",
-			OrganizationId: 0, // System-wide role
-			IsSystem:       true,
+			Name:        "Owner",
+			Description: "Full access to all resources",
+			IsSystem:    true,
 		},
 		{
-			Name:           "Administrator",
-			Description:    "Administrative access with some limitations",
-			OrganizationId: 0, // System-wide role
-			IsSystem:       true,
+			Name:        "Administrator",
+			Description: "Administrative access with some limitations",
+			IsSystem:    true,
 		},
 		{
-			Name:           "Member",
-			Description:    "Standard member with limited access",
-			OrganizationId: 0, // System-wide role
-			IsSystem:       true,
+			Name:        "Member",
+			Description: "Standard member with limited access",
+			IsSystem:    true,
 		},
 		{
-			Name:           "Viewer",
-			Description:    "Read-only access to resources",
-			OrganizationId: 0, // System-wide role
-			IsSystem:       true,
+			Name:        "Viewer",
+			Description: "Read-only access to resources",
+			IsSystem:    true,
 		},
 	}
 
@@ -150,7 +154,7 @@ func (m *AuthorizationModule) seedDefaultData() error {
 	// Seed roles
 	for _, role := range defaultRoles {
 		var existingRole Role
-		result := tx.Where("name = ? AND organization_id = ?", role.Name, role.OrganizationId).First(&existingRole)
+		result := tx.Where("name = ? AND is_system = ?", role.Name, role.IsSystem).First(&existingRole)
 		if result.Error != nil && result.Error.Error() == "record not found" {
 			if err := tx.Create(&role).Error; err != nil {
 				tx.Rollback()
@@ -173,7 +177,7 @@ func (m *AuthorizationModule) seedDefaultData() error {
 
 	// Assign all permissions to Owner role
 	var ownerRole Role
-	if err := tx.Where("name = ? AND organization_id = ?", "Owner", 0).First(&ownerRole).Error; err == nil {
+	if err := tx.Where("name = ? AND is_system = ?", "Owner", true).First(&ownerRole).Error; err == nil {
 		// Get all permissions
 		var allPermissions []Permission
 		if err := tx.Find(&allPermissions).Error; err != nil {
@@ -199,7 +203,7 @@ func (m *AuthorizationModule) seedDefaultData() error {
 
 	// Assign appropriate permissions to Admin role
 	var adminRole Role
-	if err := tx.Where("name = ? AND organization_id = ?", "Administrator", 0).First(&adminRole).Error; err == nil {
+	if err := tx.Where("name = ? AND is_system = ?", "Administrator", true).First(&adminRole).Error; err == nil {
 		adminPermissions := []string{
 			"project:create", "project:read", "project:update", "project:delete", "project:list", "project:manage_members",
 			"client:create", "client:read", "client:update", "client:delete", "client:list",
@@ -244,7 +248,7 @@ func (m *AuthorizationModule) seedDefaultData() error {
 
 	// Assign appropriate permissions to Member role
 	var memberRole Role
-	if err := tx.Where("name = ? AND organization_id = ?", "Member", 0).First(&memberRole).Error; err == nil {
+	if err := tx.Where("name = ? AND is_system = ?", "Member", true).First(&memberRole).Error; err == nil {
 		memberPermissions := []string{
 			"project:read", "project:list",
 			"client:read", "client:list",
@@ -285,7 +289,7 @@ func (m *AuthorizationModule) seedDefaultData() error {
 
 	// Assign appropriate permissions to Viewer role
 	var viewerRole Role
-	if err := tx.Where("name = ? AND organization_id = ?", "Viewer", 0).First(&viewerRole).Error; err == nil {
+	if err := tx.Where("name = ? AND is_system = ?", "Viewer", true).First(&viewerRole).Error; err == nil {
 		viewerPermissions := []string{
 			"project:read", "project:list",
 			"client:read", "client:list",
@@ -326,8 +330,8 @@ func (m *AuthorizationModule) seedDefaultData() error {
 	return tx.Commit().Error
 }
 
-func (m *AuthorizationModule) GetModels() []interface{} {
-	return []interface{}{
+func (m *AuthorizationModule) GetModels() []any {
+	return []any{
 		&Role{},
 		&Permission{},
 		&RolePermission{},

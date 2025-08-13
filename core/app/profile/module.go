@@ -3,30 +3,30 @@ package profile
 import (
 	"base/core/logger"
 	"base/core/module"
+	"base/core/router"
 	"base/core/storage"
 
-	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
 type UserModule struct {
 	module.DefaultModule
 	DB            *gorm.DB
-	Controller    *UserController
-	Service       *UserService
+	Controller    *ProfileController
+	Service       *ProfileService
 	Logger        logger.Logger
 	ActiveStorage *storage.ActiveStorage
 }
 
 func NewUserModule(
 	db *gorm.DB,
-	router *gin.RouterGroup,
+	router *router.RouterGroup,
 	logger logger.Logger,
 	activeStorage *storage.ActiveStorage,
 ) module.Module {
 	// Initialize service with active storage
-	service := NewUserService(db, logger, activeStorage)
-	controller := NewUserController(service, logger)
+	service := NewProfileService(db, logger, activeStorage)
+	controller := NewProfileController(service, logger)
 
 	usersModule := &UserModule{
 		DB:            db,
@@ -39,7 +39,7 @@ func NewUserModule(
 	return usersModule
 }
 
-func (m *UserModule) Routes(router *gin.RouterGroup) {
+func (m *UserModule) Routes(router *router.RouterGroup) {
 	m.Controller.Routes(router)
 }
 
@@ -52,8 +52,8 @@ func (m *UserModule) Migrate() error {
 	return nil
 }
 
-func (m *UserModule) GetModels() []interface{} {
-	return []interface{}{
+func (m *UserModule) GetModels() []any {
+	return []any{
 		&User{},
 	}
 }

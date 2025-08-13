@@ -5,9 +5,8 @@ import (
 	"strconv"
 
 	"base/core/logger"
+	"base/core/router"
 	"base/core/storage"
-
-	"github.com/gin-gonic/gin"
 )
 
 type MediaController struct {
@@ -24,18 +23,22 @@ func NewMediaController(service *MediaService, storage *storage.ActiveStorage, l
 	}
 }
 
-func (c *MediaController) Routes(router *gin.RouterGroup) {
+func (c *MediaController) Routes(router *router.RouterGroup) {
 	// Main CRUD endpoints
-	router.GET("", c.List)        // Paginated list
-	router.GET("/all", c.ListAll) // Unpaginated list
-	router.GET("/:id", c.Get)
-	router.POST("", c.Create)
-	router.PUT("/:id", c.Update)
-	router.DELETE("/:id", c.Delete)
+	router.GET("/media", c.List) // Paginated list
+	router.POST("/media", c.Create)
+
+	// Specific endpoints (must come before :id routes)
+	router.GET("/media/all", c.ListAll) // Unpaginated list
+
+	// Parameterized routes (must come last)
+	router.GET("/media/:id", c.Get)
+	router.PUT("/media/:id", c.Update)
+	router.DELETE("/media/:id", c.Delete)
 
 	// File management endpoints
-	router.PUT("/:id/file", c.UpdateFile)
-	router.DELETE("/:id/file", c.RemoveFile)
+	router.PUT("/media/:id/file", c.UpdateFile)
+	router.DELETE("/media/:id/file", c.RemoveFile)
 }
 
 // Create godoc
@@ -52,11 +55,10 @@ func (c *MediaController) Routes(router *gin.RouterGroup) {
 // @Router /media [post]
 // @Security ApiKeyAuth
 // @Security BearerAuth
-func (c *MediaController) Create(ctx *gin.Context) {
+func (c *MediaController) Create(ctx *router.Context) error {
 	var req CreateMediaRequest
 	if err := ctx.ShouldBind(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
-		return
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	}
 
 	// Handle file upload
@@ -66,11 +68,10 @@ func (c *MediaController) Create(ctx *gin.Context) {
 
 	item, err := c.Service.Create(&req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
-		return
+		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 	}
 
-	ctx.JSON(http.StatusCreated, item.ToResponse())
+	return ctx.JSON(http.StatusCreated, item.ToResponse())
 }
 
 // UpdateFile godoc
@@ -85,26 +86,23 @@ func (c *MediaController) Create(ctx *gin.Context) {
 // @Router /media/{id}/file [put]
 // @Security ApiKeyAuth
 // @Security BearerAuth
-func (c *MediaController) UpdateFile(ctx *gin.Context) {
+func (c *MediaController) UpdateFile(ctx *router.Context) error {
 	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid id parameter"})
-		return
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid id parameter"})
 	}
 
 	file, err := ctx.FormFile("file")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "file is required"})
-		return
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "file is required"})
 	}
 
 	item, err := c.Service.UpdateFile(ctx, uint(id), file)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
-		return
+		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 	}
 
-	ctx.JSON(http.StatusOK, item.ToResponse())
+	return ctx.JSON(http.StatusOK, item.ToResponse())
 }
 
 // RemoveFile godoc
@@ -117,20 +115,18 @@ func (c *MediaController) UpdateFile(ctx *gin.Context) {
 // @Router /media/{id}/file [delete]
 // @Security ApiKeyAuth
 // @Security BearerAuth
-func (c *MediaController) RemoveFile(ctx *gin.Context) {
+func (c *MediaController) RemoveFile(ctx *router.Context) error {
 	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid id parameter"})
-		return
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid id parameter"})
 	}
 
 	item, err := c.Service.RemoveFile(ctx, uint(id))
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
-		return
+		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 	}
 
-	ctx.JSON(http.StatusOK, item.ToResponse())
+	return ctx.JSON(http.StatusOK, item.ToResponse())
 }
 
 // Update godoc
@@ -148,17 +144,15 @@ func (c *MediaController) RemoveFile(ctx *gin.Context) {
 // @Router /media/{id} [put]
 // @Security ApiKeyAuth
 // @Security BearerAuth
-func (c *MediaController) Update(ctx *gin.Context) {
+func (c *MediaController) Update(ctx *router.Context) error {
 	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid id parameter"})
-		return
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid id parameter"})
 	}
 
 	var req UpdateMediaRequest
 	if err := ctx.ShouldBind(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
-		return
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	}
 
 	// Handle file upload
@@ -168,11 +162,10 @@ func (c *MediaController) Update(ctx *gin.Context) {
 
 	item, err := c.Service.Update(uint(id), &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
-		return
+		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 	}
 
-	ctx.JSON(http.StatusOK, item.ToResponse())
+	return ctx.JSON(http.StatusOK, item.ToResponse())
 }
 
 // Delete godoc
@@ -185,19 +178,18 @@ func (c *MediaController) Update(ctx *gin.Context) {
 // @Router /media/{id} [delete]
 // @Security ApiKeyAuth
 // @Security BearerAuth
-func (c *MediaController) Delete(ctx *gin.Context) {
+func (c *MediaController) Delete(ctx *router.Context) error {
 	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid id parameter"})
-		return
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid id parameter"})
 	}
 
 	if err := c.Service.Delete(uint(id)); err != nil {
-		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
-		return
+		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 	}
 
 	ctx.Status(http.StatusNoContent)
+	return nil
 }
 
 // Get godoc
@@ -210,20 +202,18 @@ func (c *MediaController) Delete(ctx *gin.Context) {
 // @Router /media/{id} [get]
 // @Security ApiKeyAuth
 // @Security BearerAuth
-func (c *MediaController) Get(ctx *gin.Context) {
+func (c *MediaController) Get(ctx *router.Context) error {
 	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid id parameter"})
-		return
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "invalid id parameter"})
 	}
 
 	item, err := c.Service.GetById(uint(id))
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, ErrorResponse{Error: "media not found"})
-		return
+		return ctx.JSON(http.StatusNotFound, ErrorResponse{Error: "media not found"})
 	}
 
-	ctx.JSON(http.StatusOK, item.ToResponse())
+	return ctx.JSON(http.StatusOK, item.ToResponse())
 }
 
 // List godoc
@@ -237,7 +227,7 @@ func (c *MediaController) Get(ctx *gin.Context) {
 // @Router /media [get]
 // @Security ApiKeyAuth
 // @Security BearerAuth
-func (c *MediaController) List(ctx *gin.Context) {
+func (c *MediaController) List(ctx *router.Context) error {
 	page := 1
 	limit := 10
 
@@ -255,11 +245,10 @@ func (c *MediaController) List(ctx *gin.Context) {
 
 	result, err := c.Service.GetAll(&page, &limit)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
-		return
+		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 	}
 
-	ctx.JSON(http.StatusOK, result)
+	return ctx.JSON(http.StatusOK, result)
 }
 
 // ListAll godoc
@@ -271,14 +260,13 @@ func (c *MediaController) List(ctx *gin.Context) {
 // @Router /media/all [get]
 // @Security ApiKeyAuth
 // @Security BearerAuth
-func (c *MediaController) ListAll(ctx *gin.Context) {
+func (c *MediaController) ListAll(ctx *router.Context) error {
 	result, err := c.Service.GetAll(nil, nil)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
-		return
+		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 	}
 
-	ctx.JSON(http.StatusOK, result)
+	return ctx.JSON(http.StatusOK, result)
 }
 
 type ErrorResponse struct {

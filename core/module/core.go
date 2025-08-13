@@ -4,8 +4,7 @@ import (
 	"fmt"
 
 	"base/core/logger"
-
-	"github.com/gin-gonic/gin"
+	"base/core/router"
 )
 
 // CoreModuleProvider defines the interface for providing core modules
@@ -17,11 +16,11 @@ type CoreModuleProvider interface {
 type CoreOrchestrator struct {
 	initializer *Initializer
 	provider    CoreModuleProvider
-	authRouter  *gin.RouterGroup
+	authRouter  *router.RouterGroup
 }
 
 // NewCoreOrchestrator creates a new core module orchestrator
-func NewCoreOrchestrator(initializer *Initializer, provider CoreModuleProvider, authRouter *gin.RouterGroup) *CoreOrchestrator {
+func NewCoreOrchestrator(initializer *Initializer, provider CoreModuleProvider, authRouter *router.RouterGroup) *CoreOrchestrator {
 	return &CoreOrchestrator{
 		initializer: initializer,
 		provider:    provider,
@@ -84,7 +83,7 @@ func (co *CoreOrchestrator) initializeCoreModules(modules map[string]Module, dep
 		}
 
 		// Setup routes with special handling for auth modules
-		if routeModule, ok := mod.(interface{ Routes(*gin.RouterGroup) }); ok {
+		if routeModule, ok := mod.(interface{ Routes(*router.RouterGroup) }); ok {
 			// Use AuthRouter for auth modules, protected Router for others
 			if name == "authentication" || name == "authorization" {
 				routeModule.Routes(co.authRouter)

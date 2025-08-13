@@ -4,9 +4,9 @@ import (
 	"base/core/emitter"
 	"base/core/logger"
 	"base/core/module"
+	"base/core/router"
 	"base/core/storage"
 
-	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
@@ -19,7 +19,7 @@ type Module struct {
 	Storage    *storage.ActiveStorage
 }
 
-func NewTranslationModule(db *gorm.DB, router *gin.RouterGroup, log logger.Logger, emitter *emitter.Emitter, storage *storage.ActiveStorage) module.Module {
+func NewTranslationModule(db *gorm.DB, router *router.RouterGroup, log logger.Logger, emitter *emitter.Emitter, storage *storage.ActiveStorage) module.Module {
 	service := NewTranslationService(db, emitter, storage, log)
 	controller := NewTranslationController(service, storage)
 
@@ -34,7 +34,7 @@ func NewTranslationModule(db *gorm.DB, router *gin.RouterGroup, log logger.Logge
 	return m
 }
 
-func (m *Module) Routes(router *gin.RouterGroup) {
+func (m *Module) Routes(router *router.RouterGroup) {
 	m.Logger.Info("Registering Translation module routes")
 	m.Controller.Routes(router)
 	m.Logger.Info("Translation module routes registered")
@@ -44,6 +44,6 @@ func (m *Module) Migrate() error {
 	return m.DB.AutoMigrate(&Translation{})
 }
 
-func (m *Module) GetModels() []interface{} {
-	return []interface{}{&Translation{}}
+func (m *Module) GetModels() []any {
+	return []any{&Translation{}}
 }

@@ -87,7 +87,7 @@ func (f Field) Value() (driver.Value, error) {
 }
 
 // Scan implements sql.Scanner for database reading
-func (f *Field) Scan(value interface{}) error {
+func (f *Field) Scan(value any) error {
 	if value == nil {
 		f.Original = ""
 		f.Values = make(map[string]string)

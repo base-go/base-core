@@ -9,11 +9,13 @@ import (
 
 type User struct {
 	Id        uint                `gorm:"column:id;primary_key;auto_increment"`
-	Name      string              `gorm:"column:name;not null"`
-	Username  string              `gorm:"column:username;unique;not null"`
-	Email     string              `gorm:"column:email;unique;not null"`
+	FirstName string              `gorm:"column:first_name;not null;size:255"`
+	LastName  string              `gorm:"column:last_name;not null;size:255"`
+	Username  string              `gorm:"column:username;unique;not null;size:255"`
+	Phone     string              `gorm:"column:phone;unique;size:255"`
+	Email     string              `gorm:"column:email;unique;not null;size:255"`
 	Avatar    *storage.Attachment `gorm:"foreignKey:ModelId;references:Id"`
-	Password  string              `gorm:"column:password"`
+	Password  string              `gorm:"column:password;size:255"`
 	LastLogin *time.Time          `gorm:"column:last_login"`
 	CreatedAt time.Time           `gorm:"column:created_at"`
 	UpdatedAt time.Time           `gorm:"column:updated_at"`
@@ -25,21 +27,25 @@ func (User) TableName() string {
 }
 
 type CreateRequest struct {
-	Name     string `json:"name" binding:"required"`
-	Username string `json:"username" binding:"required"`
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=8"`
+	FirstName string `json:"first_name" binding:"required,max=255"`
+	LastName  string `json:"last_name" binding:"required,max=255"`
+	Username  string `json:"username" binding:"required,max=255"`
+	Phone     string `json:"phone" binding:"max=255"`
+	Email     string `json:"email" binding:"required,email,max=255"`
+	Password  string `json:"password" binding:"required,min=8,max=255"`
 }
 
 type UpdateRequest struct {
-	Name     string `form:"name"`
-	Username string `form:"username"`
-	Email    string `form:"email"`
+	FirstName string `form:"first_name" binding:"max=255"`
+	LastName  string `form:"last_name" binding:"max=255"`
+	Username  string `form:"username" binding:"max=255"`
+	Phone     string `form:"phone" binding:"max=255"`
+	Email     string `form:"email" binding:"email,max=255"`
 }
 
 type UpdatePasswordRequest struct {
-	OldPassword string `form:"OldPassword" binding:"required"`
-	NewPassword string `form:"NewPassword" binding:"required,min=6"`
+	OldPassword string `form:"OldPassword" binding:"required,max=255"`
+	NewPassword string `form:"NewPassword" binding:"required,min=6,max=255"`
 }
 
 // Implement the Attachable interface
@@ -54,8 +60,10 @@ func (u *User) GetModelName() string {
 // UserResponse represents the API response structure
 type UserResponse struct {
 	Id        uint   `json:"id"`
-	Name      string `json:"name"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
 	Username  string `json:"username"`
+	Phone     string `json:"phone"`
 	Email     string `json:"email"`
 	AvatarURL string `json:"avatar_url"`
 	LastLogin string `json:"last_login"`
@@ -71,10 +79,12 @@ type AvatarResponse struct {
 // Helper function to convert User to UserResponse
 func ToResponse(user *User) *UserResponse {
 	response := &UserResponse{
-		Id:       user.Id,
-		Name:     user.Name,
-		Username: user.Username,
-		Email:    user.Email,
+		Id:        user.Id,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Username:  user.Username,
+		Phone:     user.Phone,
+		Email:     user.Email,
 	}
 
 	if user.Avatar != nil {

@@ -2,9 +2,8 @@ package oauth
 
 import (
 	"base/core/logger"
+	"base/core/router"
 	"net/http"
-
-	"github.com/gin-gonic/gin"
 )
 
 type OAuthController struct {
@@ -21,7 +20,7 @@ func NewOAuthController(service *OAuthService, logger logger.Logger, config *OAu
 	}
 }
 
-func (c *OAuthController) Routes(router *gin.RouterGroup) {
+func (c *OAuthController) Routes(router *router.RouterGroup) {
 	router.POST("/google/callback", c.GoogleCallback)
 	router.POST("/facebook/callback", c.FacebookCallback)
 	router.POST("/apple/callback", c.AppleCallback)
@@ -39,25 +38,26 @@ func (c *OAuthController) Routes(router *gin.RouterGroup) {
 // @Failure 400 {object} ErrorResponse
 // @Failure 401 {object} ErrorResponse
 // @Router /oauth/google/callback [post]
-func (c *OAuthController) GoogleCallback(ctx *gin.Context) {
+func (c *OAuthController) GoogleCallback(ctx *router.Context) error {
 	var req struct {
 		IDToken string `json:"idToken"`
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		c.Logger.Error("Failed to bind JSON request", logger.String("error", err.Error()))
-		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid request payload"})
-		return
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid request payload"})
+		return nil
 	}
 
 	user, err := c.Service.ProcessGoogleOAuth(req.IDToken)
 	if err != nil {
 		c.Logger.Error("Google OAuth authentication failed", logger.String("error", err.Error()))
-		ctx.JSON(http.StatusUnauthorized, ErrorResponse{Error: err.Error()})
-		return
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, ErrorResponse{Error: err.Error()})
+		return nil
 	}
 
 	ctx.JSON(http.StatusOK, user)
+	return nil
 }
 
 // FacebookCallback godoc
@@ -72,25 +72,26 @@ func (c *OAuthController) GoogleCallback(ctx *gin.Context) {
 // @Failure 400 {object} ErrorResponse
 // @Failure 401 {object} ErrorResponse
 // @Router /oauth/facebook/callback [post]
-func (c *OAuthController) FacebookCallback(ctx *gin.Context) {
+func (c *OAuthController) FacebookCallback(ctx *router.Context) error {
 	var req struct {
 		AccessToken string `json:"accessToken"`
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		c.Logger.Error("Failed to bind JSON request", logger.String("error", err.Error()))
-		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid request payload"})
-		return
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid request payload"})
+		return nil
 	}
 
 	user, err := c.Service.ProcessFacebookOAuth(req.AccessToken)
 	if err != nil {
 		c.Logger.Error("Facebook OAuth authentication failed", logger.String("error", err.Error()))
-		ctx.JSON(http.StatusUnauthorized, ErrorResponse{Error: err.Error()})
-		return
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, ErrorResponse{Error: err.Error()})
+		return nil
 	}
 
 	ctx.JSON(http.StatusOK, user)
+	return nil
 }
 
 // AppleCallback godoc
@@ -105,25 +106,26 @@ func (c *OAuthController) FacebookCallback(ctx *gin.Context) {
 // @Failure 400 {object} ErrorResponse
 // @Failure 401 {object} ErrorResponse
 // @Router /oauth/apple/callback [post]
-func (c *OAuthController) AppleCallback(ctx *gin.Context) {
+func (c *OAuthController) AppleCallback(ctx *router.Context) error {
 	var req struct {
 		IDToken string `json:"idToken"`
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		c.Logger.Error("Failed to bind JSON request", logger.String("error", err.Error()))
-		ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid request payload"})
-		return
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid request payload"})
+		return nil
 	}
 
 	user, err := c.Service.ProcessAppleOAuth(req.IDToken)
 	if err != nil {
 		c.Logger.Error("Apple OAuth authentication failed", logger.String("error", err.Error()))
-		ctx.JSON(http.StatusUnauthorized, ErrorResponse{Error: err.Error()})
-		return
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, ErrorResponse{Error: err.Error()})
+		return nil
 	}
 
 	ctx.JSON(http.StatusOK, user)
+	return nil
 }
 
 // ErrorResponse represents an error response

@@ -2,6 +2,7 @@ package module
 
 import (
 	"fmt"
+	"maps"
 	"reflect"
 	"sync"
 
@@ -12,7 +13,7 @@ import (
 type Module interface {
 	Init() error
 	Migrate() error
-	GetModels() []interface{}
+	GetModels() []any
 }
 
 // DefaultModule provides a default implementation for the Module interface.
@@ -34,7 +35,7 @@ func (DefaultModule) Migrate() error {
 func (DefaultModule) Routes() {
 	// Default implementation does nothing
 }
-func (DefaultModule) GetModels() []interface{} {
+func (DefaultModule) GetModels() []any {
 	return nil
 }
 
@@ -78,9 +79,7 @@ func GetAllModules() map[string]Module {
 	lock.RLock()
 	defer lock.RUnlock()
 	copy := make(map[string]Module, len(modulesRegistry))
-	for key, value := range modulesRegistry {
-		copy[key] = value
-	}
+	maps.Copy(copy, modulesRegistry)
 	return copy
 }
 

@@ -26,10 +26,14 @@ type LoginEvent struct {
 // RegisterRequest represents the payload for user registration
 // @Description Registration request payload
 type RegisterRequest struct {
-	// @Description User's full name
-	Name string `json:"name" example:"John Doe" gorm:"column:name"`
+	// @Description User's first name
+	FirstName string `json:"first_name" example:"John" gorm:"column:first_name"`
+	// @Description User's last name
+	LastName string `json:"last_name" example:"Doe" gorm:"column:last_name"`
 	// @Description Username for the account
 	Username string `json:"username" example:"johndoe" gorm:"column:username"`
+	// @Description User's phone number
+	Phone string `json:"phone" example:"+1234567890" gorm:"column:phone"`
 	// @Description User's email address
 	Email string `json:"email" binding:"required,email" example:"john@example.com"`
 	// @Description Password for the account (minimum 8 characters)
@@ -53,9 +57,9 @@ type ResetPasswordRequest struct {
 
 type AuthResponse struct {
 	profile.UserResponse
-	AccessToken string      `json:"accessToken"`
-	Exp         int64       `json:"exp"`
-	Extend      interface{} `json:"extend,omitempty"`
+	AccessToken string `json:"accessToken"`
+	Exp         int64  `json:"exp"`
+	Extend      any    `json:"extend,omitempty"`
 }
 
 type ErrorResponse struct {

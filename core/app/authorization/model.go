@@ -24,7 +24,6 @@ type Role struct {
 	Id              uint      `gorm:"primaryKey;autoIncrement;column:id" json:"id"`
 	Name            string    `gorm:"not null" json:"name"`
 	Description     string    `json:"description"`
-	OrganizationId  uint      `gorm:"not null" json:"organization_id"`
 	IsSystem        bool      `gorm:"default:false" json:"is_system"`
 	CreatedAt       time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt       time.Time `gorm:"autoUpdateTime" json:"updated_at"`
@@ -40,7 +39,6 @@ func (r *Role) ToResponse() *RoleResponse {
 		Id:              r.Id,
 		Name:            r.Name,
 		Description:     r.Description,
-		OrganizationId:  r.OrganizationId,
 		IsSystem:        r.IsSystem,
 		CreatedAt:       r.CreatedAt,
 		UpdatedAt:       r.UpdatedAt,
@@ -53,7 +51,6 @@ type RoleResponse struct {
 	Id              uint      `json:"id"`
 	Name            string    `json:"name"`
 	Description     string    `json:"description"`
-	OrganizationId  uint      `json:"organization_id"`
 	IsSystem        bool      `json:"is_system"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
@@ -62,10 +59,9 @@ type RoleResponse struct {
 
 // CreateRoleRequest represents the payload for creating a role
 type CreateRoleRequest struct {
-	Name           string `json:"name" binding:"required"`
-	Description    string `json:"description"`
-	OrganizationId string `json:"organization_id" binding:"required"`
-	IsSystem       bool   `json:"is_system"`
+	Name        string `json:"name" binding:"required"`
+	Description string `json:"description"`
+	IsSystem    bool   `json:"is_system"`
 }
 
 // UpdateRoleRequest represents the payload for updating a role
@@ -159,19 +155,18 @@ type RolePermissionResponse struct {
 
 // ResourcePermission grants permissions on resource types or specific resources
 type ResourcePermission struct {
-	Id             uint       `gorm:"primaryKey;autoIncrement;column:id" json:"id"`
-	OrganizationId uint       `gorm:"not null" json:"organization_id"`
-	ResourceType   string     `gorm:"not null" json:"resource_type"` // Resource type (e.g., "project", "employee", etc.)
-	ResourceId     string     `json:"resource_id"`                   // Optional: specific resource ID if applicable
-	UserId         uint       `json:"user_id"`                       // Optional: specific user ID if applicable
-	RoleId         string     `gorm:"index" json:"role_id"`          // Optional: role ID for role-based permissions
-	Action         string     `json:"action"`                        // Action type (e.g., "create", "read", "update", "delete")
-	DefaultScope   string     `json:"default_scope"`                 // Default permission scope (e.g., "own", "team", "all")
-	PermissionId   uint       `gorm:"index" json:"permission_id"`    // Optional: legacy permission ID
-	CreatedAt      time.Time  `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt      time.Time  `gorm:"autoUpdateTime" json:"updated_at"`
-	Permission     Permission `gorm:"foreignKey:PermissionId" json:"-"`
-	Role           Role       `gorm:"foreignKey:RoleId;references:Id" json:"-"` // Relationship to Role
+	Id           uint       `gorm:"primaryKey;autoIncrement;column:id" json:"id"`
+	ResourceType string     `gorm:"not null" json:"resource_type"` // Resource type (e.g., "project", "employee", etc.)
+	ResourceId   string     `json:"resource_id"`                   // Optional: specific resource ID if applicable
+	UserId       uint       `json:"user_id"`                       // Optional: specific user ID if applicable
+	RoleId       string     `gorm:"index" json:"role_id"`          // Optional: role ID for role-based permissions
+	Action       string     `json:"action"`                        // Action type (e.g., "create", "read", "update", "delete")
+	DefaultScope string     `json:"default_scope"`                 // Default permission scope (e.g., "own", "team", "all")
+	PermissionId uint       `gorm:"index" json:"permission_id"`    // Optional: legacy permission ID
+	CreatedAt    time.Time  `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt    time.Time  `gorm:"autoUpdateTime" json:"updated_at"`
+	Permission   Permission `gorm:"foreignKey:PermissionId" json:"-"`
+	Role         Role       `gorm:"foreignKey:RoleId;references:Id" json:"-"` // Relationship to Role
 }
 
 // ToResponse converts the resource permission to a response object
@@ -180,36 +175,34 @@ func (rp *ResourcePermission) ToResponse() *ResourcePermissionResponse {
 		return nil
 	}
 	return &ResourcePermissionResponse{
-		Id:             rp.Id,
-		OrganizationId: rp.OrganizationId,
-		ResourceType:   rp.ResourceType,
-		ResourceId:     rp.ResourceId,
-		UserId:         rp.UserId,
-		RoleId:         rp.RoleId,
-		Action:         rp.Action,
-		DefaultScope:   rp.DefaultScope,
-		PermissionId:   rp.PermissionId,
-		CreatedAt:      rp.CreatedAt,
-		UpdatedAt:      rp.UpdatedAt,
+		Id:           rp.Id,
+		ResourceType: rp.ResourceType,
+		ResourceId:   rp.ResourceId,
+		UserId:       rp.UserId,
+		RoleId:       rp.RoleId,
+		Action:       rp.Action,
+		DefaultScope: rp.DefaultScope,
+		PermissionId: rp.PermissionId,
+		CreatedAt:    rp.CreatedAt,
+		UpdatedAt:    rp.UpdatedAt,
 		// Role details will be added where needed
 	}
 }
 
 // ResourcePermissionResponse represents the response structure for a resource permission
 type ResourcePermissionResponse struct {
-	Id             uint                `json:"id"`
-	OrganizationId uint                `json:"organization_id"`
-	ResourceType   string              `json:"resource_type"`
-	ResourceId     string              `json:"resource_id,omitempty"`
-	UserId         uint                `json:"user_id,omitempty"`
-	RoleId         string              `json:"role_id,omitempty"`
-	Action         string              `json:"action,omitempty"`
-	DefaultScope   string              `json:"default_scope,omitempty"`
-	PermissionId   uint                `json:"permission_id,omitempty"`
-	CreatedAt      time.Time           `json:"created_at"`
-	UpdatedAt      time.Time           `json:"updated_at"`
-	Permission     *PermissionResponse `json:"permission,omitempty"`
-	RoleDetails    *RoleResponse       `json:"role_details,omitempty"`
+	Id           uint                `json:"id"`
+	ResourceType string              `json:"resource_type"`
+	ResourceId   string              `json:"resource_id,omitempty"`
+	UserId       uint                `json:"user_id,omitempty"`
+	RoleId       string              `json:"role_id,omitempty"`
+	Action       string              `json:"action,omitempty"`
+	DefaultScope string              `json:"default_scope,omitempty"`
+	PermissionId uint                `json:"permission_id,omitempty"`
+	CreatedAt    time.Time           `json:"created_at"`
+	UpdatedAt    time.Time           `json:"updated_at"`
+	Permission   *PermissionResponse `json:"permission,omitempty"`
+	RoleDetails  *RoleResponse       `json:"role_details,omitempty"`
 }
 
 // ErrorResponse represents an error response
@@ -221,19 +214,6 @@ type ErrorResponse struct {
 type SuccessResponse struct {
 	Message string `json:"message"`
 }
-
-// Constants for resource types
-const (
-	ResourceOrganization   = "organization"
-	ResourceProject        = "project"
-	ResourceEmployee       = "employee"
-	ResourceClient         = "client"
-	ResourceScope          = "scope"
-	ResourceIdeaGroup      = "idea_group"
-	ResourceIdea           = "idea"
-	ResourcePermissionType = "permission"
-	ResourceRole           = "role"
-)
 
 // Constants for actions
 const (

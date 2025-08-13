@@ -6,10 +6,10 @@ import (
 	"base/core/emitter"
 	"base/core/logger"
 	"base/core/module"
+	"base/core/router"
 	"base/core/storage"
 	"fmt"
 
-	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
@@ -28,7 +28,7 @@ type Module struct {
 // ModuleDependencies interface defines what dependencies a module needs
 type ModuleDependencies interface {
 	GetDB() *gorm.DB
-	GetRouter() *gin.RouterGroup
+	GetRouter() *router.RouterGroup
 	GetLogger() logger.Logger
 	GetEmitter() *emitter.Emitter
 	GetStorage() *storage.ActiveStorage
@@ -54,7 +54,7 @@ func (bm *Module) LogInfo(message string, fields ...logger.Field) {
 	contextFields := append([]logger.Field{
 		logger.String("module", bm.Name),
 	}, fields...)
-	
+
 	bm.Logger.Info(message, contextFields...)
 }
 
@@ -63,7 +63,7 @@ func (bm *Module) LogError(message string, fields ...logger.Field) {
 	contextFields := append([]logger.Field{
 		logger.String("module", bm.Name),
 	}, fields...)
-	
+
 	bm.Logger.Error(message, contextFields...)
 }
 
@@ -72,15 +72,15 @@ func (bm *Module) LogWarn(message string, fields ...logger.Field) {
 	contextFields := append([]logger.Field{
 		logger.String("module", bm.Name),
 	}, fields...)
-	
+
 	bm.Logger.Warn(message, contextFields...)
 }
 
 // EmitEvent emits an event with module context
-func (bm *Module) EmitEvent(eventName string, data interface{}) {
+func (bm *Module) EmitEvent(eventName string, data any) {
 	if bm.Emitter != nil {
 		// Add module context to event data
-		eventData := map[string]interface{}{
+		eventData := map[string]any{
 			"module": bm.Name,
 			"data":   data,
 		}
@@ -89,25 +89,25 @@ func (bm *Module) EmitEvent(eventName string, data interface{}) {
 }
 
 // AutoMigrate performs database migration for given models
-func (bm *Module) AutoMigrate(models ...interface{}) error {
+func (bm *Module) AutoMigrate(models ...any) error {
 	if len(models) == 0 {
 		return nil
 	}
-	
+
 	bm.LogInfo("Starting database migration", logger.Int("models_count", len(models)))
-	
+
 	err := bm.DB.AutoMigrate(models...)
 	if err != nil {
 		bm.LogError("Database migration failed", logger.String("error", err.Error()))
 		return fmt.Errorf("failed to migrate %s module: %w", bm.Name, err)
 	}
-	
+
 	bm.LogInfo("Database migration completed successfully")
 	return nil
 }
 
 // RegisterRoutes is a helper method for route registration with logging
-func (bm *Module) RegisterRoutes(router *gin.RouterGroup, routeSetup func(*gin.RouterGroup)) {
+func (bm *Module) RegisterRoutes(router *router.RouterGroup, routeSetup func(*router.RouterGroup)) {
 	bm.LogInfo("Registering module routes")
 	routeSetup(router)
 	bm.LogInfo("Module routes registered successfully")
@@ -128,31 +128,31 @@ func (bm *Module) ValidateConfig(validator func(*config.Config) error) error {
 	if validator == nil {
 		return nil
 	}
-	
+
 	bm.LogInfo("Validating module configuration")
-	
+
 	if err := validator(bm.Config); err != nil {
 		bm.LogError("Configuration validation failed", logger.String("error", err.Error()))
 		return fmt.Errorf("invalid configuration for %s module: %w", bm.Name, err)
 	}
-	
+
 	bm.LogInfo("Module configuration validated successfully")
 	return nil
 }
 
 // SetupHooks sets up module event hooks
-func (bm *Module) SetupHooks(hooks map[string][]func(interface{})) {
+func (bm *Module) SetupHooks(hooks map[string][]func(any)) {
 	if bm.Emitter == nil || len(hooks) == 0 {
 		return
 	}
-	
+
 	bm.LogInfo("Setting up module event hooks", logger.Int("hooks_count", len(hooks)))
-	
+
 	for eventName, handlers := range hooks {
 		for _, handler := range handlers {
 			bm.Emitter.On(eventName, handler)
 		}
 	}
-	
+
 	bm.LogInfo("Module event hooks setup completed")
 }

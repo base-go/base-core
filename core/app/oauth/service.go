@@ -103,7 +103,7 @@ func (s *OAuthService) handleFacebookOAuth(accessToken string) (email, name, use
 		return "", "", "", "", "", fmt.Errorf("failed to read Facebook response: %w", err)
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	if err := json.Unmarshal(body, &result); err != nil {
 		return "", "", "", "", "", fmt.Errorf("failed to parse Facebook response: %w", err)
 	}
@@ -113,8 +113,8 @@ func (s *OAuthService) handleFacebookOAuth(accessToken string) (email, name, use
 	email, _ = result["email"].(string)
 	username = strings.ToLower(strings.ReplaceAll(name, " ", ""))
 
-	if pictureData, ok := result["picture"].(map[string]interface{}); ok {
-		if data, ok := pictureData["data"].(map[string]interface{}); ok {
+	if pictureData, ok := result["picture"].(map[string]any); ok {
+		if data, ok := pictureData["data"].(map[string]any); ok {
 			picture, _ = data["url"].(string)
 		}
 	}
@@ -131,9 +131,10 @@ func (s *OAuthService) processUser(email, name, username, pictureURL, provider, 
 			// Create new user
 			user = OAuthUser{
 				User: profile.User{
-					Email:    email,
-					Name:     name,
-					Username: s.generateUniqueUsername(username),
+					Email:     email,
+					FirstName: name[:strings.Index(name, " ")],
+					LastName:  name[strings.Index(name, " ")+1:],
+					Username:  s.generateUniqueUsername(username),
 				},
 				Provider:       provider,
 				ProviderID:     providerID,
@@ -161,7 +162,8 @@ func (s *OAuthService) processUser(email, name, username, pictureURL, provider, 
 		}
 	} else {
 		// Update existing user
-		user.Name = name
+		user.User.FirstName = name[:strings.Index(name, " ")]
+		user.User.LastName = name[strings.Index(name, " ")+1:]
 		user.Provider = provider
 		user.ProviderID = providerID
 		user.AccessToken = token

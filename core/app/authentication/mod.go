@@ -5,8 +5,8 @@ import (
 	"base/core/emitter"
 	"base/core/logger"
 	"base/core/module"
+	"base/core/router"
 
-	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
@@ -20,7 +20,7 @@ type AuthenticationModule struct {
 	Emitter     *emitter.Emitter
 }
 
-func NewAuthenticationModule(db *gorm.DB, router *gin.RouterGroup, emailSender email.Sender, logger logger.Logger, emitter *emitter.Emitter) module.Module {
+func NewAuthenticationModule(db *gorm.DB, router *router.RouterGroup, emailSender email.Sender, logger logger.Logger, emitter *emitter.Emitter) module.Module {
 	service := NewAuthService(db, emailSender, emitter)
 	controller := NewAuthController(service, emailSender, logger)
 
@@ -36,7 +36,7 @@ func NewAuthenticationModule(db *gorm.DB, router *gin.RouterGroup, emailSender e
 	return authModule
 }
 
-func (m *AuthenticationModule) Routes(router *gin.RouterGroup) {
+func (m *AuthenticationModule) Routes(router *router.RouterGroup) {
 	// Router is already /api/auth from start.go
 	m.Controller.Routes(router)
 }
@@ -45,8 +45,8 @@ func (m *AuthenticationModule) Migrate() error {
 	return m.DB.AutoMigrate(&AuthUser{})
 }
 
-func (m *AuthenticationModule) GetModels() []interface{} {
-	return []interface{}{
+func (m *AuthenticationModule) GetModels() []any {
+	return []any{
 		&AuthUser{},
 	}
 }

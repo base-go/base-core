@@ -26,7 +26,7 @@ type UserService struct {
 // Initialize event listeners
 func (s *UserService) Init() {
     // User creation events
-    s.Emitter.On("user.created", func(data interface{}) {
+    s.Emitter.On("user.created", func(data any) {
         if user, ok := data.(*models.User); ok {
             s.Logger.Info("New user registered",
                 logger.Int("id", int(user.Id)),
@@ -35,7 +35,7 @@ func (s *UserService) Init() {
     })
 
     // User update events
-    s.Emitter.On("user.updated", func(data interface{}) {
+    s.Emitter.On("user.updated", func(data any) {
         if user, ok := data.(*models.User); ok {
             s.Logger.Info("User profile updated",
                 logger.Int("id", int(user.Id)))
@@ -67,7 +67,7 @@ type PostService struct {
 
 func (s *PostService) Init() {
     // File upload events
-    s.Emitter.On("post.featured_image.uploaded", func(data interface{}) {
+    s.Emitter.On("post.featured_image.uploaded", func(data any) {
         if post, ok := data.(*models.Post); ok {
             s.Logger.Info("Featured image uploaded",
                 logger.Int("post_id", int(post.Id)),
@@ -76,7 +76,7 @@ func (s *PostService) Init() {
     })
 
     // File deletion events
-    s.Emitter.On("post.featured_image.deleted", func(data interface{}) {
+    s.Emitter.On("post.featured_image.deleted", func(data any) {
         if post, ok := data.(*models.Post); ok {
             s.Logger.Info("Featured image deleted",
                 logger.Int("post_id", int(post.Id)))
@@ -112,7 +112,7 @@ type NotificationService struct {
 
 func (s *NotificationService) Init() {
     // Email notification on post creation
-    s.Emitter.On("post.created", func(data interface{}) {
+    s.Emitter.On("post.created", func(data any) {
         if post, ok := data.(*models.Post); ok {
             msg := email.Message{
                 To:      []string{post.Author.Email},
@@ -128,7 +128,7 @@ func (s *NotificationService) Init() {
     })
 
     // Log post creation
-    s.Emitter.On("post.created", func(data interface{}) {
+    s.Emitter.On("post.created", func(data any) {
         if post, ok := data.(*models.Post); ok {
             s.Logger.Info("Post published",
                 logger.Int("id", int(post.Id)),
@@ -145,12 +145,12 @@ The emitter includes built-in panic recovery:
 
 ```go
 func (s *PostService) Init() {
-    s.Emitter.On("post.created", func(data interface{}) {
+    s.Emitter.On("post.created", func(data any) {
         // Even if this panics, other listeners will still execute
         panic("something went wrong")
     })
 
-    s.Emitter.On("post.created", func(data interface{}) {
+    s.Emitter.On("post.created", func(data any) {
         // This will still run
         if post, ok := data.(*models.Post); ok {
             s.Logger.Info("Post created", logger.Int("id", int(post.Id)))

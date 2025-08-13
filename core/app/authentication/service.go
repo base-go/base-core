@@ -69,12 +69,15 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 	}
 
 	now := time.Now()
+
 	user := AuthUser{
 		User: profile.User{
-			Email:    req.Email,
-			Password: string(hashedPassword),
-			Name:     req.Name,
-			Username: req.Username,
+			Email:     req.Email,
+			Password:  string(hashedPassword),
+			FirstName: req.FirstName,
+			LastName:  req.LastName,
+			Username:  req.Username,
+			Phone:     req.Phone,
 		},
 		LastLogin: &now,
 	}
@@ -104,10 +107,11 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 	}
 
 	userData := types.UserData{
-		Id:       user.Id,
-		Name:     user.Name,
-		Username: user.Username,
-		Email:    user.Email,
+		Id:        user.Id,
+		FirstName: user.User.FirstName,
+		LastName:  user.User.LastName,
+		Username:  user.Username,
+		Email:     user.Email,
 	}
 
 	// Emit registration event
@@ -217,7 +221,7 @@ func (s *AuthService) ForgotPassword(email string) error {
 		return fmt.Errorf("failed to begin transaction: %w", tx.Error)
 	}
 
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"reset_token":        token,
 		"reset_token_expiry": sql.NullTime{Time: expiry, Valid: true},
 	}
@@ -266,7 +270,7 @@ func (s *AuthService) ResetPassword(email, token, newPassword string) error {
 		return fmt.Errorf("failed to begin transaction: %w", tx.Error)
 	}
 
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"password":           string(hashedPassword),
 		"reset_token":        "",
 		"reset_token_expiry": nil,
@@ -320,7 +324,7 @@ func (s *AuthService) sendEmail(to, subject, title, content string) error {
 	}
 
 	var body bytes.Buffer
-	err := cachedTemplate.Execute(&body, map[string]interface{}{
+	err := cachedTemplate.Execute(&body, map[string]any{
 		"Title":   title,
 		"Content": content,
 		"Year":    time.Now().Year(),
@@ -347,12 +351,12 @@ func (s *AuthService) sendPasswordResetEmail(user *AuthUser, token string) error
 		<h2>%s</h2>
 		<p>This code will expire in 15 minutes.</p>
 		<p>If you didn't request a password reset, please ignore this email or contact support if you have concerns.</p>
-	`, user.Name, token)
+	`, user.FirstName, token)
 	return s.sendEmail(user.Email, title, title, content)
 }
 
 func (s *AuthService) sendPasswordChangedEmail(user *AuthUser) error {
 	title := "Your Base Password Has Been Changed"
-	content := fmt.Sprintf("<p>Hi %s,</p><p>Your password has been successfully changed. If you did not make this change, please contact support immediately.</p>", user.Name)
+	content := fmt.Sprintf("<p>Hi %s,</p><p>Your password has been successfully changed. If you did not make this change, please contact support immediately.</p>", user.FirstName)
 	return s.sendEmail(user.Email, title, title, content)
 }

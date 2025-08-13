@@ -36,7 +36,7 @@ func (a *Attachment) Value() (driver.Value, error) {
 }
 
 // Scan implements the sql.Scanner interface
-func (a *Attachment) Scan(value interface{}) error {
+func (a *Attachment) Scan(value any) error {
 	if value == nil {
 		*a = Attachment{}
 		return nil

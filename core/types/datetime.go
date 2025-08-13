@@ -63,7 +63,7 @@ func (dt DateTime) Value() (driver.Value, error) {
 }
 
 // Scan implements the sql.Scanner interface for database operations
-func (dt *DateTime) Scan(value interface{}) error {
+func (dt *DateTime) Scan(value any) error {
 	if value == nil {
 		dt.Time = time.Time{}
 		return nil

@@ -548,53 +548,43 @@ func (s *AuthorizationService) SeedPermissions() error {
 }
 
 // SeedRoles creates default roles if they don't exist
-func (s *AuthorizationService) SeedRoles(organizationId string) error {
-	// Convert string ID to uint
-	orgIdUint, err := strconv.ParseUint(organizationId, 10, 32)
-	if err != nil {
-		return ErrInvalidOrganizationId
-	}
-
+func (s *AuthorizationService) SeedRoles() error {
 	// Define default roles
 	defaultRoles := []Role{
 		{
-			Name:           "Owner",
-			Description:    "Full access to all resources",
-			OrganizationId: uint(orgIdUint),
-			IsSystem:       true,
-			CreatedAt:      time.Now(),
-			UpdatedAt:      time.Now(),
+			Name:        "Owner",
+			Description: "Full access to all resources",
+			IsSystem:    true,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
 		},
 		{
-			Name:           "Administrator",
-			Description:    "Administrative access with some limitations",
-			OrganizationId: uint(orgIdUint),
-			IsSystem:       true,
-			CreatedAt:      time.Now(),
-			UpdatedAt:      time.Now(),
+			Name:        "Administrator",
+			Description: "Administrative access with some limitations",
+			IsSystem:    true,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
 		},
 		{
-			Name:           "Member",
-			Description:    "Standard member with limited access",
-			OrganizationId: uint(orgIdUint),
-			IsSystem:       true,
-			CreatedAt:      time.Now(),
-			UpdatedAt:      time.Now(),
+			Name:        "Member",
+			Description: "Standard member with limited access",
+			IsSystem:    true,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
 		},
 		{
-			Name:           "External",
-			Description:    "External user with minimal access",
-			OrganizationId: uint(orgIdUint),
-			IsSystem:       true,
-			CreatedAt:      time.Now(),
-			UpdatedAt:      time.Now(),
+			Name:        "External",
+			Description: "External user with minimal access",
+			IsSystem:    true,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
 		},
 	}
 
 	// Create roles if they don't exist
 	for _, role := range defaultRoles {
 		var existingRole Role
-		result := s.DB.First(&existingRole, "name = ? AND organization_id = ?", role.Name, role.OrganizationId)
+		result := s.DB.First(&existingRole, "name = ? AND is_system = ?", role.Name, role.IsSystem)
 
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			if err := s.DB.Create(&role).Error; err != nil {
@@ -609,20 +599,14 @@ func (s *AuthorizationService) SeedRoles(organizationId string) error {
 }
 
 // SetupRolePermissions assigns default permissions to system roles
-func (s *AuthorizationService) SetupRolePermissions(organizationId string) error {
-	// Convert string ID to uint
-	orgIdUint, err := strconv.ParseUint(organizationId, 10, 32)
-	if err != nil {
-		return ErrInvalidOrganizationId
-	}
-
+func (s *AuthorizationService) SetupRolePermissions() error {
 	// First seed permissions
 	if err := s.SeedPermissions(); err != nil {
 		return err
 	}
 
 	// Then seed roles
-	if err := s.SeedRoles(organizationId); err != nil {
+	if err := s.SeedRoles(); err != nil {
 		return err
 	}
 
@@ -634,7 +618,7 @@ func (s *AuthorizationService) SetupRolePermissions(organizationId string) error
 
 	// Get the owner role
 	var ownerRole Role
-	if err := s.DB.Where("name = ? AND organization_id = ?", "Owner", uint(orgIdUint)).First(&ownerRole).Error; err != nil {
+	if err := s.DB.Where("name = ? AND is_system = ?", "Owner", true).First(&ownerRole).Error; err != nil {
 		return err
 	}
 
@@ -666,7 +650,7 @@ func (s *AuthorizationService) SetupRolePermissions(organizationId string) error
 
 	// Get the admin role
 	var adminRole Role
-	if err := s.DB.Where("name = ? AND organization_id = ?", "Administrator", uint(orgIdUint)).First(&adminRole).Error; err != nil {
+	if err := s.DB.Where("name = ? AND is_system = ?", "Administrator", true).First(&adminRole).Error; err != nil {
 		return err
 	}
 
@@ -710,7 +694,7 @@ func (s *AuthorizationService) SetupRolePermissions(organizationId string) error
 
 	// Get the member role
 	var memberRole Role
-	if err := s.DB.Where("name = ? AND organization_id = ?", "Member", uint(orgIdUint)).First(&memberRole).Error; err != nil {
+	if err := s.DB.Where("name = ? AND is_system = ?", "Member", true).First(&memberRole).Error; err != nil {
 		return err
 	}
 
@@ -753,7 +737,7 @@ func (s *AuthorizationService) SetupRolePermissions(organizationId string) error
 
 	// Get the external role
 	var externalRole Role
-	if err := s.DB.Where("name = ? AND organization_id = ?", "External", uint(orgIdUint)).First(&externalRole).Error; err != nil {
+	if err := s.DB.Where("name = ? AND is_system = ?", "External", true).First(&externalRole).Error; err != nil {
 		return err
 	}
 
@@ -813,15 +797,14 @@ func (s *AuthorizationService) SeedTestPermissionsForUser(userId string) error {
 
 	// Get the owner role for organization ID 1 (assuming it exists)
 	var ownerRole Role
-	if err := s.DB.Where("name = ? AND (organization_id = ? OR organization_id = 0)", "Owner", 1).First(&ownerRole).Error; err != nil {
+	if err := s.DB.Where("name = ? AND is_system = ?", "Owner", true).First(&ownerRole).Error; err != nil {
 		// Try to create the owner role if it doesn't exist
 		ownerRole = Role{
-			Name:           "Owner",
-			Description:    "Full access to all resources",
-			OrganizationId: 1,
-			IsSystem:       true,
-			CreatedAt:      time.Now(),
-			UpdatedAt:      time.Now(),
+			Name:        "Owner",
+			Description: "Full access to all resources",
+			IsSystem:    true,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
 		}
 		if err := s.DB.Create(&ownerRole).Error; err != nil {
 			return fmt.Errorf("failed to create owner role: %w", err)
@@ -935,7 +918,7 @@ func (s *AuthorizationService) GetAccessibleResources(userId uint64, orgId uint6
 	// First, check for specific resource access entries
 	var resourceAccessList []ResourceAccess
 	if err := s.DB.Where(
-		"member_id = ? AND resource_type = ?", 
+		"member_id = ? AND resource_type = ?",
 		memberId, resourceType,
 	).Find(&resourceAccessList).Error; err != nil {
 		return nil, "", err
@@ -980,13 +963,13 @@ func (s *AuthorizationService) GetAccessibleResources(userId uint64, orgId uint6
 func (s *AuthorizationService) isResourceInDepartment(resourceType, department string) bool {
 	// This is a simplified implementation - in a real system you'd likely
 	// have a database table mapping resources to departments
-	
+
 	// Map departments to their resource types
 	departmentResources := map[string][]string{
-		"HR": {"employee", "absence", "timesheet"},
-		"Finance": {"invoice", "payment", "expense"},
+		"HR":          {"employee", "absence", "timesheet"},
+		"Finance":     {"invoice", "payment", "expense"},
 		"Engineering": {"project", "scope_version", "idea", "idea_group"},
-		"Sales": {"client", "lead", "opportunity"},
+		"Sales":       {"client", "lead", "opportunity"},
 	}
 
 	// Check if the resource type belongs to the specified department

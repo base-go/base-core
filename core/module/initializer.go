@@ -5,16 +5,16 @@ import (
 	"base/core/email"
 	"base/core/emitter"
 	"base/core/logger"
+	"base/core/router"
 	"base/core/storage"
 
-	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
 // Dependencies contains all dependencies that can be injected into modules
 type Dependencies struct {
 	DB          *gorm.DB
-	Router      *gin.RouterGroup
+	Router      *router.RouterGroup
 	Logger      logger.Logger
 	Emitter     *emitter.Emitter
 	Storage     *storage.ActiveStorage
@@ -70,7 +70,7 @@ func (mi *Initializer) Initialize(modules map[string]Module, deps Dependencies) 
 		}
 
 		// Setup routes
-		if routeModule, ok := mod.(interface{ Routes(*gin.RouterGroup) }); ok {
+		if routeModule, ok := mod.(interface{ Routes(*router.RouterGroup) }); ok {
 			routeModule.Routes(deps.Router)
 		}
 

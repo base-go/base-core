@@ -88,7 +88,7 @@ func (s *MediaService) GetAll(page, limit *int) (*types.PaginatedResponse, error
 	}
 
 	// Convert to response
-	responses := make([]interface{}, len(items))
+	responses := make([]any, len(items))
 	for i, item := range items {
 		responses[i] = item.ToListResponse()
 	}

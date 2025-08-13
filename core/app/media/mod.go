@@ -4,9 +4,9 @@ import (
 	"base/core/emitter"
 	"base/core/logger"
 	"base/core/module"
+	"base/core/router"
 	"base/core/storage"
 
-	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
@@ -22,7 +22,7 @@ type MediaModule struct {
 
 func NewMediaModule(
 	db *gorm.DB,
-	router *gin.RouterGroup,
+	router *router.RouterGroup,
 	activeStorage *storage.ActiveStorage,
 	emitter *emitter.Emitter,
 	logger logger.Logger,
@@ -42,7 +42,7 @@ func NewMediaModule(
 	return mediaModule
 }
 
-func (m *MediaModule) Routes(router *gin.RouterGroup) {
+func (m *MediaModule) Routes(router *router.RouterGroup) {
 	m.Logger.Info("Registering media module routes")
 	mediaGroup := router.Group("/media")
 	m.Controller.Routes(mediaGroup)
@@ -53,6 +53,6 @@ func (m *MediaModule) Migrate() error {
 	return m.DB.AutoMigrate(&Media{})
 }
 
-func (m *MediaModule) GetModels() []interface{} {
-	return []interface{}{&Media{}}
+func (m *MediaModule) GetModels() []any {
+	return []any{&Media{}}
 }

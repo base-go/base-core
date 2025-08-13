@@ -2,12 +2,11 @@ package authorization
 
 import (
 	"base/core/logger"
+	"base/core/router"
 	"base/core/types"
 	"fmt"
 	"net/http"
 	"strconv"
-
-	"github.com/gin-gonic/gin"
 )
 
 // AuthorizationController handles HTTP requests for authorization
@@ -25,7 +24,7 @@ func NewAuthorizationController(service *AuthorizationService, logger logger.Log
 }
 
 // Routes registers routes for the authorization controller
-func (c *AuthorizationController) Routes(router *gin.RouterGroup) {
+func (c *AuthorizationController) Routes(router *router.RouterGroup) {
 	c.Logger.Info("Setting up authorization routes")
 	authzRoutes := router.Group("/authorization")
 	{
@@ -65,7 +64,7 @@ func (c *AuthorizationController) Routes(router *gin.RouterGroup) {
 // @Failure 400 {object} types.ErrorResponse "Bad request - Missing organization_id"
 // @Failure 500 {object} types.ErrorResponse "Internal server error"
 // @Router /authorization/roles [get]
-func (c *AuthorizationController) GetRoles(ctx *gin.Context) {
+func (c *AuthorizationController) GetRoles(ctx *router.Context) error {
 	orgIDStr := ctx.GetHeader("Base-Orgid")
 	var orgID uint64
 	if orgIDStr != "" {
@@ -90,13 +89,12 @@ func (c *AuthorizationController) GetRoles(ctx *gin.Context) {
 			logger.String("error", err.Error()),
 			logger.String("organization_id", fmt.Sprintf("%d", orgID)))
 
-		ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
+		return ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
 			Error: "Failed to retrieve roles",
 		})
-		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	return ctx.JSON(http.StatusOK, map[string]any{
 		"data": roles,
 	})
 }
@@ -114,36 +112,33 @@ func (c *AuthorizationController) GetRoles(ctx *gin.Context) {
 // @Failure 404 {object} types.ErrorResponse "Role not found"
 // @Failure 500 {object} types.ErrorResponse "Internal server error"
 // @Router /authorization/roles/{id} [get]
-func (c *AuthorizationController) GetRole(ctx *gin.Context) {
+func (c *AuthorizationController) GetRole(ctx *router.Context) error {
 	roleId := ctx.Param("id")
 	roleIdUint, err := strconv.ParseUint(roleId, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
+		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
 			Error: "Invalid role ID: " + err.Error(),
 		})
-		return
 	}
 
 	role, err := c.Service.GetRole(roleIdUint)
 	if err != nil {
 		if err == ErrRoleNotFound {
-			ctx.JSON(http.StatusNotFound, types.ErrorResponse{
+			return ctx.JSON(http.StatusNotFound, types.ErrorResponse{
 				Error: "Role not found",
 			})
-			return
 		}
 
 		c.Logger.Error("Error getting role",
 			logger.String("error", err.Error()),
 			logger.String("role_id", roleId))
 
-		ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
+		return ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
 			Error: "Failed to retrieve role",
 		})
-		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	return ctx.JSON(http.StatusOK, map[string]any{
 		"data": role,
 	})
 }
@@ -161,28 +156,25 @@ func (c *AuthorizationController) GetRole(ctx *gin.Context) {
 // @Failure 400 {object} types.ErrorResponse "Invalid role data"
 // @Failure 500 {object} types.ErrorResponse "Internal server error"
 // @Router /authorization/roles [post]
-func (c *AuthorizationController) CreateRole(ctx *gin.Context) {
+func (c *AuthorizationController) CreateRole(ctx *router.Context) error {
 	var role Role
 	if err := ctx.ShouldBindJSON(&role); err != nil {
-		ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
+		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
 			Error: "Invalid role data: " + err.Error(),
 		})
-		return
 	}
 
 	if err := c.Service.CreateRole(&role); err != nil {
 		c.Logger.Error("Error creating role",
 			logger.String("error", err.Error()),
-			logger.String("organization_id", fmt.Sprintf("%d", role.OrganizationId)),
 			logger.String("role_name", role.Name))
 
-		ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
+		return ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
 			Error: "Failed to create role: " + err.Error(),
 		})
-		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{
+	return ctx.JSON(http.StatusCreated, map[string]any{
 		"data": role,
 	})
 }
@@ -203,22 +195,20 @@ func (c *AuthorizationController) CreateRole(ctx *gin.Context) {
 // @Failure 404 {object} types.ErrorResponse "Role not found"
 // @Failure 500 {object} types.ErrorResponse "Internal server error"
 // @Router /authorization/roles/{id} [put]
-func (c *AuthorizationController) UpdateRole(ctx *gin.Context) {
+func (c *AuthorizationController) UpdateRole(ctx *router.Context) error {
 	roleId := ctx.Param("id")
 	roleIdInt, err := strconv.ParseUint(roleId, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
+		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
 			Error: "Invalid role ID: " + err.Error(),
 		})
-		return
 	}
 
 	var role Role
 	if err := ctx.ShouldBindJSON(&role); err != nil {
-		ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
+		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
 			Error: "Invalid role data: " + err.Error(),
 		})
-		return
 	}
 
 	role.Id = uint(roleIdInt)
@@ -226,28 +216,25 @@ func (c *AuthorizationController) UpdateRole(ctx *gin.Context) {
 	if err := c.Service.UpdateRole(&role); err != nil {
 		switch err {
 		case ErrRoleNotFound:
-			ctx.JSON(http.StatusNotFound, types.ErrorResponse{
+			return ctx.JSON(http.StatusNotFound, types.ErrorResponse{
 				Error: "Role not found",
 			})
-			return
 		case ErrSystemRoleUnmodifiable:
-			ctx.JSON(http.StatusForbidden, types.ErrorResponse{
+			return ctx.JSON(http.StatusForbidden, types.ErrorResponse{
 				Error: "System roles cannot be modified",
 			})
-			return
 		}
 
 		c.Logger.Error("Error updating role",
 			logger.String("error", err.Error()),
 			logger.String("role_id", roleId))
 
-		ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
+		return ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
 			Error: "Failed to update role",
 		})
-		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	return ctx.JSON(http.StatusOK, map[string]any{
 		"data": role,
 	})
 }
@@ -266,41 +253,37 @@ func (c *AuthorizationController) UpdateRole(ctx *gin.Context) {
 // @Failure 404 {object} types.ErrorResponse "Role not found"
 // @Failure 500 {object} types.ErrorResponse "Internal server error"
 // @Router /authorization/roles/{id} [delete]
-func (c *AuthorizationController) DeleteRole(ctx *gin.Context) {
+func (c *AuthorizationController) DeleteRole(ctx *router.Context) error {
 	roleId := ctx.Param("id")
 	roleIdUint, err := strconv.ParseUint(roleId, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
+		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
 			Error: "Invalid role ID: " + err.Error(),
 		})
-		return
 	}
 
 	if err := c.Service.DeleteRole(roleIdUint); err != nil {
 		switch err {
 		case ErrRoleNotFound:
-			ctx.JSON(http.StatusNotFound, types.ErrorResponse{
+			return ctx.JSON(http.StatusNotFound, types.ErrorResponse{
 				Error: "Role not found",
 			})
-			return
 		case ErrSystemRoleUnmodifiable:
-			ctx.JSON(http.StatusForbidden, types.ErrorResponse{
+			return ctx.JSON(http.StatusForbidden, types.ErrorResponse{
 				Error: "System roles cannot be deleted",
 			})
-			return
 		}
 
 		c.Logger.Error("Error deleting role",
 			logger.String("error", err.Error()),
 			logger.String("role_id", roleId))
 
-		ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
+		return ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
 			Error: "Failed to delete role",
 		})
-		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	return ctx.JSON(http.StatusOK, map[string]any{
 		"success": true,
 	})
 }
@@ -318,36 +301,33 @@ func (c *AuthorizationController) DeleteRole(ctx *gin.Context) {
 // @Failure 404 {object} types.ErrorResponse "Role not found"
 // @Failure 500 {object} types.ErrorResponse "Internal server error"
 // @Router /authorization/roles/{id}/permissions [get]
-func (c *AuthorizationController) GetRolePermissions(ctx *gin.Context) {
+func (c *AuthorizationController) GetRolePermissions(ctx *router.Context) error {
 	roleId := ctx.Param("id")
 	roleIdUint, err := strconv.ParseUint(roleId, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
+		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
 			Error: "Invalid role ID: " + err.Error(),
 		})
-		return
 	}
 
 	permissions, err := c.Service.GetRolePermissions(roleIdUint)
 	if err != nil {
 		if err == ErrRoleNotFound {
-			ctx.JSON(http.StatusNotFound, types.ErrorResponse{
+			return ctx.JSON(http.StatusNotFound, types.ErrorResponse{
 				Error: "Role not found",
 			})
-			return
 		}
 
 		c.Logger.Error("Error getting role permissions",
 			logger.String("error", err.Error()),
 			logger.String("role_id", roleId))
 
-		ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
+		return ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
 			Error: "Failed to retrieve permissions",
 		})
-		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	return ctx.JSON(http.StatusOK, map[string]any{
 		"data": permissions,
 	})
 }
@@ -368,14 +348,13 @@ func (c *AuthorizationController) GetRolePermissions(ctx *gin.Context) {
 // @Failure 409 {object} types.ErrorResponse "Permission already assigned"
 // @Failure 500 {object} types.ErrorResponse "Internal server error"
 // @Router /authorization/roles/{id}/permissions [post]
-func (c *AuthorizationController) AssignPermission(ctx *gin.Context) {
+func (c *AuthorizationController) AssignPermission(ctx *router.Context) error {
 	roleId := ctx.Param("id")
 	roleIdUint, err := strconv.ParseUint(roleId, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
+		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
 			Error: "Invalid role ID: " + err.Error(),
 		})
-		return
 	}
 
 	var request struct {
@@ -383,37 +362,32 @@ func (c *AuthorizationController) AssignPermission(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&request); err != nil {
-		ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
+		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
 			Error: "Invalid request: " + err.Error(),
 		})
-		return
 	}
 
 	permissionIdUint, err := strconv.ParseUint(request.PermissionId, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
+		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
 			Error: "Invalid permission ID: " + err.Error(),
 		})
-		return
 	}
 
 	if err := c.Service.AssignPermissionToRole(roleIdUint, permissionIdUint); err != nil {
 		switch err {
 		case ErrRoleNotFound:
-			ctx.JSON(http.StatusNotFound, types.ErrorResponse{
+			return ctx.JSON(http.StatusNotFound, types.ErrorResponse{
 				Error: "Role not found",
 			})
-			return
 		case ErrPermissionNotFound:
-			ctx.JSON(http.StatusNotFound, types.ErrorResponse{
+			return ctx.JSON(http.StatusNotFound, types.ErrorResponse{
 				Error: "Permission not found",
 			})
-			return
 		case ErrDuplicatePermission:
-			ctx.JSON(http.StatusConflict, types.ErrorResponse{
+			return ctx.JSON(http.StatusConflict, types.ErrorResponse{
 				Error: "Permission already assigned to this role",
 			})
-			return
 		}
 
 		c.Logger.Error("Error assigning permission",
@@ -421,13 +395,12 @@ func (c *AuthorizationController) AssignPermission(ctx *gin.Context) {
 			logger.String("role_id", roleId),
 			logger.String("permission_id", request.PermissionId))
 
-		ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
+		return ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
 			Error: "Failed to assign permission",
 		})
-		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	return ctx.JSON(http.StatusOK, map[string]any{
 		"success": true,
 	})
 }
@@ -446,38 +419,34 @@ func (c *AuthorizationController) AssignPermission(ctx *gin.Context) {
 // @Failure 404 {object} types.ErrorResponse "Role or permission not found"
 // @Failure 500 {object} types.ErrorResponse "Internal server error"
 // @Router /authorization/roles/{id}/permissions/{permissionId} [delete]
-func (c *AuthorizationController) RevokePermission(ctx *gin.Context) {
+func (c *AuthorizationController) RevokePermission(ctx *router.Context) error {
 	roleId := ctx.Param("id")
 	permissionId := ctx.Param("permissionId")
 
 	roleIdUint, err := strconv.ParseUint(roleId, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
+		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
 			Error: "Invalid role ID: " + err.Error(),
 		})
-		return
 	}
 
 	permissionIdUint, err := strconv.ParseUint(permissionId, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
+		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
 			Error: "Invalid permission ID: " + err.Error(),
 		})
-		return
 	}
 
 	if err := c.Service.RevokePermissionFromRole(roleIdUint, permissionIdUint); err != nil {
 		switch err {
 		case ErrRoleNotFound:
-			ctx.JSON(http.StatusNotFound, types.ErrorResponse{
+			return ctx.JSON(http.StatusNotFound, types.ErrorResponse{
 				Error: "Role not found",
 			})
-			return
 		case ErrPermissionNotFound:
-			ctx.JSON(http.StatusNotFound, types.ErrorResponse{
+			return ctx.JSON(http.StatusNotFound, types.ErrorResponse{
 				Error: "Permission not found",
 			})
-			return
 		}
 
 		c.Logger.Error("Error revoking permission",
@@ -485,13 +454,12 @@ func (c *AuthorizationController) RevokePermission(ctx *gin.Context) {
 			logger.String("role_id", roleId),
 			logger.String("permission_id", permissionId))
 
-		ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
+		return ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
 			Error: "Failed to revoke permission",
 		})
-		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	return ctx.JSON(http.StatusOK, map[string]any{
 		"success": true,
 	})
 }
@@ -509,29 +477,26 @@ func (c *AuthorizationController) RevokePermission(ctx *gin.Context) {
 // @Failure 400 {object} types.ErrorResponse "Invalid resource permission data"
 // @Failure 500 {object} types.ErrorResponse "Internal server error"
 // @Router /authorization/resource-permissions [post]
-func (c *AuthorizationController) CreateResourcePermission(ctx *gin.Context) {
+func (c *AuthorizationController) CreateResourcePermission(ctx *router.Context) error {
 	var resourcePermission ResourcePermission
 	if err := ctx.ShouldBindJSON(&resourcePermission); err != nil {
-		ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
+		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
 			Error: "Invalid resource permission data: " + err.Error(),
 		})
-		return
 	}
 
 	if err := c.Service.CreateResourcePermission(&resourcePermission); err != nil {
 		c.Logger.Error("Error creating resource permission",
 			logger.String("error", err.Error()),
-			logger.String("organization_id", fmt.Sprintf("%d", resourcePermission.OrganizationId)),
 			logger.String("resource_type", resourcePermission.ResourceType),
 			logger.String("resource_id", resourcePermission.ResourceId))
 
-		ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
+		return ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
 			Error: "Failed to create resource permission",
 		})
-		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{
+	return ctx.JSON(http.StatusCreated, map[string]any{
 		"data": resourcePermission,
 	})
 }
@@ -548,14 +513,13 @@ func (c *AuthorizationController) CreateResourcePermission(ctx *gin.Context) {
 // @Success 200 {object} object{success=boolean} "Resource permission deleted successfully"
 // @Failure 500 {object} types.ErrorResponse "Internal server error"
 // @Router /authorization/resource-permissions/{id} [delete]
-func (c *AuthorizationController) DeleteResourcePermission(ctx *gin.Context) {
+func (c *AuthorizationController) DeleteResourcePermission(ctx *router.Context) error {
 	id := ctx.Param("id")
 	idUint, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
+		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
 			Error: "Invalid resource permission ID: " + err.Error(),
 		})
-		return
 	}
 
 	if err := c.Service.DeleteResourcePermission(idUint); err != nil {
@@ -563,13 +527,12 @@ func (c *AuthorizationController) DeleteResourcePermission(ctx *gin.Context) {
 			logger.String("error", err.Error()),
 			logger.String("id", id))
 
-		ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
+		return ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
 			Error: "Failed to delete resource permission",
 		})
-		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	return ctx.JSON(http.StatusOK, map[string]any{
 		"success": true,
 	})
 }
@@ -587,7 +550,7 @@ func (c *AuthorizationController) DeleteResourcePermission(ctx *gin.Context) {
 // @Failure 400 {object} types.ErrorResponse "Invalid request data"
 // @Failure 500 {object} types.ErrorResponse "Internal server error"
 // @Router /authorization/check [post]
-func (c *AuthorizationController) CheckPermission(ctx *gin.Context) {
+func (c *AuthorizationController) CheckPermission(ctx *router.Context) error {
 	var request struct {
 		UserId       uint64 `json:"user_id" binding:"required"`
 		OrgId        uint64 `json:"organization_id" binding:"required"`
@@ -597,10 +560,9 @@ func (c *AuthorizationController) CheckPermission(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&request); err != nil {
-		ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
+		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
 			Error: "Invalid request: " + err.Error(),
 		})
-		return
 	}
 
 	var hasPermission bool
@@ -632,13 +594,12 @@ func (c *AuthorizationController) CheckPermission(ctx *gin.Context) {
 			logger.String("action", request.Action),
 			logger.String("resource_id", request.ResourceId))
 
-		ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
+		return ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
 			Error: "Failed to check permission",
 		})
-		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	return ctx.JSON(http.StatusOK, map[string]any{
 		"has_permission": hasPermission,
 	})
 }
