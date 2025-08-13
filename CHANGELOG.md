@@ -5,6 +5,21 @@ All notable changes to the Base Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.1.1] - 2025-08-13
+
+### Added
+- **🎯 Enhanced DateTime Type Support** - Comprehensive date/time handling
+  - Support for MySQL, JSON, and HTML datetime formats
+  - Flexible parsing with multiple format fallbacks
+  - Proper timezone handling and RFC3339 compliance
+  - Database scanner and valuer interface implementation
+
+### Improved
+- **📊 Database Performance Optimization**
+  - Optimized field types and indexing strategies  
+  - Better GORM tag support for various field types
+  - Enhanced foreign key relationships and constraints
+
 ## [v2.1.0] - 2025-08-13
 
 ### Added
