@@ -31,7 +31,6 @@ RUN chown appuser:appuser /app/base-api
 RUN chmod +x /app/base-api
 
 # Copy other files as needed
-COPY --from=build /src/docs ./docs
 COPY --from=build /src/logs ./logs
 COPY --from=build /src/storage ./storage
 

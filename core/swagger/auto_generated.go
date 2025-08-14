@@ -10,54 +10,6 @@ func init() {
 
 // RegisterAllRoutes registers all auto-discovered routes
 func RegisterAllRoutes() {
-	AutoRegisterRouteDetailed("POST", "/api/categories", "Create a new Category", "Create a new Category with the input payload", []string{"App/Category"},
-		[]Parameter{
-		{Name: "categories", In: "body", Description: "Create Category request", Required: true, Schema: Schema{Type: "models.CreateCategoryRequest"}},
-	}, map[string]Response{
-		"201": {Description: "{object}"},
-		"400": {Description: "{object}"},
-		"500": {Description: "{object}"},
-	}, []map[string][]string{{"ApiKeyAuth": {}}, {"BearerAuth": {}}, })
-	AutoRegisterRouteDetailed("GET", "/api/categories/{id}", "Get a Category", "Get a Category by its id", []string{"App/Category"},
-		[]Parameter{
-		{Name: "id", In: "path", Description: "Category id", Required: true, Schema: Schema{Type: "int"}},
-	}, map[string]Response{
-		"200": {Description: "{object}"},
-		"400": {Description: "{object}"},
-		"404": {Description: "{object}"},
-	}, []map[string][]string{{"ApiKeyAuth": {}}, {"BearerAuth": {}}, })
-	AutoRegisterRouteDetailed("GET", "/api/categories", "List categories", "Get a list of categories", []string{"App/Category"},
-		[]Parameter{
-		{Name: "page", In: "query", Description: "Page number", Required: false, Schema: Schema{Type: "int"}},
-		{Name: "limit", In: "query", Description: "Number of items per page", Required: false, Schema: Schema{Type: "int"}},
-	}, map[string]Response{
-		"200": {Description: "{object}"},
-		"400": {Description: "{object}"},
-		"500": {Description: "{object}"},
-	}, []map[string][]string{{"ApiKeyAuth": {}}, {"BearerAuth": {}}, })
-	AutoRegisterRouteDetailed("GET", "/api/categories/all", "List all categories without pagination", "Get a list of all categories without pagination", []string{"App/Category"},
-		nil, map[string]Response{
-		"200": {Description: "{object}"},
-		"500": {Description: "{object}"},
-	}, []map[string][]string{{"ApiKeyAuth": {}}, {"BearerAuth": {}}, })
-	AutoRegisterRouteDetailed("PUT", "/api/categories/{id}", "Update a Category", "Update a Category by its id", []string{"Category"},
-		[]Parameter{
-		{Name: "id", In: "path", Description: "Category id", Required: true, Schema: Schema{Type: "int"}},
-		{Name: "categories", In: "body", Description: "Update Category request", Required: true, Schema: Schema{Type: "models.UpdateCategoryRequest"}},
-	}, map[string]Response{
-		"200": {Description: "{object}"},
-		"400": {Description: "{object}"},
-		"404": {Description: "{object}"},
-		"500": {Description: "{object}"},
-	}, []map[string][]string{{"ApiKeyAuth": {}}, {"BearerAuth": {}}, })
-	AutoRegisterRouteDetailed("DELETE", "/api/categories/{id}", "Delete a Category", "Delete a Category by its id", []string{"Category"},
-		[]Parameter{
-		{Name: "id", In: "path", Description: "Category id", Required: true, Schema: Schema{Type: "int"}},
-	}, map[string]Response{
-		"200": {Description: "{object}"},
-		"400": {Description: "{object}"},
-		"500": {Description: "{object}"},
-	}, []map[string][]string{{"ApiKeyAuth": {}}, {"BearerAuth": {}}, })
 	AutoRegisterRouteDetailed("POST", "/api/auth/register", "Register", "Register user", []string{"Core/Auth"},
 		[]Parameter{
 		{Name: "body", In: "body", Description: "Register Request", Required: true, Schema: Schema{Type: "RegisterRequest"}},

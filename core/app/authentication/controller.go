@@ -42,17 +42,29 @@ func (c *AuthController) Routes(router *router.RouterGroup) {
 // @Param body body RegisterRequest true "Register Request"
 // @Success 201 {object} AuthResponse
 // @Failure 400 {object} ErrorResponse
+// @Failure 409 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /auth/register [post]
 func (c *AuthController) Register(ctx *router.Context) error {
 	var req RegisterRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
+		// Log why the request was invalid
+		c.logger.Error("Invalid register request",
+			logger.String("error", err.Error()))
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 	}
 
 	user, err := c.service.Register(&req)
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to register user"})
+		// Log the underlying service error to help debug 500s
+		c.logger.Error("Failed to register user",
+			logger.String("error", err.Error()))
+		status := http.StatusInternalServerError
+		// Provide a better status for common cases
+		if strings.Contains(strings.ToLower(err.Error()), "user already exists") {
+			status = http.StatusConflict // 409
+		}
+		return ctx.JSON(status, ErrorResponse{Error: err.Error()})
 	}
 
 	//	Send welcome email
