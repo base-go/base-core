@@ -35,10 +35,12 @@ func TestProfileService(t *testing.T) {
 	profileService := profile.NewProfileService(helper.DB, helper.Logger, mockStorage)
 
 	t.Run("Profile service operations for 100% coverage", func(t *testing.T) {
+		// Clean database before each sub-test group
+		helper.CleanDatabase()
 
 		t.Run("RemoveAvatar - success", func(t *testing.T) {
 			// Create a test user with avatar
-			testUser := helper.CreateTestUser("removeavatar@example.com", "removeavataruser", "+1555555555")
+			testUser := helper.CreateUniqueTestUser("removeavatar")
 			
 			// Test RemoveAvatar with user that has no avatar (simpler test)
 			ctx := context.Background()

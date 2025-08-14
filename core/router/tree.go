@@ -61,7 +61,7 @@ walk:
 			path = path[i:]
 
 			if n.wildChild {
-				n = n.children[0]
+				n = n.children[len(n.children)-1]
 				n.priority++
 
 				// Check if the wildcard matches
@@ -154,7 +154,7 @@ func (n *node) insertChild(path, fullPath string, handler HandlerFunc) {
 				nType: param,
 				path:  wildcard,
 			}
-			n.children = []*node{child}
+			n.children = append(n.children, child)
 			n = child
 
 			// If the path doesn't end with the wildcard, then there will be
@@ -226,24 +226,24 @@ walk: // Outer loop for walking the tree
 			if path[:len(prefix)] == prefix {
 				path = path[len(prefix):]
 
-				// If this node does not have a wildcard child,
-				// we can just look up the next child node and continue
-				if !n.wildChild {
-					idxc := path[0]
-					for i, c := range []byte(n.indices) {
-						if c == idxc {
-							n = n.children[i]
-							continue walk
-						}
+				// Always try static routes first, even if wildcard child exists
+				idxc := path[0]
+				for i, c := range []byte(n.indices) {
+					if c == idxc {
+						n = n.children[i]
+						continue walk
 					}
+				}
 
+				// If no static route found and wildcard child exists, try wildcard
+				if n.wildChild {
+					// Handle wildcard child (now always the last child)
+					n = n.children[len(n.children)-1]
+				} else {
 					// Nothing found
 					tsr = (path == "/" && n.handler != nil)
 					return
 				}
-
-				// Handle wildcard child
-				n = n.children[0]
 				switch n.nType {
 				case param:
 					// Find param end

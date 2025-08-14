@@ -39,6 +39,9 @@ func TestAuthenticationControllers(t *testing.T) {
 	authController.Routes(authGroup)
 
 	t.Run("Authentication controller operations comprehensive coverage", func(t *testing.T) {
+		// Clean database before each sub-test group
+		helper.CleanDatabase()
+		
 		t.Run("POST /auth/register - successful registration", func(t *testing.T) {
 			req := &authentication.RegisterRequest{
 				FirstName: "John",
@@ -151,12 +154,12 @@ func TestAuthenticationControllers(t *testing.T) {
 
 			r.ServeHTTP(w, httpReq)
 
-			assert.Equal(t, http.StatusInternalServerError, w.Code)
+			assert.Equal(t, http.StatusConflict, w.Code)
 
 			var response authentication.ErrorResponse
 			err = json.Unmarshal(w.Body.Bytes(), &response)
 			assert.NoError(t, err)
-			assert.Equal(t, "Failed to register user", response.Error)
+			assert.Equal(t, "user already exists", response.Error)
 		})
 
 		t.Run("POST /auth/login - successful login", func(t *testing.T) {

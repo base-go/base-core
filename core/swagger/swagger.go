@@ -162,10 +162,6 @@ func (s *SwaggerService) GenerateSwaggerDoc() map[string]any {
 				"name":        "Core/Translation",
 				"description": "Translation and localization",
 			},
-			{
-				"name":        "App/Categories",
-				"description": "Category management",
-			},
 		},
 		"paths": s.generatePaths(),
 	}

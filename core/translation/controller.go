@@ -28,20 +28,20 @@ func (c *TranslationController) Routes(router *router.RouterGroup) {
 	router.GET("/translations", c.List)
 	router.POST("/translations", c.Create)
 
-	// Bulk operations
+	// Bulk operations - MUST come before parameterized routes
 	router.POST("/translations/bulk", c.BulkUpdate)
 
-	// Utility endpoints
+	// Utility endpoints - MUST come before parameterized routes
 	router.GET("/translations/languages", c.GetSupportedLanguages)
 
-	// Model-specific operations
+	// Model-specific operations - MUST come before parameterized routes  
 	router.GET("/translations/models/:model/:model_id", c.GetForModel)
 	router.GET("/translations/models/:model/:model_id/:language", c.GetForModelAndLanguage)
 
-	// CRUD operations with :id parameter
-	router.GET("/translations/:id", c.Get)
-	router.PUT("/translations/:id", c.Update)
-	router.DELETE("/translations/:id", c.Delete)
+	// CRUD operations with :id parameter - MUST come LAST
+	router.GET("/translations/by-id/:id", c.Get)
+	router.PUT("/translations/by-id/:id", c.Update)
+	router.DELETE("/translations/by-id/:id", c.Delete)
 }
 
 // List godoc
@@ -109,7 +109,7 @@ func (c *TranslationController) List(ctx *router.Context) error {
 // @Failure 400 {object} types.ErrorResponse
 // @Failure 404 {object} types.ErrorResponse
 // @Failure 500 {object} types.ErrorResponse
-// @Router /translations/{id} [get]
+// @Router /translations/by-id/{id} [get]
 func (c *TranslationController) Get(ctx *router.Context) error {
 	idStr := ctx.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)
@@ -168,7 +168,7 @@ func (c *TranslationController) Create(ctx *router.Context) error {
 // @Failure 400 {object} types.ErrorResponse
 // @Failure 404 {object} types.ErrorResponse
 // @Failure 500 {object} types.ErrorResponse
-// @Router /translations/{id} [put]
+// @Router /translations/by-id/{id} [put]
 func (c *TranslationController) Update(ctx *router.Context) error {
 	idStr := ctx.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)
@@ -204,7 +204,7 @@ func (c *TranslationController) Update(ctx *router.Context) error {
 // @Failure 400 {object} types.ErrorResponse
 // @Failure 404 {object} types.ErrorResponse
 // @Failure 500 {object} types.ErrorResponse
-// @Router /translations/{id} [delete]
+// @Router /translations/by-id/{id} [delete]
 func (c *TranslationController) Delete(ctx *router.Context) error {
 	idStr := ctx.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)

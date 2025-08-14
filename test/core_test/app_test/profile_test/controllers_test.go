@@ -50,10 +50,12 @@ func TestProfileControllers(t *testing.T) {
 	profileController.Routes(profileGroup)
 
 	t.Run("Profile controller operations comprehensive coverage", func(t *testing.T) {
+		// Clean database before each sub-test group
+		helper.CleanDatabase()
 
 		t.Run("GET /profile - success", func(t *testing.T) {
 			// Create a fresh test user for this test
-			testUser := helper.CreateTestUser("get-profile@example.com", "getprofileuser", "+1111111111")
+			testUser := helper.CreateUniqueTestUser("getprofile")
 
 			w := httptest.NewRecorder()
 			httpReq, _ := http.NewRequest("GET", "/profile", nil)
@@ -132,7 +134,7 @@ func TestProfileControllers(t *testing.T) {
 
 		t.Run("PUT /profile - success", func(t *testing.T) {
 			// Create a fresh test user for this test
-			testUser := helper.CreateTestUser("update-profile@example.com", "updateprofileuser", "+2222222222")
+			testUser := helper.CreateUniqueTestUser("updateprofile")
 
 			req := &profile.UpdateRequest{
 				FirstName: "Updated",
@@ -219,7 +221,7 @@ func TestProfileControllers(t *testing.T) {
 
 		t.Run("PUT /profile - invalid JSON", func(t *testing.T) {
 			// Create a fresh test user for this test
-			testUser := helper.CreateTestUser("invalid-json@example.com", "invalidjsonuser", "+4444444444")
+			testUser := helper.CreateUniqueTestUser("invalidjson")
 
 			w := httptest.NewRecorder()
 			httpReq, _ := http.NewRequest("PUT", "/profile", bytes.NewBuffer([]byte("invalid json")))
@@ -248,7 +250,7 @@ func TestProfileControllers(t *testing.T) {
 
 		t.Run("PUT /profile/avatar - success", func(t *testing.T) {
 			// Create a fresh test user for this test
-			testUser := helper.CreateTestUser("avatar-upload@example.com", "avataruser", "+3333333333")
+			testUser := helper.CreateUniqueTestUser("avatarupload")
 
 			// Create a test file
 			body := &bytes.Buffer{}
@@ -323,7 +325,7 @@ func TestProfileControllers(t *testing.T) {
 
 		t.Run("PUT /profile/avatar - missing file", func(t *testing.T) {
 			// Create a fresh test user for this test
-			testUser := helper.CreateTestUser("avatar-missing@example.com", "avatarmissinguser", "+5555555555")
+			testUser := helper.CreateUniqueTestUser("avatarmissing")
 
 			w := httptest.NewRecorder()
 			httpReq, _ := http.NewRequest("PUT", "/profile/avatar", bytes.NewBuffer([]byte{}))
@@ -352,7 +354,7 @@ func TestProfileControllers(t *testing.T) {
 
 		t.Run("PUT /profile/password - success", func(t *testing.T) {
 			// Create a fresh test user for this test
-			testUser := helper.CreateTestUser("password-success@example.com", "passwordsuccessuser", "+6666666666")
+			testUser := helper.CreateUniqueTestUser("passwordsuccess")
 
 			req := &profile.UpdatePasswordRequest{
 				OldPassword: "testpassword123", // This matches the password used in CreateTestUser
@@ -419,7 +421,7 @@ func TestProfileControllers(t *testing.T) {
 
 		t.Run("PUT /profile/password - invalid JSON", func(t *testing.T) {
 			// Create a fresh test user for this test
-			testUser := helper.CreateTestUser("password-invalid-json@example.com", "passwordinvalidjsonuser", "+7777777777")
+			testUser := helper.CreateUniqueTestUser("passwordinvalidjson")
 
 			w := httptest.NewRecorder()
 			httpReq, _ := http.NewRequest("PUT", "/profile/password", bytes.NewBuffer([]byte("invalid json")))
@@ -448,7 +450,7 @@ func TestProfileControllers(t *testing.T) {
 
 		t.Run("PUT /profile/password - password too short", func(t *testing.T) {
 			// Create a fresh test user for this test
-			testUser := helper.CreateTestUser("password-short@example.com", "passwordshortuser", "+8888888888")
+			testUser := helper.CreateUniqueTestUser("passwordshort")
 
 			req := &profile.UpdatePasswordRequest{
 				OldPassword: "testpassword123",
@@ -480,14 +482,12 @@ func TestProfileControllers(t *testing.T) {
 			assert.NoError(t, err)
 			// Check for validation error message format
 			errorMsg := errorResponse["error"].(string)
-			assert.Contains(t, errorMsg, "Invalid input")
-			assert.Contains(t, errorMsg, "NewPassword")
-			assert.Contains(t, errorMsg, "min")
+			assert.Contains(t, errorMsg, "password must be at least")
 		})
 
 		t.Run("PUT /profile/password - wrong current password", func(t *testing.T) {
 			// Create a fresh test user for this test
-			testUser := helper.CreateTestUser("password-wrong@example.com", "passwordwronguser", "+9999999999")
+			testUser := helper.CreateUniqueTestUser("passwordwrong")
 
 			req := &profile.UpdatePasswordRequest{
 				OldPassword: "wrongpassword",

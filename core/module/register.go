@@ -44,10 +44,18 @@ type Seeder interface {
 	Seed(*gorm.DB) error
 }
 
+// ModuleFactory is a function that creates a module with dependencies
+type ModuleFactory func(deps Dependencies) Module
+
 var (
 	// modulesRegistry stores all registered modules. The key is the module name.
 	modulesRegistry = make(map[string]Module)
-	lock            sync.RWMutex
+	
+	// globalAppModules stores factory functions for app modules (used by auto-discovery)
+	globalAppModules = make(map[string]ModuleFactory)
+	
+	lock     sync.RWMutex
+	globalMu sync.RWMutex
 )
 
 // RegisterModule registers a module under a unique name. It returns an error
@@ -89,3 +97,32 @@ func HasMethod(module Module, methodName string) bool {
 	_, exists := moduleType.MethodByName(methodName)
 	return exists
 }
+
+// RegisterAppModule registers a module factory for auto-discovery
+// This should be called from the module's init() function
+func RegisterAppModule(name string, factory ModuleFactory) {
+	globalMu.Lock()
+	defer globalMu.Unlock()
+	globalAppModules[name] = factory
+	fmt.Printf("Successfully registered app module factory: %s\n", name)
+}
+
+// GetAppModule retrieves a registered module factory
+func GetAppModule(name string) ModuleFactory {
+	globalMu.RLock()
+	defer globalMu.RUnlock()
+	return globalAppModules[name]
+}
+
+// GetAllAppModules returns all registered app module factories
+func GetAllAppModules() map[string]ModuleFactory {
+	globalMu.RLock()
+	defer globalMu.RUnlock()
+	
+	copy := make(map[string]ModuleFactory)
+	for k, v := range globalAppModules {
+		copy[k] = v
+	}
+	return copy
+}
+

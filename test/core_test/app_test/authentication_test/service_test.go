@@ -5,6 +5,7 @@ import (
 	"base/core/app/profile"
 	"base/core/emitter"
 	"base/test"
+	"fmt"
 	"testing"
 	"time"
 
@@ -24,15 +25,22 @@ func TestAuthenticationService(t *testing.T) {
 	authService := authentication.NewAuthService(helper.DB, emailSender, mockEmitter)
 
 	t.Run("Authentication service operations for 100% coverage", func(t *testing.T) {
+		// Clean database before each sub-test group
+		helper.CleanDatabase()
 
 		t.Run("Register - edge cases", func(t *testing.T) {
 			// Test with duplicate email
+			uniqueID := helper.GenerateUniqueTestID()
+			email := fmt.Sprintf("duplicate-%s@example.com", uniqueID)
+			username := fmt.Sprintf("duplicateuser%s", uniqueID)
+			phone := fmt.Sprintf("+1%s", uniqueID[len(uniqueID)-10:])
+			
 			req := &authentication.RegisterRequest{
 				FirstName: "Duplicate",
 				LastName:  "User",
-				Username:  "duplicateuser",
-				Phone:     "+1111111111",
-				Email:     "duplicate@example.com",
+				Username:  username,
+				Phone:     phone,
+				Email:     email,
 				Password:  "password123",
 			}
 
@@ -44,9 +52,9 @@ func TestAuthenticationService(t *testing.T) {
 			req2 := &authentication.RegisterRequest{
 				FirstName: "Another",
 				LastName:  "User",
-				Username:  "anotheruser",
-				Phone:     "+2222222222",
-				Email:     "duplicate@example.com", // Same email
+				Username:  "anotheruser" + uniqueID,
+				Phone:     fmt.Sprintf("+2%s", uniqueID[len(uniqueID)-10:]),
+				Email:     email, // Same email
 				Password:  "password123",
 			}
 			_, err = authService.Register(req2)
@@ -55,14 +63,19 @@ func TestAuthenticationService(t *testing.T) {
 
 		t.Run("Login - edge cases", func(t *testing.T) {
 			// Create a test user first
+			uniqueID := helper.GenerateUniqueTestID()
+			email := fmt.Sprintf("logintest-%s@example.com", uniqueID)
+			username := fmt.Sprintf("logintest%s", uniqueID)
+			phone := fmt.Sprintf("+1%s", uniqueID[len(uniqueID)-10:])
+			
 			hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
 			testUser := &authentication.AuthUser{
 				User: profile.User{
 					FirstName: "Login",
 					LastName:  "Test",
-					Username:  "logintest",
-					Phone:     "+3333333333",
-					Email:     "logintest@example.com",
+					Username:  username,
+					Phone:     phone,
+					Email:     email,
 					Password:  string(hashedPassword),
 				},
 			}
@@ -70,7 +83,7 @@ func TestAuthenticationService(t *testing.T) {
 
 			// Test successful login
 			loginReq := &authentication.LoginRequest{
-				Email:    "logintest@example.com",
+				Email:    email,
 				Password: "password123",
 			}
 			response, err := authService.Login(loginReq)
@@ -80,7 +93,7 @@ func TestAuthenticationService(t *testing.T) {
 
 			// Test login with wrong password
 			wrongPasswordReq := &authentication.LoginRequest{
-				Email:    "logintest@example.com",
+				Email:    email,
 				Password: "wrongpassword",
 			}
 			_, err = authService.Login(wrongPasswordReq)
@@ -354,15 +367,20 @@ func TestAuthenticationService(t *testing.T) {
 
 		t.Run("ResetPassword comprehensive coverage tests", func(t *testing.T) {
 			// Create user with valid reset token for testing
+			uniqueID := helper.GenerateUniqueTestID()
+			email := fmt.Sprintf("resetpassword-%s@example.com", uniqueID)
+			username := fmt.Sprintf("resetpassword%s", uniqueID)
+			phone := fmt.Sprintf("+1%s", uniqueID[len(uniqueID)-10:])
 			resetToken := "validresettoken123"
 			resetExpiry := time.Now().Add(time.Hour)
+			
 			testUser := &authentication.AuthUser{
 				User: profile.User{
 					FirstName: "Reset",
 					LastName:  "Password",
-					Username:  "resetpassword",
-					Phone:     "+1919191920",
-					Email:     "resetpassword@example.com",
+					Username:  username,
+					Phone:     phone,
+					Email:     email,
 					Password:  "oldpassword",
 				},
 				ResetToken:       resetToken,
@@ -371,12 +389,12 @@ func TestAuthenticationService(t *testing.T) {
 			helper.DB.Create(testUser)
 
 			// Test ResetPassword with valid token - success path
-			err := authService.ResetPassword("resetpassword@example.com", resetToken, "newpassword123")
+			err := authService.ResetPassword(email, resetToken, "newpassword123")
 			assert.NoError(t, err)
 
 			// Verify password was changed and reset token cleared
 			var updatedUser authentication.AuthUser
-			helper.DB.Where("email = ?", "resetpassword@example.com").First(&updatedUser)
+			helper.DB.Where("email = ?", email).First(&updatedUser)
 			assert.Empty(t, updatedUser.ResetToken)
 			assert.Nil(t, updatedUser.ResetTokenExpiry)
 			assert.NotEqual(t, "oldpassword", updatedUser.Password)
@@ -451,13 +469,18 @@ func TestAuthenticationService(t *testing.T) {
 		t.Run("Login comprehensive coverage tests", func(t *testing.T) {
 			// Create user with hashed password for login testing
 			hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("correctpassword"), bcrypt.DefaultCost)
+			uniqueID := helper.GenerateUniqueTestID()
+			email := fmt.Sprintf("logintest-%s@example.com", uniqueID)
+			username := fmt.Sprintf("logintest%s", uniqueID)
+			phone := fmt.Sprintf("+1%s", uniqueID[len(uniqueID)-10:])
+			
 			loginUser := &authentication.AuthUser{
 				User: profile.User{
 					FirstName: "Login",
 					LastName:  "Test",
-					Username:  "logintest",
-					Phone:     "+2323232324",
-					Email:     "logintest@example.com",
+					Username:  username,
+					Phone:     phone,
+					Email:     email,
 					Password:  string(hashedPassword),
 				},
 				LastLogin: nil, // No previous login
@@ -466,13 +489,13 @@ func TestAuthenticationService(t *testing.T) {
 
 			// Test Login with correct credentials - success path
 			loginReq := &authentication.LoginRequest{
-				Email:    "logintest@example.com",
+				Email:    email,
 				Password: "correctpassword",
 			}
 			response, err := authService.Login(loginReq)
 			assert.NoError(t, err)
 			assert.NotNil(t, response)
-			assert.Equal(t, "logintest@example.com", response.Email)
+			assert.Equal(t, email, response.Email)
 			assert.NotEmpty(t, response.AccessToken)
 			assert.Greater(t, response.Exp, int64(0))
 

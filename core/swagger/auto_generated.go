@@ -10,12 +10,673 @@ func init() {
 
 // RegisterAllRoutes registers all auto-discovered routes
 func RegisterAllRoutes() {
+	AutoRegisterRouteDetailed("POST", "/api/authors", "Create a new Author", "Create a new Author with the input payload", []string{"App/Author"},
+		[]Parameter{
+		{Name: "authors", In: "body", Description: "Create Author request", Required: true, Schema: Schema{Type: "models.CreateAuthorRequest"}},
+	}, map[string]Response{
+		"201": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/authors/{id}", "Get a Author", "Get a Author by its id", []string{"App/Author"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Author id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"404": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/authors", "List authors", "Get a list of authors", []string{"App/Author"},
+		[]Parameter{
+		{Name: "page", In: "query", Description: "Page number", Required: false, Schema: Schema{Type: "int"}},
+		{Name: "limit", In: "query", Description: "Number of items per page", Required: false, Schema: Schema{Type: "int"}},
+		{Name: "sort", In: "query", Description: "Sort field (id, created_at, updated_at,name,bio,email,avatar,resume,website,twitter,github,is_verified,rating,)", Required: false, Schema: Schema{Type: "string"}},
+		{Name: "order", In: "query", Description: "Sort order (asc, desc)", Required: false, Schema: Schema{Type: "string"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/authors/all", "List all authors for select options", "Get a simplified list of all authors with id and name only (for dropdowns/select boxes)", []string{"App/Author"},
+		nil, map[string]Response{
+		"200": {Description: "{array}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("PUT", "/api/authors/{id}", "Update a Author", "Update a Author by its id", []string{"App/Author"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Author id", Required: true, Schema: Schema{Type: "int"}},
+		{Name: "authors", In: "body", Description: "Update Author request", Required: true, Schema: Schema{Type: "models.UpdateAuthorRequest"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"404": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("DELETE", "/api/authors/{id}", "Delete a Author", "Delete a Author by its id", []string{"App/Author"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Author id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("POST", "/api/authors/upload", "Upload a Author", "Upload a Author with the input payload", []string{"App/Author"},
+		[]Parameter{
+		{Name: "authors", In: "body", Description: "Create Author request", Required: true, Schema: Schema{Type: "models.CreateAuthorRequest"}},
+	}, map[string]Response{
+		"201": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("DELETE", "/api/authors/upload/{id}", "Delete a Author", "Delete a Author by its id", []string{"App/Author"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Author id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("POST", "/api/categories", "Create a new Category", "Create a new Category with the input payload", []string{"App/Category"},
+		[]Parameter{
+		{Name: "categories", In: "body", Description: "Create Category request", Required: true, Schema: Schema{Type: "models.CreateCategoryRequest"}},
+	}, map[string]Response{
+		"201": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/categories/{id}", "Get a Category", "Get a Category by its id", []string{"App/Category"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Category id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"404": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/categories", "List categories", "Get a list of categories", []string{"App/Category"},
+		[]Parameter{
+		{Name: "page", In: "query", Description: "Page number", Required: false, Schema: Schema{Type: "int"}},
+		{Name: "limit", In: "query", Description: "Number of items per page", Required: false, Schema: Schema{Type: "int"}},
+		{Name: "sort", In: "query", Description: "Sort field (id, created_at, updated_at,name,slug,description,parent,position,is_active,meta_title,meta_description,icon,color,)", Required: false, Schema: Schema{Type: "string"}},
+		{Name: "order", In: "query", Description: "Sort order (asc, desc)", Required: false, Schema: Schema{Type: "string"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/categories/all", "List all categories for select options", "Get a simplified list of all categories with id and name only (for dropdowns/select boxes)", []string{"App/Category"},
+		nil, map[string]Response{
+		"200": {Description: "{array}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("PUT", "/api/categories/{id}", "Update a Category", "Update a Category by its id", []string{"App/Category"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Category id", Required: true, Schema: Schema{Type: "int"}},
+		{Name: "categories", In: "body", Description: "Update Category request", Required: true, Schema: Schema{Type: "models.UpdateCategoryRequest"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"404": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("DELETE", "/api/categories/{id}", "Delete a Category", "Delete a Category by its id", []string{"App/Category"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Category id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("POST", "/api/categories/upload", "Upload a Category", "Upload a Category with the input payload", []string{"App/Category"},
+		[]Parameter{
+		{Name: "categories", In: "body", Description: "Create Category request", Required: true, Schema: Schema{Type: "models.CreateCategoryRequest"}},
+	}, map[string]Response{
+		"201": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("DELETE", "/api/categories/upload/{id}", "Delete a Category", "Delete a Category by its id", []string{"App/Category"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Category id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("POST", "/api/comments", "Create a new Comment", "Create a new Comment with the input payload", []string{"App/Comment"},
+		[]Parameter{
+		{Name: "comments", In: "body", Description: "Create Comment request", Required: true, Schema: Schema{Type: "models.CreateCommentRequest"}},
+	}, map[string]Response{
+		"201": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/comments/{id}", "Get a Comment", "Get a Comment by its id", []string{"App/Comment"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Comment id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"404": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/comments", "List comments", "Get a list of comments", []string{"App/Comment"},
+		[]Parameter{
+		{Name: "page", In: "query", Description: "Page number", Required: false, Schema: Schema{Type: "int"}},
+		{Name: "limit", In: "query", Description: "Number of items per page", Required: false, Schema: Schema{Type: "int"}},
+		{Name: "sort", In: "query", Description: "Sort field (id, created_at, updated_at,post,user,parent,content,status,is_approved,likes,dislikes,ip_address,user_agent,)", Required: false, Schema: Schema{Type: "string"}},
+		{Name: "order", In: "query", Description: "Sort order (asc, desc)", Required: false, Schema: Schema{Type: "string"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/comments/all", "List all comments for select options", "Get a simplified list of all comments with id and name only (for dropdowns/select boxes)", []string{"App/Comment"},
+		nil, map[string]Response{
+		"200": {Description: "{array}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("PUT", "/api/comments/{id}", "Update a Comment", "Update a Comment by its id", []string{"App/Comment"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Comment id", Required: true, Schema: Schema{Type: "int"}},
+		{Name: "comments", In: "body", Description: "Update Comment request", Required: true, Schema: Schema{Type: "models.UpdateCommentRequest"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"404": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("DELETE", "/api/comments/{id}", "Delete a Comment", "Delete a Comment by its id", []string{"App/Comment"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Comment id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("POST", "/api/comments/upload", "Upload a Comment", "Upload a Comment with the input payload", []string{"App/Comment"},
+		[]Parameter{
+		{Name: "comments", In: "body", Description: "Create Comment request", Required: true, Schema: Schema{Type: "models.CreateCommentRequest"}},
+	}, map[string]Response{
+		"201": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("DELETE", "/api/comments/upload/{id}", "Delete a Comment", "Delete a Comment by its id", []string{"App/Comment"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Comment id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("POST", "/api/events", "Create a new Event", "Create a new Event with the input payload", []string{"App/Event"},
+		[]Parameter{
+		{Name: "events", In: "body", Description: "Create Event request", Required: true, Schema: Schema{Type: "models.CreateEventRequest"}},
+	}, map[string]Response{
+		"201": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/events/{id}", "Get a Event", "Get a Event by its id", []string{"App/Event"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Event id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"404": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/events", "List events", "Get a list of events", []string{"App/Event"},
+		[]Parameter{
+		{Name: "page", In: "query", Description: "Page number", Required: false, Schema: Schema{Type: "int"}},
+		{Name: "limit", In: "query", Description: "Number of items per page", Required: false, Schema: Schema{Type: "int"}},
+		{Name: "sort", In: "query", Description: "Sort field (id, created_at, updated_at,title,description,location,start_date,end_date,all_day,recurring,max_attendees,current_attendees,price,currency,image,status,)", Required: false, Schema: Schema{Type: "string"}},
+		{Name: "order", In: "query", Description: "Sort order (asc, desc)", Required: false, Schema: Schema{Type: "string"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/events/all", "List all events for select options", "Get a simplified list of all events with id and name only (for dropdowns/select boxes)", []string{"App/Event"},
+		nil, map[string]Response{
+		"200": {Description: "{array}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("PUT", "/api/events/{id}", "Update a Event", "Update a Event by its id", []string{"App/Event"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Event id", Required: true, Schema: Schema{Type: "int"}},
+		{Name: "events", In: "body", Description: "Update Event request", Required: true, Schema: Schema{Type: "models.UpdateEventRequest"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"404": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("DELETE", "/api/events/{id}", "Delete a Event", "Delete a Event by its id", []string{"App/Event"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Event id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("POST", "/api/events/upload", "Upload a Event", "Upload a Event with the input payload", []string{"App/Event"},
+		[]Parameter{
+		{Name: "events", In: "body", Description: "Create Event request", Required: true, Schema: Schema{Type: "models.CreateEventRequest"}},
+	}, map[string]Response{
+		"201": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("DELETE", "/api/events/upload/{id}", "Delete a Event", "Delete a Event by its id", []string{"App/Event"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Event id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("POST", "/api/media-libraries", "Create a new MediaLibrary", "Create a new MediaLibrary with the input payload", []string{"App/MediaLibrary"},
+		[]Parameter{
+		{Name: "media-libraries", In: "body", Description: "Create MediaLibrary request", Required: true, Schema: Schema{Type: "models.CreateMediaLibraryRequest"}},
+	}, map[string]Response{
+		"201": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/media-libraries/{id}", "Get a MediaLibrary", "Get a MediaLibrary by its id", []string{"App/MediaLibrary"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "MediaLibrary id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"404": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/media-libraries", "List media-libraries", "Get a list of media-libraries", []string{"App/MediaLibrary"},
+		[]Parameter{
+		{Name: "page", In: "query", Description: "Page number", Required: false, Schema: Schema{Type: "int"}},
+		{Name: "limit", In: "query", Description: "Number of items per page", Required: false, Schema: Schema{Type: "int"}},
+		{Name: "sort", In: "query", Description: "Sort field (id, created_at, updated_at,title,description,file,thumbnail,mime_type,size,width,height,duration,folder,is_public,download_count,)", Required: false, Schema: Schema{Type: "string"}},
+		{Name: "order", In: "query", Description: "Sort order (asc, desc)", Required: false, Schema: Schema{Type: "string"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/media-libraries/all", "List all media-libraries for select options", "Get a simplified list of all media-libraries with id and name only (for dropdowns/select boxes)", []string{"App/MediaLibrary"},
+		nil, map[string]Response{
+		"200": {Description: "{array}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("PUT", "/api/media-libraries/{id}", "Update a MediaLibrary", "Update a MediaLibrary by its id", []string{"App/MediaLibrary"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "MediaLibrary id", Required: true, Schema: Schema{Type: "int"}},
+		{Name: "media-libraries", In: "body", Description: "Update MediaLibrary request", Required: true, Schema: Schema{Type: "models.UpdateMediaLibraryRequest"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"404": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("DELETE", "/api/media-libraries/{id}", "Delete a MediaLibrary", "Delete a MediaLibrary by its id", []string{"App/MediaLibrary"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "MediaLibrary id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("POST", "/api/media-libraries/upload", "Upload a MediaLibrary", "Upload a MediaLibrary with the input payload", []string{"App/MediaLibrary"},
+		[]Parameter{
+		{Name: "media-libraries", In: "body", Description: "Create MediaLibrary request", Required: true, Schema: Schema{Type: "models.CreateMediaLibraryRequest"}},
+	}, map[string]Response{
+		"201": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("DELETE", "/api/media-libraries/upload/{id}", "Delete a MediaLibrary", "Delete a MediaLibrary by its id", []string{"App/MediaLibrary"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "MediaLibrary id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("POST", "/api/newsletters", "Create a new Newsletter", "Create a new Newsletter with the input payload", []string{"App/Newsletter"},
+		[]Parameter{
+		{Name: "newsletters", In: "body", Description: "Create Newsletter request", Required: true, Schema: Schema{Type: "models.CreateNewsletterRequest"}},
+	}, map[string]Response{
+		"201": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/newsletters/{id}", "Get a Newsletter", "Get a Newsletter by its id", []string{"App/Newsletter"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Newsletter id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"404": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/newsletters", "List newsletters", "Get a list of newsletters", []string{"App/Newsletter"},
+		[]Parameter{
+		{Name: "page", In: "query", Description: "Page number", Required: false, Schema: Schema{Type: "int"}},
+		{Name: "limit", In: "query", Description: "Number of items per page", Required: false, Schema: Schema{Type: "int"}},
+		{Name: "sort", In: "query", Description: "Sort field (id, created_at, updated_at,email,name,status,token,subscribed_at,unsubscribed_at,preferences,source,)", Required: false, Schema: Schema{Type: "string"}},
+		{Name: "order", In: "query", Description: "Sort order (asc, desc)", Required: false, Schema: Schema{Type: "string"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/newsletters/all", "List all newsletters for select options", "Get a simplified list of all newsletters with id and name only (for dropdowns/select boxes)", []string{"App/Newsletter"},
+		nil, map[string]Response{
+		"200": {Description: "{array}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("PUT", "/api/newsletters/{id}", "Update a Newsletter", "Update a Newsletter by its id", []string{"App/Newsletter"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Newsletter id", Required: true, Schema: Schema{Type: "int"}},
+		{Name: "newsletters", In: "body", Description: "Update Newsletter request", Required: true, Schema: Schema{Type: "models.UpdateNewsletterRequest"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"404": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("DELETE", "/api/newsletters/{id}", "Delete a Newsletter", "Delete a Newsletter by its id", []string{"App/Newsletter"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Newsletter id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("POST", "/api/newsletters/upload", "Upload a Newsletter", "Upload a Newsletter with the input payload", []string{"App/Newsletter"},
+		[]Parameter{
+		{Name: "newsletters", In: "body", Description: "Create Newsletter request", Required: true, Schema: Schema{Type: "models.CreateNewsletterRequest"}},
+	}, map[string]Response{
+		"201": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("DELETE", "/api/newsletters/upload/{id}", "Delete a Newsletter", "Delete a Newsletter by its id", []string{"App/Newsletter"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Newsletter id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("POST", "/api/posts", "Create a new Post", "Create a new Post with the input payload", []string{"App/Post"},
+		[]Parameter{
+		{Name: "posts", In: "body", Description: "Create Post request", Required: true, Schema: Schema{Type: "models.CreatePostRequest"}},
+	}, map[string]Response{
+		"201": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/posts/{id}", "Get a Post", "Get a Post by its id", []string{"App/Post"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Post id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"404": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/posts", "List posts", "Get a list of posts", []string{"App/Post"},
+		[]Parameter{
+		{Name: "page", In: "query", Description: "Page number", Required: false, Schema: Schema{Type: "int"}},
+		{Name: "limit", In: "query", Description: "Number of items per page", Required: false, Schema: Schema{Type: "int"}},
+		{Name: "sort", In: "query", Description: "Sort field (id, created_at, updated_at,title,slug,content,excerpt,featured_image,gallery,category,author,status,published_at,view_count,like_count,is_featured,is_premium,reading_time,meta_title,meta_description,meta_keywords,)", Required: false, Schema: Schema{Type: "string"}},
+		{Name: "order", In: "query", Description: "Sort order (asc, desc)", Required: false, Schema: Schema{Type: "string"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/posts/all", "List all posts for select options", "Get a simplified list of all posts with id and name only (for dropdowns/select boxes)", []string{"App/Post"},
+		nil, map[string]Response{
+		"200": {Description: "{array}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("PUT", "/api/posts/{id}", "Update a Post", "Update a Post by its id", []string{"App/Post"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Post id", Required: true, Schema: Schema{Type: "int"}},
+		{Name: "posts", In: "body", Description: "Update Post request", Required: true, Schema: Schema{Type: "models.UpdatePostRequest"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"404": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("DELETE", "/api/posts/{id}", "Delete a Post", "Delete a Post by its id", []string{"App/Post"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Post id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("POST", "/api/posts/upload", "Upload a Post", "Upload a Post with the input payload", []string{"App/Post"},
+		[]Parameter{
+		{Name: "posts", In: "body", Description: "Create Post request", Required: true, Schema: Schema{Type: "models.CreatePostRequest"}},
+	}, map[string]Response{
+		"201": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("DELETE", "/api/posts/upload/{id}", "Delete a Post", "Delete a Post by its id", []string{"App/Post"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Post id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("POST", "/api/reviews", "Create a new Review", "Create a new Review with the input payload", []string{"App/Review"},
+		[]Parameter{
+		{Name: "reviews", In: "body", Description: "Create Review request", Required: true, Schema: Schema{Type: "models.CreateReviewRequest"}},
+	}, map[string]Response{
+		"201": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/reviews/{id}", "Get a Review", "Get a Review by its id", []string{"App/Review"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Review id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"404": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/reviews", "List reviews", "Get a list of reviews", []string{"App/Review"},
+		[]Parameter{
+		{Name: "page", In: "query", Description: "Page number", Required: false, Schema: Schema{Type: "int"}},
+		{Name: "limit", In: "query", Description: "Number of items per page", Required: false, Schema: Schema{Type: "int"}},
+		{Name: "sort", In: "query", Description: "Sort field (id, created_at, updated_at,user,rating,title,content,pros,cons,is_verified,helpful_count,images,)", Required: false, Schema: Schema{Type: "string"}},
+		{Name: "order", In: "query", Description: "Sort order (asc, desc)", Required: false, Schema: Schema{Type: "string"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/reviews/all", "List all reviews for select options", "Get a simplified list of all reviews with id and name only (for dropdowns/select boxes)", []string{"App/Review"},
+		nil, map[string]Response{
+		"200": {Description: "{array}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("PUT", "/api/reviews/{id}", "Update a Review", "Update a Review by its id", []string{"App/Review"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Review id", Required: true, Schema: Schema{Type: "int"}},
+		{Name: "reviews", In: "body", Description: "Update Review request", Required: true, Schema: Schema{Type: "models.UpdateReviewRequest"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"404": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("DELETE", "/api/reviews/{id}", "Delete a Review", "Delete a Review by its id", []string{"App/Review"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Review id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("POST", "/api/reviews/upload", "Upload a Review", "Upload a Review with the input payload", []string{"App/Review"},
+		[]Parameter{
+		{Name: "reviews", In: "body", Description: "Create Review request", Required: true, Schema: Schema{Type: "models.CreateReviewRequest"}},
+	}, map[string]Response{
+		"201": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("DELETE", "/api/reviews/upload/{id}", "Delete a Review", "Delete a Review by its id", []string{"App/Review"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Review id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("POST", "/api/settings", "Create a new Setting", "Create a new Setting with the input payload", []string{"App/Setting"},
+		[]Parameter{
+		{Name: "settings", In: "body", Description: "Create Setting request", Required: true, Schema: Schema{Type: "models.CreateSettingRequest"}},
+	}, map[string]Response{
+		"201": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/settings/{id}", "Get a Setting", "Get a Setting by its id", []string{"App/Setting"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Setting id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"404": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/settings", "List settings", "Get a list of settings", []string{"App/Setting"},
+		[]Parameter{
+		{Name: "page", In: "query", Description: "Page number", Required: false, Schema: Schema{Type: "int"}},
+		{Name: "limit", In: "query", Description: "Number of items per page", Required: false, Schema: Schema{Type: "int"}},
+		{Name: "sort", In: "query", Description: "Sort field (id, created_at, updated_at,key,value,type,group,label,description,is_public,is_editable,validation_rules,)", Required: false, Schema: Schema{Type: "string"}},
+		{Name: "order", In: "query", Description: "Sort order (asc, desc)", Required: false, Schema: Schema{Type: "string"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/settings/all", "List all settings for select options", "Get a simplified list of all settings with id and name only (for dropdowns/select boxes)", []string{"App/Setting"},
+		nil, map[string]Response{
+		"200": {Description: "{array}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("PUT", "/api/settings/{id}", "Update a Setting", "Update a Setting by its id", []string{"App/Setting"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Setting id", Required: true, Schema: Schema{Type: "int"}},
+		{Name: "settings", In: "body", Description: "Update Setting request", Required: true, Schema: Schema{Type: "models.UpdateSettingRequest"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"404": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("DELETE", "/api/settings/{id}", "Delete a Setting", "Delete a Setting by its id", []string{"App/Setting"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Setting id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("POST", "/api/settings/upload", "Upload a Setting", "Upload a Setting with the input payload", []string{"App/Setting"},
+		[]Parameter{
+		{Name: "settings", In: "body", Description: "Create Setting request", Required: true, Schema: Schema{Type: "models.CreateSettingRequest"}},
+	}, map[string]Response{
+		"201": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("DELETE", "/api/settings/upload/{id}", "Delete a Setting", "Delete a Setting by its id", []string{"App/Setting"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Setting id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("POST", "/api/tags", "Create a new Tag", "Create a new Tag with the input payload", []string{"App/Tag"},
+		[]Parameter{
+		{Name: "tags", In: "body", Description: "Create Tag request", Required: true, Schema: Schema{Type: "models.CreateTagRequest"}},
+	}, map[string]Response{
+		"201": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/tags/{id}", "Get a Tag", "Get a Tag by its id", []string{"App/Tag"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Tag id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"404": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/tags", "List tags", "Get a list of tags", []string{"App/Tag"},
+		[]Parameter{
+		{Name: "page", In: "query", Description: "Page number", Required: false, Schema: Schema{Type: "int"}},
+		{Name: "limit", In: "query", Description: "Number of items per page", Required: false, Schema: Schema{Type: "int"}},
+		{Name: "sort", In: "query", Description: "Sort field (id, created_at, updated_at,name,slug,description,color,usage_count,)", Required: false, Schema: Schema{Type: "string"}},
+		{Name: "order", In: "query", Description: "Sort order (asc, desc)", Required: false, Schema: Schema{Type: "string"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("GET", "/api/tags/all", "List all tags for select options", "Get a simplified list of all tags with id and name only (for dropdowns/select boxes)", []string{"App/Tag"},
+		nil, map[string]Response{
+		"200": {Description: "{array}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("PUT", "/api/tags/{id}", "Update a Tag", "Update a Tag by its id", []string{"App/Tag"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Tag id", Required: true, Schema: Schema{Type: "int"}},
+		{Name: "tags", In: "body", Description: "Update Tag request", Required: true, Schema: Schema{Type: "models.UpdateTagRequest"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"404": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("DELETE", "/api/tags/{id}", "Delete a Tag", "Delete a Tag by its id", []string{"App/Tag"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Tag id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("POST", "/api/tags/upload", "Upload a Tag", "Upload a Tag with the input payload", []string{"App/Tag"},
+		[]Parameter{
+		{Name: "tags", In: "body", Description: "Create Tag request", Required: true, Schema: Schema{Type: "models.CreateTagRequest"}},
+	}, map[string]Response{
+		"201": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
+	AutoRegisterRouteDetailed("DELETE", "/api/tags/upload/{id}", "Delete a Tag", "Delete a Tag by its id", []string{"App/Tag"},
+		[]Parameter{
+		{Name: "id", In: "path", Description: "Tag id", Required: true, Schema: Schema{Type: "int"}},
+	}, map[string]Response{
+		"200": {Description: "{object}"},
+		"400": {Description: "{object}"},
+		"500": {Description: "{object}"},
+	}, []map[string][]string{{"BearerAuth": {}}, })
 	AutoRegisterRouteDetailed("POST", "/api/auth/register", "Register", "Register user", []string{"Core/Auth"},
 		[]Parameter{
 		{Name: "body", In: "body", Description: "Register Request", Required: true, Schema: Schema{Type: "RegisterRequest"}},
 	}, map[string]Response{
 		"201": {Description: "{object}"},
 		"400": {Description: "{object}"},
+		"409": {Description: "{object}"},
 		"500": {Description: "{object}"},
 	}, []map[string][]string{{"ApiKeyAuth": {}}, })
 	AutoRegisterRouteDetailed("POST", "/api/auth/login", "Login", "Login user", []string{"Core/Auth"},
@@ -269,7 +930,7 @@ func RegisterAllRoutes() {
 		"200": {Description: "{object}"},
 		"500": {Description: "{object}"},
 	}, []map[string][]string{{"ApiKeyAuth": {}}, })
-	AutoRegisterRouteDetailed("GET", "/api/translations/{id}", "Get translation by ID", "Get a single translation by its ID", []string{"Core/Translations"},
+	AutoRegisterRouteDetailed("GET", "/api/translations/by-id/{id}", "Get translation by ID", "Get a single translation by its ID", []string{"Core/Translations"},
 		[]Parameter{
 		{Name: "id", In: "path", Description: "Translation ID", Required: true, Schema: Schema{Type: "int"}},
 	}, map[string]Response{
@@ -286,7 +947,7 @@ func RegisterAllRoutes() {
 		"400": {Description: "{object}"},
 		"500": {Description: "{object}"},
 	}, []map[string][]string{{"ApiKeyAuth": {}}, })
-	AutoRegisterRouteDetailed("PUT", "/api/translations/{id}", "Update translation", "Update an existing translation", []string{"Core/Translations"},
+	AutoRegisterRouteDetailed("PUT", "/api/translations/by-id/{id}", "Update translation", "Update an existing translation", []string{"Core/Translations"},
 		[]Parameter{
 		{Name: "id", In: "path", Description: "Translation ID", Required: true, Schema: Schema{Type: "int"}},
 		{Name: "translation", In: "body", Description: "Translation data", Required: true, Schema: Schema{Type: "translation.UpdateTranslationRequest"}},
@@ -296,7 +957,7 @@ func RegisterAllRoutes() {
 		"404": {Description: "{object}"},
 		"500": {Description: "{object}"},
 	}, []map[string][]string{{"ApiKeyAuth": {}}, })
-	AutoRegisterRouteDetailed("DELETE", "/api/translations/{id}", "Delete translation", "Delete a translation by ID", []string{"Core/Translations"},
+	AutoRegisterRouteDetailed("DELETE", "/api/translations/by-id/{id}", "Delete translation", "Delete a translation by ID", []string{"Core/Translations"},
 		[]Parameter{
 		{Name: "id", In: "path", Description: "Translation ID", Required: true, Schema: Schema{Type: "int"}},
 	}, map[string]Response{

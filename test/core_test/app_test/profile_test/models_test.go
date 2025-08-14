@@ -15,6 +15,9 @@ func TestProfileModels(t *testing.T) {
 	defer helper.TeardownTest()
 
 	t.Run("User model comprehensive operations", func(t *testing.T) {
+		// Clean database before each sub-test group
+		helper.CleanDatabase()
+		
 		t.Run("should create User with all fields", func(t *testing.T) {
 			user := &profile.User{
 				FirstName: "Test",

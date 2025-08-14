@@ -76,24 +76,35 @@ type AvatarResponse struct {
 	URL      string `json:"url"`
 }
 
-// Helper function to convert User to UserResponse
-func ToResponse(user *User) *UserResponse {
+// ToResponse converts the User to a UserResponse
+func (u *User) ToResponse() *UserResponse {
+	if u == nil {
+		return nil
+	}
 	response := &UserResponse{
-		Id:        user.Id,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Username:  user.Username,
-		Phone:     user.Phone,
-		Email:     user.Email,
+		Id:        u.Id,
+		FirstName: u.FirstName,
+		LastName:  u.LastName,
+		Username:  u.Username,
+		Phone:     u.Phone,
+		Email:     u.Email,
 	}
 
-	if user.Avatar != nil {
-		response.AvatarURL = user.Avatar.URL
+	if u.Avatar != nil {
+		response.AvatarURL = u.Avatar.URL
 	}
 
-	if user.LastLogin != nil {
-		response.LastLogin = user.LastLogin.Format(time.RFC3339)
+	if u.LastLogin != nil {
+		response.LastLogin = u.LastLogin.Format(time.RFC3339)
 	}
 
 	return response
+}
+
+// Helper function to convert User to UserResponse (deprecated - use ToResponse method)
+func ToResponse(user *User) *UserResponse {
+	if user == nil {
+		return nil
+	}
+	return user.ToResponse()
 }

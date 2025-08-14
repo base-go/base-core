@@ -1,6 +1,7 @@
 package main
 
 import (
+	appmodules "base/app"
 	coremodules "base/core/app"
 	"base/core/config"
 	"base/core/database"
@@ -11,10 +12,11 @@ import (
 	"base/core/router"
 	"base/core/storage"
 	"base/core/swagger"
+	_ "base/core/translation"
 	"fmt"
 	"net"
 	"os"
-	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -281,7 +283,7 @@ func (app *App) registerCoreModules() {
 	app.logger.Info("✅ Core modules registered", logger.Int("count", len(initialized)))
 }
 
-// discoverAndRegisterAppModules dynamically discovers and registers application modules
+// discoverAndRegisterAppModules registers application modules using the app provider
 func (app *App) discoverAndRegisterAppModules() {
 	// Create dependencies for app modules
 	deps := module.Dependencies{
@@ -294,43 +296,27 @@ func (app *App) discoverAndRegisterAppModules() {
 		Config:      app.config,
 	}
 
-	count := 0
+	// Use app module provider (like core modules)
+	appProvider := appmodules.NewAppModules()
+	modules := appProvider.GetAppModules(deps)
 
-	// Scan the app directory for module directories
-	appDir := "./app"
-	entries, err := os.ReadDir(appDir)
-	if err != nil {
-		app.logger.Warn("No app directory found, skipping app modules")
+	if len(modules) == 0 {
+		app.logger.Info("No app modules found")
 		return
 	}
 
-	for _, entry := range entries {
-		if !entry.IsDir() {
-			continue
-		}
+	app.logger.Info("✅ App modules loaded", logger.Int("count", len(modules)))
+	app.initializeModules(modules, deps)
+}
 
-		// Skip special directories
-		if entry.Name() == "models" || entry.Name() == "migrations" {
-			continue
-		}
+// initializeModules initializes a collection of modules
+func (app *App) initializeModules(modules map[string]module.Module, deps module.Dependencies) {
+	initializer := module.NewInitializer(app.logger)
+	initializedModules := initializer.Initialize(modules, deps)
 
-		// Check if module.go exists in the directory
-		modulePath := filepath.Join(appDir, entry.Name(), "module.go")
-		if _, err := os.Stat(modulePath); os.IsNotExist(err) {
-			continue
-		}
-
-		// Get module from registry if it was registered
-		if modFactory := module.GetAppModule(entry.Name()); modFactory != nil {
-			mod := modFactory(deps)
-			if mod != nil {
-				app.logger.Debug("Registered app module", logger.String("module", entry.Name()))
-				count++
-			}
-		}
-	}
-
-	app.logger.Info("✅ App modules registered", logger.Int("count", count))
+	app.logger.Info("✅ Module initialization complete",
+		logger.Int("total", len(modules)),
+		logger.Int("initialized", len(initializedModules)))
 }
 
 // setupRoutes sets up basic system routes
@@ -396,7 +382,21 @@ func (app *App) run() error {
 	app.logger.Info("🌐 Server starting",
 		logger.String("port", port))
 
-	return app.router.Run(port)
+	err := app.router.Run(port)
+	if err != nil {
+		// Check if it's an "address already in use" error
+		if strings.Contains(err.Error(), "bind: address already in use") {
+			app.logger.Error("❌ Server failed to start - Port already in use",
+				logger.String("port", port),
+				logger.String("error", err.Error()))
+			return fmt.Errorf("port %s is already in use. Please:\n  • Stop any other servers running on this port\n  • Change the SERVER_PORT in your .env file\n  • Use a different port with: export SERVER_PORT=:8101", port)
+		}
+		// For other network errors, provide a generic helpful message
+		app.logger.Error("❌ Server failed to start",
+			logger.String("error", err.Error()))
+		return fmt.Errorf("server failed to start: %w", err)
+	}
+	return nil
 }
 
 // Graceful shutdown (future enhancement)
@@ -415,6 +415,8 @@ func main() {
 	app := New()
 
 	if err := app.Start(); err != nil {
-		panic(err)
+		// Print user-friendly error message instead of panicking
+		fmt.Printf("\n❌ Application failed to start:\n%v\n\n", err)
+		os.Exit(1)
 	}
 }
