@@ -12,7 +12,7 @@ func NewDefaultSender(cfg *config.Config) (*DefaultSender, error) {
 }
 
 func (s *DefaultSender) Send(msg Message) error {
-	fmt.Printf("Simulating email send - To: %v, From: %s, Subject: %s, IsHTML: %t\n", 
+	fmt.Printf("Simulating email send - To: %v, From: %s, Subject: %s, IsHTML: %t\n",
 		msg.To, msg.From, msg.Subject, msg.IsHTML)
 
 	fmt.Println("Email Content:")

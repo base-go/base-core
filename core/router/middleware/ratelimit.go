@@ -13,25 +13,25 @@ import (
 type RateLimiter interface {
 	// Allow returns true if the request should be allowed
 	Allow(key string) bool
-	
+
 	// Reset resets the rate limiter for a specific key
 	Reset(key string)
 }
 
 // TokenBucket implements token bucket rate limiting
 type TokenBucket struct {
-	rate       int           // tokens per interval
-	interval   time.Duration // interval duration
-	maxTokens  int           // maximum tokens in bucket
-	buckets    map[string]*bucket
-	mu         sync.RWMutex
-	cleanup    *time.Ticker
+	rate      int           // tokens per interval
+	interval  time.Duration // interval duration
+	maxTokens int           // maximum tokens in bucket
+	buckets   map[string]*bucket
+	mu        sync.RWMutex
+	cleanup   *time.Ticker
 }
 
 type bucket struct {
-	tokens    int
-	lastFill  time.Time
-	mu        sync.Mutex
+	tokens   int
+	lastFill time.Time
+	mu       sync.Mutex
 }
 
 // NewTokenBucket creates a new token bucket rate limiter
@@ -43,10 +43,10 @@ func NewTokenBucket(rate int, interval time.Duration, maxTokens int) *TokenBucke
 		buckets:   make(map[string]*bucket),
 		cleanup:   time.NewTicker(5 * time.Minute),
 	}
-	
+
 	// Start cleanup goroutine
 	go tb.cleanupRoutine()
-	
+
 	return tb
 }
 
@@ -55,7 +55,7 @@ func (tb *TokenBucket) Allow(key string) bool {
 	tb.mu.RLock()
 	b, exists := tb.buckets[key]
 	tb.mu.RUnlock()
-	
+
 	if !exists {
 		tb.mu.Lock()
 		b = &bucket{
@@ -65,26 +65,26 @@ func (tb *TokenBucket) Allow(key string) bool {
 		tb.buckets[key] = b
 		tb.mu.Unlock()
 	}
-	
+
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	
+
 	// Refill tokens based on time elapsed
 	now := time.Now()
 	elapsed := now.Sub(b.lastFill)
-	tokensToAdd := int(elapsed / tb.interval) * tb.rate
-	
+	tokensToAdd := int(elapsed/tb.interval) * tb.rate
+
 	if tokensToAdd > 0 {
 		b.tokens = min(b.tokens+tokensToAdd, tb.maxTokens)
 		b.lastFill = now
 	}
-	
+
 	// Check if we have tokens available
 	if b.tokens > 0 {
 		b.tokens--
 		return true
 	}
-	
+
 	return false
 }
 
@@ -120,13 +120,13 @@ func (tb *TokenBucket) Stop() {
 type RateLimitConfig struct {
 	// Limiter is the rate limiter implementation
 	Limiter RateLimiter
-	
+
 	// KeyFunc extracts the key from the request
 	KeyFunc func(*router.Context) string
-	
+
 	// ErrorHandler handles rate limit errors
 	ErrorHandler func(*router.Context) error
-	
+
 	// SkipPaths lists paths that don't require rate limiting
 	SkipPaths []string
 }
@@ -151,7 +151,7 @@ func RateLimit(config *RateLimitConfig) router.MiddlewareFunc {
 	if config == nil {
 		config = DefaultRateLimitConfig()
 	}
-	
+
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
 			// Check if path should be skipped
@@ -160,15 +160,15 @@ func RateLimit(config *RateLimitConfig) router.MiddlewareFunc {
 					return next(c)
 				}
 			}
-			
+
 			// Get rate limit key
 			key := config.KeyFunc(c)
-			
+
 			// Check rate limit
 			if !config.Limiter.Allow(key) {
 				return config.ErrorHandler(c)
 			}
-			
+
 			return next(c)
 		}
 	}
@@ -177,18 +177,18 @@ func RateLimit(config *RateLimitConfig) router.MiddlewareFunc {
 // PerEndpointRateLimit creates per-endpoint rate limiting
 func PerEndpointRateLimit(requests int, duration time.Duration) router.MiddlewareFunc {
 	limiter := NewTokenBucket(requests, duration, requests)
-	
+
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
 			// Create key from IP + path
 			key := fmt.Sprintf("%s:%s:%s", c.ClientIP(), c.Request.Method, c.Request.URL.Path)
-			
+
 			if !limiter.Allow(key) {
 				return c.JSON(http.StatusTooManyRequests, map[string]string{
 					"error": "Rate limit exceeded for this endpoint",
 				})
 			}
-			
+
 			return next(c)
 		}
 	}
@@ -196,10 +196,10 @@ func PerEndpointRateLimit(requests int, duration time.Duration) router.Middlewar
 
 // SlidingWindow implements sliding window rate limiting
 type SlidingWindow struct {
-	windowSize time.Duration
+	windowSize  time.Duration
 	maxRequests int
-	requests   map[string][]time.Time
-	mu         sync.RWMutex
+	requests    map[string][]time.Time
+	mu          sync.RWMutex
 }
 
 // NewSlidingWindow creates a new sliding window rate limiter
@@ -209,10 +209,10 @@ func NewSlidingWindow(windowSize time.Duration, maxRequests int) *SlidingWindow 
 		maxRequests: maxRequests,
 		requests:    make(map[string][]time.Time),
 	}
-	
+
 	// Start cleanup routine
 	go sw.cleanup()
-	
+
 	return sw
 }
 
@@ -220,17 +220,17 @@ func NewSlidingWindow(windowSize time.Duration, maxRequests int) *SlidingWindow 
 func (sw *SlidingWindow) Allow(key string) bool {
 	sw.mu.Lock()
 	defer sw.mu.Unlock()
-	
+
 	now := time.Now()
 	windowStart := now.Add(-sw.windowSize)
-	
+
 	// Get or create request history
 	history, exists := sw.requests[key]
 	if !exists {
 		sw.requests[key] = []time.Time{now}
 		return true
 	}
-	
+
 	// Remove old requests outside window
 	validRequests := []time.Time{}
 	for _, t := range history {
@@ -238,14 +238,14 @@ func (sw *SlidingWindow) Allow(key string) bool {
 			validRequests = append(validRequests, t)
 		}
 	}
-	
+
 	// Check if under limit
 	if len(validRequests) < sw.maxRequests {
 		validRequests = append(validRequests, now)
 		sw.requests[key] = validRequests
 		return true
 	}
-	
+
 	sw.requests[key] = validRequests
 	return false
 }
@@ -261,7 +261,7 @@ func (sw *SlidingWindow) Reset(key string) {
 func (sw *SlidingWindow) cleanup() {
 	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
-	
+
 	for range ticker.C {
 		sw.mu.Lock()
 		now := time.Now()

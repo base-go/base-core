@@ -41,7 +41,7 @@ func TestAuthenticationControllers(t *testing.T) {
 	t.Run("Authentication controller operations comprehensive coverage", func(t *testing.T) {
 		// Clean database before each sub-test group
 		helper.CleanDatabase()
-		
+
 		t.Run("POST /auth/register - successful registration", func(t *testing.T) {
 			req := &authentication.RegisterRequest{
 				FirstName: "John",

@@ -44,7 +44,7 @@ func LoadConfig() *OAuthConfig {
 
 func ValidateConfig(config *OAuthConfig) {
 	log.Println("Validating OAuth configuration")
-	
+
 	// Check if at least one provider is configured
 	hasProvider := false
 	if config.Google.ClientID != "" && config.Google.ClientSecret != "" {
@@ -59,15 +59,15 @@ func ValidateConfig(config *OAuthConfig) {
 		hasProvider = true
 		log.Println("Apple OAuth provider configured")
 	}
-	
+
 	if !hasProvider {
 		log.Println("Warning: No OAuth providers configured. OAuth functionality will be disabled.")
 	}
-	
+
 	if config.JWTSecret == "" {
 		log.Println("Warning: JWT Secret not configured. Using default for development.")
 		config.JWTSecret = "default-jwt-secret-for-development"
 	}
-	
+
 	log.Println("OAuth configuration validated successfully")
 }

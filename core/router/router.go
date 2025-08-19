@@ -188,7 +188,7 @@ func (g *RouterGroup) Group(prefix string, middleware ...MiddlewareFunc) *Router
 	}
 	// Clean up double slashes
 	normalizedPrefix = strings.ReplaceAll(normalizedPrefix, "//", "/")
-	
+
 	return &RouterGroup{
 		router:     g.router,
 		prefix:     normalizedPrefix,
@@ -240,11 +240,11 @@ func (r *Router) Run(addr string) error {
 	if !strings.HasPrefix(addr, ":") {
 		addr = ":" + addr
 	}
-	
+
 	server := &http.Server{
 		Addr:    addr,
 		Handler: r,
 	}
-	
+
 	return server.ListenAndServe()
 }

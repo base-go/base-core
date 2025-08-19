@@ -18,7 +18,7 @@ func TestAuthenticationModels(t *testing.T) {
 	t.Run("AuthUser model operations", func(t *testing.T) {
 		// Clean database before each sub-test group
 		helper.CleanDatabase()
-		
+
 		t.Run("should create AuthUser with embedded User", func(t *testing.T) {
 			authUser := &authentication.AuthUser{
 				User: profile.User{

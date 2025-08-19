@@ -35,7 +35,7 @@ func (m *SimpleManager) Send(ctx context.Context, message Message) error {
 		logger.String("to", fmt.Sprintf("%v", message.To)),
 		logger.String("subject", message.Subject),
 	)
-	
+
 	// Use the existing global Send function
 	err := Send(message)
 	if err != nil {
@@ -44,7 +44,7 @@ func (m *SimpleManager) Send(ctx context.Context, message Message) error {
 		)
 		return errors.Wrap(err, errors.CodeEmailSend, "failed to send email")
 	}
-	
+
 	m.logger.Info("Email sent successfully")
 	return nil
 }

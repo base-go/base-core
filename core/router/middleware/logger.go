@@ -14,16 +14,16 @@ import (
 type LoggerConfig struct {
 	// Logger is the logger instance to use
 	Logger logger.Logger
-	
+
 	// SkipPaths lists paths that shouldn't be logged
 	SkipPaths []string
-	
+
 	// LogLevel determines what level to log at
 	LogLevel string
-	
+
 	// IncludeBody includes request/response body in logs
 	IncludeBody bool
-	
+
 	// IncludeHeaders includes headers in logs
 	IncludeHeaders bool
 }
@@ -41,7 +41,7 @@ func Logger(config *LoggerConfig) router.MiddlewareFunc {
 	if config == nil || config.Logger == nil {
 		panic("Logger is required for logger middleware")
 	}
-	
+
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
 			// Check if path should be skipped
@@ -50,20 +50,20 @@ func Logger(config *LoggerConfig) router.MiddlewareFunc {
 					return next(c)
 				}
 			}
-			
+
 			start := time.Now()
 			path := c.Request.URL.Path
 			raw := c.Request.URL.RawQuery
-			
+
 			// Process request
 			err := next(c)
-			
+
 			// Calculate latency
 			latency := time.Since(start)
-			
+
 			// Get response status
 			status := c.Writer.Status()
-			
+
 			// Build log fields
 			fields := []logger.Field{
 				logger.String("method", c.Request.Method),
@@ -73,11 +73,11 @@ func Logger(config *LoggerConfig) router.MiddlewareFunc {
 				logger.String("ip", c.ClientIP()),
 				logger.String("user_agent", c.Request.UserAgent()),
 			}
-			
+
 			if raw != "" {
 				fields = append(fields, logger.String("query", raw))
 			}
-			
+
 			if config.IncludeHeaders {
 				headers := make(map[string][]string)
 				for k, v := range c.Request.Header {
@@ -85,11 +85,11 @@ func Logger(config *LoggerConfig) router.MiddlewareFunc {
 				}
 				fields = append(fields, logger.Any("headers", headers))
 			}
-			
+
 			if err != nil {
 				fields = append(fields, logger.String("error", err.Error()))
 			}
-			
+
 			// Log based on status code
 			switch {
 			case status >= 500:
@@ -101,7 +101,7 @@ func Logger(config *LoggerConfig) router.MiddlewareFunc {
 			default:
 				config.Logger.Info("Request", fields...)
 			}
-			
+
 			return err
 		}
 	}
@@ -120,14 +120,14 @@ func Recovery(log logger.Logger) router.MiddlewareFunc {
 						logger.String("method", c.Request.Method),
 						logger.String("ip", c.ClientIP()),
 					)
-					
+
 					// Return 500 error
 					err = c.JSON(500, map[string]string{
 						"error": "Internal server error",
 					})
 				}
 			}()
-			
+
 			return next(c)
 		}
 	}
@@ -139,13 +139,13 @@ func RequestID() router.MiddlewareFunc {
 		return func(c *router.Context) error {
 			// Generate request ID
 			requestID := generateRequestID()
-			
+
 			// Add to context
 			c.Set("request_id", requestID)
-			
+
 			// Add to response header
 			c.SetHeader("X-Request-ID", requestID)
-			
+
 			return next(c)
 		}
 	}
@@ -161,17 +161,17 @@ func AccessLog(format string, log logger.Logger) router.MiddlewareFunc {
 	if format == "" {
 		format = ":method :path :status :latency :ip"
 	}
-	
+
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
 			start := time.Now()
-			
+
 			// Process request
 			err := next(c)
-			
+
 			// Calculate latency
 			latency := time.Since(start)
-			
+
 			// Format log message
 			msg := format
 			msg = replaceToken(msg, ":method", c.Request.Method)
@@ -180,10 +180,10 @@ func AccessLog(format string, log logger.Logger) router.MiddlewareFunc {
 			msg = replaceToken(msg, ":latency", latency.String())
 			msg = replaceToken(msg, ":ip", c.ClientIP())
 			msg = replaceToken(msg, ":user_agent", c.Request.UserAgent())
-			
+
 			// Log the access
 			log.Info(msg)
-			
+
 			return err
 		}
 	}
@@ -199,10 +199,10 @@ func Metrics(collector MetricsCollector) router.MiddlewareFunc {
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
 			start := time.Now()
-			
+
 			// Process request
 			err := next(c)
-			
+
 			// Collect metrics
 			collector.RecordRequest(
 				c.Request.Method,
@@ -210,7 +210,7 @@ func Metrics(collector MetricsCollector) router.MiddlewareFunc {
 				c.Writer.Status(),
 				time.Since(start),
 			)
-			
+
 			return err
 		}
 	}
@@ -246,10 +246,10 @@ func NewSimpleMetricsCollector() *SimpleMetricsCollector {
 // RecordRequest records a request metric
 func (s *SimpleMetricsCollector) RecordRequest(method, path string, status int, duration time.Duration) {
 	key := fmt.Sprintf("%s:%s", method, path)
-	
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	metrics, exists := s.requests[key]
 	if !exists {
 		metrics = &RequestMetrics{
@@ -259,17 +259,17 @@ func (s *SimpleMetricsCollector) RecordRequest(method, path string, status int, 
 		}
 		s.requests[key] = metrics
 	}
-	
+
 	metrics.Count++
 	metrics.TotalTime += duration
-	
+
 	if duration < metrics.MinTime {
 		metrics.MinTime = duration
 	}
 	if duration > metrics.MaxTime {
 		metrics.MaxTime = duration
 	}
-	
+
 	metrics.StatusCodes[status]++
 }
 
@@ -277,7 +277,7 @@ func (s *SimpleMetricsCollector) RecordRequest(method, path string, status int, 
 func (s *SimpleMetricsCollector) GetMetrics() map[string]*RequestMetrics {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	// Return a copy
 	result := make(map[string]*RequestMetrics)
 	for k, v := range s.requests {

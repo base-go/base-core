@@ -13,6 +13,7 @@ import (
 	"base/core/storage"
 	"base/core/swagger"
 	_ "base/core/translation"
+	"flag"
 	"fmt"
 	"net"
 	"os"
@@ -234,6 +235,7 @@ func (app *App) setupMiddleware() {
 func (app *App) setupStaticRoutes() {
 	app.router.Static("/static", "./static")
 	app.router.Static("/storage", "./storage")
+	app.router.Static("/docs", "./docs")
 }
 
 // setupSwagger initializes swagger documentation
@@ -410,10 +412,52 @@ func (app *App) Stop() error {
 	return nil
 }
 
+// GenerateSwaggerDocs generates static Swagger documentation files
+func (app *App) GenerateSwaggerDocs(outputDir string) error {
+	// Initialize only what's needed for Swagger generation
+	app.loadEnvironment().initConfig()
+
+	// Initialize minimal logger for output
+	logConfig := logger.Config{
+		Environment: app.config.Env,
+		LogPath:     "logs",
+		Level:       "info",
+	}
+
+	log, err := logger.NewLogger(logConfig)
+	if err != nil {
+		return fmt.Errorf("failed to initialize logger: %w", err)
+	}
+	app.logger = log
+
+	// Initialize swagger service
+	swaggerService := swagger.NewSwaggerService(app.config)
+
+	// Generate static files
+	return swaggerService.GenerateStaticFiles(outputDir)
+}
+
 func main() {
-	// Initialize and start the Base application
+	// Parse command line flags
+	var generateDocs = flag.Bool("generate-docs", false, "Generate static Swagger documentation files")
+	var docsOutput = flag.String("docs-output", "docs", "Output directory for generated documentation")
+	flag.Parse()
+
+	// Initialize the Base application
 	app := New()
 
+	// Handle documentation generation
+	if *generateDocs {
+		fmt.Println("🔧 Generating static Swagger documentation...")
+		if err := app.GenerateSwaggerDocs(*docsOutput); err != nil {
+			fmt.Printf("\n❌ Documentation generation failed:\n%v\n\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("✅ Documentation generated successfully!")
+		return
+	}
+
+	// Normal application startup
 	if err := app.Start(); err != nil {
 		// Print user-friendly error message instead of panicking
 		fmt.Printf("\n❌ Application failed to start:\n%v\n\n", err)

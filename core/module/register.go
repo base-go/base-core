@@ -50,10 +50,10 @@ type ModuleFactory func(deps Dependencies) Module
 var (
 	// modulesRegistry stores all registered modules. The key is the module name.
 	modulesRegistry = make(map[string]Module)
-	
+
 	// globalAppModules stores factory functions for app modules (used by auto-discovery)
 	globalAppModules = make(map[string]ModuleFactory)
-	
+
 	lock     sync.RWMutex
 	globalMu sync.RWMutex
 )
@@ -118,11 +118,10 @@ func GetAppModule(name string) ModuleFactory {
 func GetAllAppModules() map[string]ModuleFactory {
 	globalMu.RLock()
 	defer globalMu.RUnlock()
-	
+
 	copy := make(map[string]ModuleFactory)
 	for k, v := range globalAppModules {
 		copy[k] = v
 	}
 	return copy
 }
-

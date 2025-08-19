@@ -88,15 +88,15 @@ func NewLogger(config Config) (Logger, error) {
 	consoleConfig.EncodeLevel = func(l zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
 		switch l {
 		case zapcore.InfoLevel:
-			enc.AppendString("\033[34mℹ️  INFO \033[0m")  // Blue
+			enc.AppendString("\033[34mℹ️  INFO \033[0m") // Blue
 		case zapcore.WarnLevel:
-			enc.AppendString("\033[33m⚠️  WARN \033[0m")  // Yellow
+			enc.AppendString("\033[33m⚠️  WARN \033[0m") // Yellow
 		case zapcore.ErrorLevel:
-			enc.AppendString("\033[31m❌ ERROR\033[0m")  // Red
+			enc.AppendString("\033[31m❌ ERROR\033[0m") // Red
 		case zapcore.DebugLevel:
-			enc.AppendString("\033[35m🔍 DEBUG\033[0m")  // Purple
+			enc.AppendString("\033[35m🔍 DEBUG\033[0m") // Purple
 		case zapcore.FatalLevel:
-			enc.AppendString("\033[31m\033[1m💀 FATAL\033[0m")  // Bold Red
+			enc.AppendString("\033[31m\033[1m💀 FATAL\033[0m") // Bold Red
 		default:
 			enc.AppendString(l.String())
 		}

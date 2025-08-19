@@ -34,7 +34,7 @@ func (c *TranslationController) Routes(router *router.RouterGroup) {
 	// Utility endpoints - MUST come before parameterized routes
 	router.GET("/translations/languages", c.GetSupportedLanguages)
 
-	// Model-specific operations - MUST come before parameterized routes  
+	// Model-specific operations - MUST come before parameterized routes
 	router.GET("/translations/models/:model/:model_id", c.GetForModel)
 	router.GET("/translations/models/:model/:model_id/:language", c.GetForModelAndLanguage)
 

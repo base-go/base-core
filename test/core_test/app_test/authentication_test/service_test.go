@@ -34,7 +34,7 @@ func TestAuthenticationService(t *testing.T) {
 			email := fmt.Sprintf("duplicate-%s@example.com", uniqueID)
 			username := fmt.Sprintf("duplicateuser%s", uniqueID)
 			phone := fmt.Sprintf("+1%s", uniqueID[len(uniqueID)-10:])
-			
+
 			req := &authentication.RegisterRequest{
 				FirstName: "Duplicate",
 				LastName:  "User",
@@ -67,7 +67,7 @@ func TestAuthenticationService(t *testing.T) {
 			email := fmt.Sprintf("logintest-%s@example.com", uniqueID)
 			username := fmt.Sprintf("logintest%s", uniqueID)
 			phone := fmt.Sprintf("+1%s", uniqueID[len(uniqueID)-10:])
-			
+
 			hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
 			testUser := &authentication.AuthUser{
 				User: profile.User{
@@ -297,8 +297,8 @@ func TestAuthenticationService(t *testing.T) {
 			req2 := &authentication.RegisterRequest{
 				FirstName: "Duplicate",
 				LastName:  "User2",
-				Username:  "duplicateuser", // Same username - should cause duplicate
-				Phone:     "+1515151516",    // Different phone
+				Username:  "duplicateuser",          // Same username - should cause duplicate
+				Phone:     "+1515151516",            // Different phone
 				Email:     "duplicate2@example.com", // Different email
 				Password:  "password123",
 			}
@@ -373,7 +373,7 @@ func TestAuthenticationService(t *testing.T) {
 			phone := fmt.Sprintf("+1%s", uniqueID[len(uniqueID)-10:])
 			resetToken := "validresettoken123"
 			resetExpiry := time.Now().Add(time.Hour)
-			
+
 			testUser := &authentication.AuthUser{
 				User: profile.User{
 					FirstName: "Reset",
@@ -473,7 +473,7 @@ func TestAuthenticationService(t *testing.T) {
 			email := fmt.Sprintf("logintest-%s@example.com", uniqueID)
 			username := fmt.Sprintf("logintest%s", uniqueID)
 			phone := fmt.Sprintf("+1%s", uniqueID[len(uniqueID)-10:])
-			
+
 			loginUser := &authentication.AuthUser{
 				User: profile.User{
 					FirstName: "Login",

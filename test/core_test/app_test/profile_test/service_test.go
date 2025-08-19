@@ -41,7 +41,7 @@ func TestProfileService(t *testing.T) {
 		t.Run("RemoveAvatar - success", func(t *testing.T) {
 			// Create a test user with avatar
 			testUser := helper.CreateUniqueTestUser("removeavatar")
-			
+
 			// Test RemoveAvatar with user that has no avatar (simpler test)
 			ctx := context.Background()
 			response, err := profileService.RemoveAvatar(ctx, testUser.Id)
@@ -60,7 +60,7 @@ func TestProfileService(t *testing.T) {
 		t.Run("RemoveAvatar - user with no avatar", func(t *testing.T) {
 			// Create a test user without avatar
 			testUser := helper.CreateTestUser("noavatar@example.com", "noavataruser", "+1666666666")
-			
+
 			ctx := context.Background()
 			response, err := profileService.RemoveAvatar(ctx, testUser.Id)
 			assert.NoError(t, err) // Should succeed even if no avatar
@@ -84,7 +84,7 @@ func TestProfileService(t *testing.T) {
 				Username:  "updateduser",
 				Email:     "updated@example.com",
 			}
-			
+
 			response, err := profileService.Update(99999, updateReq) // Non-existent user
 			assert.Error(t, err)
 			assert.Nil(t, response)
@@ -99,7 +99,7 @@ func TestProfileService(t *testing.T) {
 				OldPassword: "password123",
 				NewPassword: "newpassword123",
 			}
-			
+
 			err := profileService.UpdatePassword(99999, updateReq) // Non-existent user
 			assert.Error(t, err)
 
@@ -148,7 +148,7 @@ func TestProfileService(t *testing.T) {
 
 			// Test RemoveAvatar with user that has avatar (create a proper avatar)
 			testUser4 := helper.CreateTestUser("removeavatar2@example.com", "removeavatar2user", "+1515151515")
-			
+
 			// Create a simple attachment for testing
 			attachment := &storage.Attachment{
 				Id:       2,
@@ -269,7 +269,7 @@ func TestProfileService(t *testing.T) {
 
 			// Test RemoveAvatar with user that has an avatar
 			testUser2 := helper.CreateTestUser("hasavatar@example.com", "hasavataruser", "+2828282829")
-			
+
 			// Create a mock attachment for the user
 			attachment := &storage.Attachment{
 				Id:       3,
