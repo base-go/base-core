@@ -25,8 +25,9 @@ import (
 )
 
 // @title Base API
-// @version 2.1.0
-// @description This is the API documentation for Base
+// @version 2.0.0
+// @description This is the API documentation for Base Framework, change this on main.go
+// @host http://localhost:8100
 // @BasePath /api
 // @schemes http https
 // @produces json
