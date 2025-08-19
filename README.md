@@ -66,6 +66,7 @@ Base is a modern Go web framework designed for rapid development and maintainabl
   - belongs_to (One-to-one with foreign key in this model)
   - has_one (One-to-one with foreign key in other model)
   - has_many (One-to-many)
+  - to_many (Many-to-many with join table)
   - **Automatic Relationship Detection**: Fields ending with `_id` automatically generate relationships
 - Auto-Migration
 - Transaction Support
@@ -213,14 +214,14 @@ cd myapp
 base start
 ```
 
-Your API will be available at `http://localhost:8080`
+Your API will be available at `http://localhost:8100`
 
 ### Configuration
 
 Base uses environment variables for configuration. A `.env` file is automatically created with your new project:
 
 ```bash
-SERVER_ADDRESS=:8080
+SERVER_ADDRESS=:8100
 JWT_SECRET=your_jwt_secret
 API_KEY=your_api_key
 
@@ -257,11 +258,13 @@ Base follows a modular architecture with a centralized models directory:
 │   ├── posts/            # Post module
 │   │   ├── controller.go # HTTP handlers & file upload
 │   │   ├── service.go    # Business logic & storage
-│   │   └── module.go     # Module registration
+│   │   ├── module.go     # Module registration
+│   │   └── validation.go # Validation rules
 │   ├── users/            # User module
 │   │   ├── controller.go
 │   │   ├── service.go
-│   │   └── module.go
+│   │   ├── module.go
+│   │   └── validation.go # Validation rules
 │   └── init.go           # Module initialization
 ├── core/                 # Framework core
 │   ├── storage/         # File storage system
@@ -285,7 +288,8 @@ app/
 └── posts/              # Post module
     ├── controller.go   # HTTP handlers & validation
     ├── service.go      # Business logic
-    └── module.go       # Module registration
+    ├── module.go       # Module registration
+    └── validation.go   # Validation rules
 ```
 
 ### Model Organization
