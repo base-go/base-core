@@ -5,7 +5,7 @@ All notable changes to the Base Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v2.1.1] - 2025-08-13
+## [v2.0.1] - 2025-08-19
 
 ### Added
 - **🎯 Enhanced DateTime Type Support** - Comprehensive date/time handling
@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Better GORM tag support for various field types
   - Enhanced foreign key relationships and constraints
 
-## [v2.1.0] - 2025-08-13
+## [v2.0.0] - 2025-08-13
 
 ### Added
 - **🚀 Zero-Dependency HTTP Router** - Complete Gin framework removal
@@ -61,7 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Route definitions**: No changes needed - existing routes work unchanged
 - **Performance**: Expect improved startup time and reduced memory footprint
 
-## [v2.0.0] - 2025-01-31
+ 
 
 ### Added
 - **Automatic Relationship Detection**: Enhanced code generation to automatically detect and create GORM relationships when field names end with `_id` and have `uint` type
