@@ -213,7 +213,7 @@
 
         function connect() {
             const clientId = 'monitor_' + Math.random().toString(36).substr(2, 9);
-            socket = new WebSocket(`ws://localhost:8001/api/ws?id=${clientId}&room=system_monitor`);
+            socket = new WebSocket(`ws://localhost:8100/api/ws?id=${clientId}&room=system_monitor`);
 
             socket.onopen = function() {
                 updateStatus('Connected');

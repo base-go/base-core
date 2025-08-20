@@ -343,6 +343,23 @@ func (s *SwaggerService) generatePaths() map[string]any {
 		},
 	}
 
+	// WebSocket endpoint (only if enabled)
+	if s.config.WebSocketEnabled {
+		paths["/ws"] = map[string]any{
+			"get": map[string]any{
+				"summary":     "WebSocket endpoint",
+				"description": "WebSocket endpoint for real-time communication",
+				"operationId": "websocketEndpoint",
+				"tags":        []string{"System"},
+				"responses": map[string]any{
+					"200": map[string]any{
+						"description": "WebSocket connection established",
+					},
+				},
+			},
+		}
+	}
+
 	// Root endpoint
 	paths["/"] = map[string]any{
 		"get": map[string]any{

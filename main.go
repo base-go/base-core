@@ -13,6 +13,7 @@ import (
 	"base/core/storage"
 	"base/core/swagger"
 	_ "base/core/translation"
+	"base/core/websocket"
 	"flag"
 	"fmt"
 	"net"
@@ -59,6 +60,7 @@ type App struct {
 	storage     *storage.ActiveStorage
 	emailSender email.Sender
 	swagger     *swagger.SwaggerService
+	wsHub       *websocket.Hub
 
 	// State
 	running bool
@@ -176,6 +178,7 @@ func (app *App) initRouter() *App {
 	app.setupMiddleware()
 	app.setupStaticRoutes()
 	app.setupSwagger()
+	app.initWebSocket()
 
 	app.logger.Info("✅ Router initialized")
 	return app
@@ -243,10 +246,23 @@ func (app *App) setupStaticRoutes() {
 func (app *App) setupSwagger() {
 	app.swagger = swagger.NewSwaggerService(app.config)
 
-	if app.config.Env != "production" {
+	if app.config.SwaggerEnabled {
 		app.swagger.RegisterRoutes(app.router)
 		app.logger.Info("✅ Swagger documentation enabled at /swagger/")
+	} else {
+		app.logger.Info("⏩ Swagger documentation disabled via SWAGGER_ENABLED=false")
 	}
+}
+
+// initWebSocket initializes the WebSocket hub if enabled
+func (app *App) initWebSocket() {
+	if !app.config.WebSocketEnabled {
+		app.logger.Info("⏩ WebSocket disabled via WS_ENABLED=false")
+		return
+	}
+	
+	app.wsHub = websocket.InitWebSocketModule(app.router.Group("/api"))
+	app.logger.Info("✅ WebSocket hub initialized")
 }
 
 // autoDiscoverModules automatically discovers and registers modules
