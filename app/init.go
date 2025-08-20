@@ -1,6 +1,10 @@
 package app
 
 import (
+
+
+
+
 	"base/core/module"
 )
 
@@ -11,6 +15,8 @@ type AppModules struct{}
 // This is the only function that needs to be updated when adding new app modules
 func (am *AppModules) GetAppModules(deps module.Dependencies) map[string]module.Module {
 	modules := make(map[string]module.Module)
+
+
 
 	return modules
 }

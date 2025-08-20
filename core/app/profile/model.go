@@ -101,6 +101,29 @@ func (u *User) ToResponse() *UserResponse {
 	return response
 }
 
+// UserModelResponse represents a simplified response when User is part of other entities
+type UserModelResponse struct {
+	Id        uint   `json:"id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Username  string `json:"username"`
+	Phone     string `json:"phone"`
+	Email     string `json:"email"`
+}
+
+// ToModelResponse converts the model to a simplified response for when it's part of other entities
+func (u *User) ToModelResponse() *UserModelResponse {
+	if u == nil {
+		return nil
+	}
+	return &UserModelResponse{
+		Id:        u.Id,
+		FirstName: u.FirstName,
+		LastName:  u.LastName,
+		Username:  u.Username,
+	}
+}
+
 // Helper function to convert User to UserResponse (deprecated - use ToResponse method)
 func ToResponse(user *User) *UserResponse {
 	if user == nil {

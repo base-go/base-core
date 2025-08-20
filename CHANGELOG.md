@@ -5,6 +5,43 @@ All notable changes to the Base Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.0.2] - 2025-08-20
+
+### Added
+- **🚀 Fully Dynamic Swagger Schema Generation** - Revolutionary automatic API documentation
+  - Complete replacement of hardcoded schema generation with intelligent discovery system
+  - Automatic model scanning from `/app/models/` directory for any new modules
+  - Pattern-based schema generation following Base Framework naming conventions
+  - Zero-maintenance swagger documentation - new modules automatically generate proper schemas
+  - Smart filename-to-model conversion (`post_categor.go` → `PostCategor`)
+  - Comprehensive schema set generation for any model:
+    - `models.Create{Model}Request` for POST endpoints
+    - `models.Update{Model}Request` for PUT endpoints  
+    - `models.{Model}Response` for response objects
+    - `models.{Model}SelectOption` for dropdown/select lists
+
+### Enhanced
+- **📚 Swagger Documentation System** - Complete overhaul for better API documentation
+  - Fixed OpenAPI 3.0 compliance with proper `$ref` schema references
+  - Enhanced requestBody handling for POST/PUT endpoints (replaced incorrect `parameters` usage)
+  - Improved schema property generation with proper field types, descriptions, and examples
+  - Automatic field description and example generation based on field names
+  - Better error handling with graceful fallbacks to ensure swagger always works
+
+### Fixed
+- **🐛 API Documentation Issues**
+  - Resolved "Unknown Type" errors in Swagger UI - now shows proper schema structures
+  - Fixed parameter schema references to use correct OpenAPI 3.0 `$ref` format
+  - Corrected body parameter handling to use `requestBody` instead of `parameters`
+  - Fixed schema generation for dynamically created modules via `./base g` command
+
+### Improved
+- **⚡ Performance & Maintainability**
+  - Eliminated manual schema maintenance - schemas now generate automatically
+  - Better code organization with clear separation of concerns
+  - More robust error handling in swagger service
+  - Future-proof system that adapts to any new modules without code changes
+
 ## [v2.0.1] - 2025-08-19
 
 ### Added

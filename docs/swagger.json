@@ -662,7 +662,7 @@
     "/api/authorization/roles/{id}/permissions/{permissionId}": {
       "delete": {
         "description": "Removes a permission from a role",
-        "operationId": "deleteAuthorizationRolesByIdPermissionsByPermissionId",
+        "operationId": "deleteAuthorizationRolesByIdPermissionsByPermissionid",
         "parameters": [
           {
             "description": "Role ID",
@@ -1150,6 +1150,524 @@
         "summary": "Google OAuth callback",
         "tags": [
           "Core/OAuth"
+        ]
+      }
+    },
+    "/api/post-categors": {
+      "get": {
+        "description": "Get a list of post-categors",
+        "operationId": "getPost-Categors",
+        "parameters": [
+          {
+            "description": "Page number",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "int"
+            }
+          },
+          {
+            "description": "Number of items per page",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "int"
+            }
+          },
+          {
+            "description": "Sort field (id, created_at, updated_at,tile,desc,date,nite,)",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort order (asc, desc)",
+            "in": "query",
+            "name": "order",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{object}"
+          },
+          "400": {
+            "description": "{object}"
+          },
+          "500": {
+            "description": "{object}"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "List post-categors",
+        "tags": [
+          "App/PostCategor"
+        ]
+      },
+      "post": {
+        "description": "Create a new PostCategor with the input payload",
+        "operationId": "postPost-Categors",
+        "parameters": [
+          {
+            "description": "Create PostCategor request",
+            "in": "body",
+            "name": "post-categors",
+            "required": true,
+            "schema": {
+              "type": "models.CreatePostCategorRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "{object}"
+          },
+          "400": {
+            "description": "{object}"
+          },
+          "500": {
+            "description": "{object}"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Create a new PostCategor",
+        "tags": [
+          "App/PostCategor"
+        ]
+      }
+    },
+    "/api/post-categors/all": {
+      "get": {
+        "description": "Get a simplified list of all post-categors with id and name only (for dropdowns/select boxes)",
+        "operationId": "getPost-CategorsAll",
+        "responses": {
+          "200": {
+            "description": "{array}"
+          },
+          "500": {
+            "description": "{object}"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "List all post-categors for select options",
+        "tags": [
+          "App/PostCategor"
+        ]
+      }
+    },
+    "/api/post-categors/{id}": {
+      "delete": {
+        "description": "Delete a PostCategor by its id",
+        "operationId": "deletePost-CategorsById",
+        "parameters": [
+          {
+            "description": "PostCategor id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "int"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{object}"
+          },
+          "400": {
+            "description": "{object}"
+          },
+          "500": {
+            "description": "{object}"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Delete a PostCategor",
+        "tags": [
+          "App/PostCategor"
+        ]
+      },
+      "get": {
+        "description": "Get a PostCategor by its id",
+        "operationId": "getPost-CategorsById",
+        "parameters": [
+          {
+            "description": "PostCategor id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "int"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{object}"
+          },
+          "400": {
+            "description": "{object}"
+          },
+          "404": {
+            "description": "{object}"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get a PostCategor",
+        "tags": [
+          "App/PostCategor"
+        ]
+      },
+      "put": {
+        "description": "Update a PostCategor by its id",
+        "operationId": "putPost-CategorsById",
+        "parameters": [
+          {
+            "description": "PostCategor id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "int"
+            }
+          },
+          {
+            "description": "Update PostCategor request",
+            "in": "body",
+            "name": "post-categors",
+            "required": true,
+            "schema": {
+              "type": "models.UpdatePostCategorRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{object}"
+          },
+          "400": {
+            "description": "{object}"
+          },
+          "404": {
+            "description": "{object}"
+          },
+          "500": {
+            "description": "{object}"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Update a PostCategor",
+        "tags": [
+          "App/PostCategor"
+        ]
+      }
+    },
+    "/api/posts": {
+      "get": {
+        "description": "Get a list of posts",
+        "operationId": "getPosts",
+        "parameters": [
+          {
+            "description": "Page number",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "int"
+            }
+          },
+          {
+            "description": "Number of items per page",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "int"
+            }
+          },
+          {
+            "description": "Sort field (id, created_at, updated_at,tile,desc,date,nite,)",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort order (asc, desc)",
+            "in": "query",
+            "name": "order",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{object}"
+          },
+          "400": {
+            "description": "{object}"
+          },
+          "500": {
+            "description": "{object}"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "List posts",
+        "tags": [
+          "App/Post"
+        ]
+      },
+      "post": {
+        "description": "Create a new Post with the input payload",
+        "operationId": "postPosts",
+        "parameters": [
+          {
+            "description": "Create Post request",
+            "in": "body",
+            "name": "posts",
+            "required": true,
+            "schema": {
+              "type": "models.CreatePostRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "{object}"
+          },
+          "400": {
+            "description": "{object}"
+          },
+          "500": {
+            "description": "{object}"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Create a new Post",
+        "tags": [
+          "App/Post"
+        ]
+      }
+    },
+    "/api/posts/all": {
+      "get": {
+        "description": "Get a simplified list of all posts with id and name only (for dropdowns/select boxes)",
+        "operationId": "getPostsAll",
+        "responses": {
+          "200": {
+            "description": "{array}"
+          },
+          "500": {
+            "description": "{object}"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "List all posts for select options",
+        "tags": [
+          "App/Post"
+        ]
+      }
+    },
+    "/api/posts/{id}": {
+      "delete": {
+        "description": "Delete a Post by its id",
+        "operationId": "deletePostsById",
+        "parameters": [
+          {
+            "description": "Post id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "int"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{object}"
+          },
+          "400": {
+            "description": "{object}"
+          },
+          "500": {
+            "description": "{object}"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Delete a Post",
+        "tags": [
+          "App/Post"
+        ]
+      },
+      "get": {
+        "description": "Get a Post by its id",
+        "operationId": "getPostsById",
+        "parameters": [
+          {
+            "description": "Post id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "int"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{object}"
+          },
+          "400": {
+            "description": "{object}"
+          },
+          "404": {
+            "description": "{object}"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get a Post",
+        "tags": [
+          "App/Post"
+        ]
+      },
+      "put": {
+        "description": "Update a Post by its id",
+        "operationId": "putPostsById",
+        "parameters": [
+          {
+            "description": "Post id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "int"
+            }
+          },
+          {
+            "description": "Update Post request",
+            "in": "body",
+            "name": "posts",
+            "required": true,
+            "schema": {
+              "type": "models.UpdatePostRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{object}"
+          },
+          "400": {
+            "description": "{object}"
+          },
+          "404": {
+            "description": "{object}"
+          },
+          "500": {
+            "description": "{object}"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Update a Post",
+        "tags": [
+          "App/Post"
         ]
       }
     },
