@@ -66,7 +66,7 @@ require (
 	github.com/keighl/postmark v0.0.0-20190821160221-28358b1a94e3
 	github.com/sendgrid/sendgrid-go v3.16.1+incompatible
 	go.uber.org/zap v1.27.0
-	golang.org/x/text v0.28.0 // indirect
+	golang.org/x/text v0.28.0
 	google.golang.org/api v0.248.0
 	gorm.io/driver/mysql v1.6.0
 	gorm.io/driver/postgres v1.6.0

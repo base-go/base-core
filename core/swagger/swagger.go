@@ -12,6 +12,9 @@ import (
 
 	"base/core/config"
 	"base/core/router"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // SwaggerInfo holds the basic information for Swagger documentation
@@ -391,7 +394,6 @@ func (s *SwaggerService) scanAndParseControllerAnnotations(paths map[string]any)
 	cwd, err := os.Getwd()
 	if err != nil {
 		// Fallback to hardcoded endpoints if we can't get working directory
-		s.addAppPostsEndpoints(paths)
 		s.addCoreAuthEndpoints(paths)
 		s.addCoreProfileEndpoints(paths)
 		s.addCoreMediaEndpoints(paths)
@@ -400,8 +402,8 @@ func (s *SwaggerService) scanAndParseControllerAnnotations(paths map[string]any)
 
 	// Directories to scan for controllers (absolute paths)
 	controllerDirs := []string{
-		filepath.Join(cwd, "app"),           // App modules: /base/app/*/controller.go
-		filepath.Join(cwd, "core", "app"),   // Core modules: /base/core/app/*/controller.go
+		filepath.Join(cwd, "app"),         // App modules: /base/app/*/controller.go
+		filepath.Join(cwd, "core", "app"), // Core modules: /base/core/app/*/controller.go
 	}
 
 	for _, dir := range controllerDirs {
@@ -415,9 +417,8 @@ func (s *SwaggerService) scanDirectoryForControllers(baseDir string, paths map[s
 	controllerFiles, err := s.findControllerFiles(baseDir)
 	if err != nil {
 		// Fallback to hardcoded endpoints for known modules
-		if baseDir == "app" {
-			s.addAppPostsEndpoints(paths)
-		} else if baseDir == "core/app" {
+		switch baseDir {
+		case "core/app":
 			s.addCoreAuthEndpoints(paths)
 			s.addCoreProfileEndpoints(paths)
 			s.addCoreMediaEndpoints(paths)
@@ -652,14 +653,14 @@ func (s *SwaggerService) convertAnnotationsToPaths(annotations []SwaggerAnnotati
 					"description": param.Description,
 					"required":    param.Required,
 				}
-				
+
 				// For body parameters, use requestBody instead of parameter schema
 				if param.In == "body" {
 					// Body parameters should be handled as requestBody in OpenAPI 3.0
 					// Skip adding to parameters array - will be handled separately
 					continue
 				}
-				
+
 				// For other parameter types, determine if it's a model reference or primitive type
 				if strings.Contains(param.Type, ".") && !strings.Contains(param.Type, "[]") {
 					// This is a model reference like "models.CreatePostRequest"
@@ -672,7 +673,7 @@ func (s *SwaggerService) convertAnnotationsToPaths(annotations []SwaggerAnnotati
 						"type": param.Type,
 					}
 				}
-				
+
 				parameters = append(parameters, paramMap)
 			}
 			operation["parameters"] = parameters
@@ -687,7 +688,7 @@ func (s *SwaggerService) convertAnnotationsToPaths(annotations []SwaggerAnnotati
 						"application/json": map[string]any{},
 					},
 				}
-				
+
 				// Determine if it's a model reference or primitive type
 				if strings.Contains(param.Type, ".") {
 					// This is a model reference like "models.CreatePostRequest"
@@ -700,7 +701,7 @@ func (s *SwaggerService) convertAnnotationsToPaths(annotations []SwaggerAnnotati
 						"type": param.Type,
 					}
 				}
-				
+
 				operation["requestBody"] = requestBody
 				break // Only one body parameter per operation
 			}
@@ -763,351 +764,13 @@ func (s *SwaggerService) generateOperationID(method, route string) string {
 		if strings.HasPrefix(part, "{") && strings.HasSuffix(part, "}") {
 			param := strings.Trim(part, "{}")
 			opID.WriteString("By")
-			opID.WriteString(strings.Title(param))
+			opID.WriteString(cases.Title(language.AmericanEnglish, cases.NoLower).String(param))
 		} else {
-			opID.WriteString(strings.Title(part))
+			opID.WriteString(cases.Title(language.AmericanEnglish, cases.NoLower).String(part))
 		}
 	}
 
 	return opID.String()
-}
-
-// addAppPostsEndpoints adds endpoints for the Posts app module
-func (s *SwaggerService) addAppPostsEndpoints(paths map[string]any) {
-	paths["/api/posts"] = map[string]any{
-		"get": map[string]any{
-			"summary":     "List posts",
-			"description": "Get a list of posts",
-			"tags":        []string{"App/Post"},
-			"security": []map[string][]string{
-				{"ApiKeyAuth": {}},
-				{"BearerAuth": {}},
-			},
-			"parameters": []map[string]any{
-				{
-					"name":        "page",
-					"in":          "query",
-					"description": "Page number",
-					"required":    false,
-					"schema":      map[string]any{"type": "integer"},
-				},
-				{
-					"name":        "limit",
-					"in":          "query",
-					"description": "Number of items per page",
-					"required":    false,
-					"schema":      map[string]any{"type": "integer"},
-				},
-				{
-					"name":        "sort",
-					"in":          "query",
-					"description": "Sort field (id, created_at, updated_at, tile, desc, date)",
-					"required":    false,
-					"schema":      map[string]any{"type": "string"},
-				},
-				{
-					"name":        "order",
-					"in":          "query",
-					"description": "Sort order (asc, desc)",
-					"required":    false,
-					"schema":      map[string]any{"type": "string"},
-				},
-			},
-			"responses": map[string]any{
-				"200": map[string]any{
-					"description": "List of posts",
-					"content": map[string]any{
-						"application/json": map[string]any{
-							"schema": map[string]any{
-								"$ref": "#/components/schemas/types.PaginatedResponse",
-							},
-						},
-					},
-				},
-				"400": map[string]any{
-					"description": "Bad request",
-					"content": map[string]any{
-						"application/json": map[string]any{
-							"schema": map[string]any{
-								"$ref": "#/components/schemas/types.ErrorResponse",
-							},
-						},
-					},
-				},
-				"500": map[string]any{
-					"description": "Internal server error",
-					"content": map[string]any{
-						"application/json": map[string]any{
-							"schema": map[string]any{
-								"$ref": "#/components/schemas/types.ErrorResponse",
-							},
-						},
-					},
-				},
-			},
-		},
-		"post": map[string]any{
-			"summary":     "Create a new Post",
-			"description": "Create a new Post with the input payload",
-			"tags":        []string{"App/Post"},
-			"security": []map[string][]string{
-				{"ApiKeyAuth": {}},
-				{"BearerAuth": {}},
-			},
-			"requestBody": map[string]any{
-				"required": true,
-				"content": map[string]any{
-					"application/json": map[string]any{
-						"schema": map[string]any{
-							"$ref": "#/components/schemas/models.CreatePostRequest",
-						},
-					},
-				},
-			},
-			"responses": map[string]any{
-				"201": map[string]any{
-					"description": "Created",
-					"content": map[string]any{
-						"application/json": map[string]any{
-							"schema": map[string]any{
-								"$ref": "#/components/schemas/models.PostResponse",
-							},
-						},
-					},
-				},
-				"400": map[string]any{
-					"description": "Bad request",
-					"content": map[string]any{
-						"application/json": map[string]any{
-							"schema": map[string]any{
-								"$ref": "#/components/schemas/types.ErrorResponse",
-							},
-						},
-					},
-				},
-				"500": map[string]any{
-					"description": "Internal server error",
-					"content": map[string]any{
-						"application/json": map[string]any{
-							"schema": map[string]any{
-								"$ref": "#/components/schemas/types.ErrorResponse",
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-
-	paths["/api/posts/all"] = map[string]any{
-		"get": map[string]any{
-			"summary":     "List all posts for select options",
-			"description": "Get a simplified list of all posts with id and name only (for dropdowns/select boxes)",
-			"tags":        []string{"App/Post"},
-			"security": []map[string][]string{
-				{"ApiKeyAuth": {}},
-				{"BearerAuth": {}},
-			},
-			"responses": map[string]any{
-				"200": map[string]any{
-					"description": "List of select options",
-					"content": map[string]any{
-						"application/json": map[string]any{
-							"schema": map[string]any{
-								"type": "array",
-								"items": map[string]any{
-									"$ref": "#/components/schemas/models.PostSelectOption",
-								},
-							},
-						},
-					},
-				},
-				"500": map[string]any{
-					"description": "Internal server error",
-					"content": map[string]any{
-						"application/json": map[string]any{
-							"schema": map[string]any{
-								"$ref": "#/components/schemas/types.ErrorResponse",
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-
-	paths["/api/posts/{id}"] = map[string]any{
-		"get": map[string]any{
-			"summary":     "Get a Post",
-			"description": "Get a Post by its id",
-			"tags":        []string{"App/Post"},
-			"security": []map[string][]string{
-				{"ApiKeyAuth": {}},
-				{"BearerAuth": {}},
-			},
-			"parameters": []map[string]any{
-				{
-					"name":        "id",
-					"in":          "path",
-					"description": "Post id",
-					"required":    true,
-					"schema":      map[string]any{"type": "integer"},
-				},
-			},
-			"responses": map[string]any{
-				"200": map[string]any{
-					"description": "Post details",
-					"content": map[string]any{
-						"application/json": map[string]any{
-							"schema": map[string]any{
-								"$ref": "#/components/schemas/models.PostResponse",
-							},
-						},
-					},
-				},
-				"400": map[string]any{
-					"description": "Bad request",
-					"content": map[string]any{
-						"application/json": map[string]any{
-							"schema": map[string]any{
-								"$ref": "#/components/schemas/types.ErrorResponse",
-							},
-						},
-					},
-				},
-				"404": map[string]any{
-					"description": "Not found",
-					"content": map[string]any{
-						"application/json": map[string]any{
-							"schema": map[string]any{
-								"$ref": "#/components/schemas/types.ErrorResponse",
-							},
-						},
-					},
-				},
-			},
-		},
-		"put": map[string]any{
-			"summary":     "Update a Post",
-			"description": "Update a Post by its id",
-			"tags":        []string{"App/Post"},
-			"security": []map[string][]string{
-				{"ApiKeyAuth": {}},
-				{"BearerAuth": {}},
-			},
-			"parameters": []map[string]any{
-				{
-					"name":        "id",
-					"in":          "path",
-					"description": "Post id",
-					"required":    true,
-					"schema":      map[string]any{"type": "integer"},
-				},
-			},
-			"requestBody": map[string]any{
-				"required": true,
-				"content": map[string]any{
-					"application/json": map[string]any{
-						"schema": map[string]any{
-							"$ref": "#/components/schemas/models.UpdatePostRequest",
-						},
-					},
-				},
-			},
-			"responses": map[string]any{
-				"200": map[string]any{
-					"description": "Updated post",
-					"content": map[string]any{
-						"application/json": map[string]any{
-							"schema": map[string]any{
-								"$ref": "#/components/schemas/models.PostResponse",
-							},
-						},
-					},
-				},
-				"400": map[string]any{
-					"description": "Bad request",
-					"content": map[string]any{
-						"application/json": map[string]any{
-							"schema": map[string]any{
-								"$ref": "#/components/schemas/types.ErrorResponse",
-							},
-						},
-					},
-				},
-				"404": map[string]any{
-					"description": "Not found",
-					"content": map[string]any{
-						"application/json": map[string]any{
-							"schema": map[string]any{
-								"$ref": "#/components/schemas/types.ErrorResponse",
-							},
-						},
-					},
-				},
-				"500": map[string]any{
-					"description": "Internal server error",
-					"content": map[string]any{
-						"application/json": map[string]any{
-							"schema": map[string]any{
-								"$ref": "#/components/schemas/types.ErrorResponse",
-							},
-						},
-					},
-				},
-			},
-		},
-		"delete": map[string]any{
-			"summary":     "Delete a Post",
-			"description": "Delete a Post by its id",
-			"tags":        []string{"App/Post"},
-			"security": []map[string][]string{
-				{"ApiKeyAuth": {}},
-				{"BearerAuth": {}},
-			},
-			"parameters": []map[string]any{
-				{
-					"name":        "id",
-					"in":          "path",
-					"description": "Post id",
-					"required":    true,
-					"schema":      map[string]any{"type": "integer"},
-				},
-			},
-			"responses": map[string]any{
-				"200": map[string]any{
-					"description": "Successfully deleted",
-					"content": map[string]any{
-						"application/json": map[string]any{
-							"schema": map[string]any{
-								"$ref": "#/components/schemas/types.SuccessResponse",
-							},
-						},
-					},
-				},
-				"400": map[string]any{
-					"description": "Bad request",
-					"content": map[string]any{
-						"application/json": map[string]any{
-							"schema": map[string]any{
-								"$ref": "#/components/schemas/types.ErrorResponse",
-							},
-						},
-					},
-				},
-				"500": map[string]any{
-					"description": "Internal server error",
-					"content": map[string]any{
-						"application/json": map[string]any{
-							"schema": map[string]any{
-								"$ref": "#/components/schemas/types.ErrorResponse",
-							},
-						},
-					},
-				},
-			},
-		},
-	}
 }
 
 // addCoreAuthEndpoints adds Core/Auth endpoints based on controller annotations
@@ -2653,9 +2316,9 @@ func (s *SwaggerService) generateDynamicSchemas(schemas map[string]any) {
 		s.addUserSchemas(schemas)
 		return
 	}
-	
+
 	modelsDir := filepath.Join(cwd, "app", "models")
-	
+
 	// Read all .go files in the models directory
 	files, err := filepath.Glob(filepath.Join(modelsDir, "*.go"))
 	if err != nil {
@@ -2664,7 +2327,7 @@ func (s *SwaggerService) generateDynamicSchemas(schemas map[string]any) {
 		s.addUserSchemas(schemas)
 		return
 	}
-	
+
 	// Parse each model file and extract struct definitions
 	for _, file := range files {
 		s.parseModelFileSimple(file, schemas)
@@ -2677,16 +2340,16 @@ func (s *SwaggerService) parseModelFileSimple(filename string, schemas map[strin
 	if err != nil {
 		return
 	}
-	
+
 	fileContent := string(content)
-	
+
 	// Extract base model name from filename (e.g., post.go -> Post, post_categor.go -> PostCategor)
 	baseName := filepath.Base(filename)
 	baseName = strings.TrimSuffix(baseName, ".go")
-	
+
 	// Convert snake_case to PascalCase (post_categor -> PostCategor)
 	modelName := s.snakeCaseToPascalCase(baseName)
-	
+
 	// Look for Request/Response struct definitions in the file
 	if strings.Contains(fileContent, "Request struct") {
 		s.generateStandardSchemas(modelName, schemas)
@@ -2709,24 +2372,24 @@ func (s *SwaggerService) snakeCaseToPascalCase(input string) string {
 func (s *SwaggerService) generateStandardSchemas(modelName string, schemas map[string]any) {
 	// Generate CreateRequest schema
 	schemas["models.Create"+modelName+"Request"] = map[string]any{
-		"type": "object",
+		"type":       "object",
 		"properties": s.generateModelProperties(),
 		"required":   []string{"tile", "desc", "date"},
 	}
-	
+
 	// Generate UpdateRequest schema
 	schemas["models.Update"+modelName+"Request"] = map[string]any{
-		"type": "object",
+		"type":       "object",
 		"properties": s.generateModelProperties(),
 	}
-	
+
 	// Generate Response schema
 	schemas["models."+modelName+"Response"] = map[string]any{
-		"type": "object",
+		"type":       "object",
 		"properties": s.generateResponseProperties(),
 		"required":   []string{"id", "created_at", "updated_at"},
 	}
-	
+
 	// Generate SelectOption schema
 	schemas["models."+modelName+"SelectOption"] = map[string]any{
 		"type": "object",
@@ -2737,7 +2400,7 @@ func (s *SwaggerService) generateStandardSchemas(modelName string, schemas map[s
 				"example":     1,
 			},
 			"name": map[string]any{
-				"type":        "string", 
+				"type":        "string",
 				"description": "Display name",
 				"example":     "Sample Name",
 			},
@@ -2756,7 +2419,7 @@ func (s *SwaggerService) generateModelProperties() map[string]any {
 		},
 		"desc": map[string]any{
 			"type":        "string",
-			"description": "Description", 
+			"description": "Description",
 			"example":     "Sample description",
 		},
 		"date": map[string]any{
@@ -2775,7 +2438,7 @@ func (s *SwaggerService) generateModelProperties() map[string]any {
 // generateResponseProperties generates standard response properties
 func (s *SwaggerService) generateResponseProperties() map[string]any {
 	properties := s.generateModelProperties()
-	
+
 	// Add standard response fields
 	properties["id"] = map[string]any{
 		"type":        "integer",
@@ -2789,7 +2452,7 @@ func (s *SwaggerService) generateResponseProperties() map[string]any {
 		"example":     "2024-01-15T10:30:00Z",
 	}
 	properties["updated_at"] = map[string]any{
-		"type":        "string", 
+		"type":        "string",
 		"format":      "date-time",
 		"description": "Last update timestamp",
 		"example":     "2024-01-15T10:30:00Z",
@@ -2800,7 +2463,7 @@ func (s *SwaggerService) generateResponseProperties() map[string]any {
 		"description": "Deletion timestamp",
 		"example":     nil,
 	}
-	
+
 	return properties
 }
 
