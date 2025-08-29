@@ -337,12 +337,14 @@ func (app *App) setupRoutes() *App {
 		return c.JSON(200, map[string]any{
 			"message": "pong",
 			"version": app.config.Version,
-			"swagger": "/swagger/index.html",
 		})
 	})
 
-	// Swagger documentation
-	app.router.Static("/swagger", "./static/swagger-ui")
+	// Swagger documentation - serve swag-generated docs
+	app.router.GET("/swagger/*any", func(c *router.Context) error {
+		// Redirect to docs index.html for swagger UI
+		return c.Redirect(302, "/docs/index.html")
+	})
 
 	return app
 }

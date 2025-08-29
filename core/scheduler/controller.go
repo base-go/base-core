@@ -3,8 +3,6 @@ package scheduler
 import (
 	"base/core/router"
 	"net/http"
-
-	"github.com/gin-gonic/gin"
 )
 
 // SchedulerController provides HTTP endpoints for scheduler management
@@ -19,8 +17,8 @@ func NewSchedulerController(scheduler *Scheduler) *SchedulerController {
 	}
 }
 
-// RegisterRoutes registers scheduler endpoints
-func (c *SchedulerController) RegisterRoutes(router *router.RouterGroup) {
+// Routes registers scheduler endpoints
+func (c *SchedulerController) Routes(router *router.RouterGroup) {
 	// Routes are registered directly on the scheduler router group
 	router.GET("/status", c.GetStatus)
 	router.GET("/tasks", c.GetTasks)
@@ -34,7 +32,7 @@ func (c *SchedulerController) RegisterRoutes(router *router.RouterGroup) {
 // GetStatus returns scheduler status
 func (c *SchedulerController) GetStatus(ctx *router.Context) error {
 	stats := c.scheduler.GetStats()
-	ctx.JSON(http.StatusOK, gin.H{
+	ctx.JSON(http.StatusOK, map[string]interface{}{
 		"status": "success",
 		"data":   stats,
 	})
@@ -74,7 +72,7 @@ func (c *SchedulerController) GetTasks(ctx *router.Context) error {
 		taskList = append(taskList, taskInfo)
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	ctx.JSON(http.StatusOK, map[string]interface{}{
 		"status": "success",
 		"data":   taskList,
 	})
@@ -94,7 +92,7 @@ func (c *SchedulerController) GetTask(ctx *router.Context) error {
 
 	task, exists := c.scheduler.GetTask(name)
 	if !exists {
-		ctx.JSON(http.StatusNotFound, gin.H{
+		ctx.JSON(http.StatusNotFound, map[string]interface{}{
 			"status":  "error",
 			"message": "Task not found",
 		})
@@ -118,7 +116,7 @@ func (c *SchedulerController) GetTask(ctx *router.Context) error {
 		taskInfo["next_run"] = task.NextRun.Format("2006-01-02 15:04:05")
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	ctx.JSON(http.StatusOK, map[string]interface{}{
 		"status": "success",
 		"data":   taskInfo,
 	})
@@ -141,7 +139,7 @@ func (c *SchedulerController) RunTask(ctx *router.Context) error {
 		return err
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	ctx.JSON(http.StatusOK, map[string]interface{}{
 		"status":  "success",
 		"message": "Task executed successfully",
 	})
@@ -164,7 +162,7 @@ func (c *SchedulerController) EnableTask(ctx *router.Context) error {
 		return err
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	ctx.JSON(http.StatusOK, map[string]interface{}{
 		"status":  "success",
 		"message": "Task enabled successfully",
 	})
@@ -187,7 +185,7 @@ func (c *SchedulerController) DisableTask(ctx *router.Context) error {
 		return err
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	ctx.JSON(http.StatusOK, map[string]interface{}{
 		"status":  "success",
 		"message": "Task disabled successfully",
 	})
@@ -203,7 +201,7 @@ func (c *SchedulerController) DisableTask(ctx *router.Context) error {
 // @Router /scheduler/stats [get]
 func (c *SchedulerController) GetStats(ctx *router.Context) error {
 	stats := c.scheduler.GetStats()
-	ctx.JSON(http.StatusOK, gin.H{
+	ctx.JSON(http.StatusOK, map[string]interface{}{
 		"status": "success",
 		"data":   stats,
 	})

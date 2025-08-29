@@ -38,19 +38,8 @@ func NewSchedulerModule(db *gorm.DB, routerGroup *router.RouterGroup, log logger
 
 // Routes registers the scheduler routes
 func (m *Module) Routes(router *router.RouterGroup) {
-	m.Controller.RegisterRoutes(router)
-}
-
-// Migrate performs any necessary database migrations
-func (m *Module) Migrate() error {
-	// Scheduler doesn't need database migrations
-	return nil
-}
-
-// GetModels returns the models used by the scheduler
-func (m *Module) GetModels() []any {
-	// Scheduler doesn't use database models directly
-	return []any{}
+	schedulerGroup := router.Group("/scheduler")
+	m.Controller.Routes(schedulerGroup)
 }
 
 // Start starts the scheduler
