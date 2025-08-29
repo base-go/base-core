@@ -96,13 +96,10 @@ func (m *AuthorizationModule) seedDefaultData() error {
 
 	// Create resource types
 	resourceTypes := []string{
-		"organization",
-		"project",
-		"client",
-		"employee",
-		"invitation",
-		"organization_member",
-		"idea",
+		"user",
+		"authorization",
+		"media",
+		"profile",
 	}
 
 	// Define actions
@@ -112,7 +109,6 @@ func (m *AuthorizationModule) seedDefaultData() error {
 		"update",
 		"delete",
 		"list",
-		"manage_members",
 	}
 
 	// Create default permissions based on resources and actions
@@ -205,15 +201,13 @@ func (m *AuthorizationModule) seedDefaultData() error {
 	var adminRole Role
 	if err := tx.Where("name = ? AND is_system = ?", "Administrator", true).First(&adminRole).Error; err == nil {
 		adminPermissions := []string{
-			"project:create", "project:read", "project:update", "project:delete", "project:list", "project:manage_members",
-			"client:create", "client:read", "client:update", "client:delete", "client:list",
-			"employee:create", "employee:read", "employee:update", "employee:delete", "employee:list",
-			"invitation:create", "invitation:read", "invitation:update", "invitation:delete", "invitation:list",
-			"organization_member:read", "organization_member:list", "organization:read", "organization:update",
+			"user:create", "user:read", "user:update", "user:delete", "user:list", "user:manage_members",
+			"authorization:create", "authorization:read", "authorization:update", "authorization:delete", "authorization:list",
+			"media:create", "media:read", "media:update", "media:delete", "media:list",
+			"profile:create", "profile:read", "profile:update", "profile:delete", "profile:list",
 			"role:create", "role:read", "role:update", "role:delete", "role:list",
 			"permission:create", "permission:read", "permission:update", "permission:delete", "permission:list",
 			"resource_permission:create", "resource_permission:read", "resource_permission:update", "resource_permission:delete", "resource_permission:list",
-			"idea:create", "idea:read", "idea:update", "idea:delete", "idea:list",
 		}
 
 		for _, permName := range adminPermissions {
@@ -250,11 +244,13 @@ func (m *AuthorizationModule) seedDefaultData() error {
 	var memberRole Role
 	if err := tx.Where("name = ? AND is_system = ?", "Member", true).First(&memberRole).Error; err == nil {
 		memberPermissions := []string{
-			"project:read", "project:list",
-			"client:read", "client:list",
-			"employee:read", "employee:list",
-			"organization:read",
-			"organization_member:read", "organization_member:list",
+			"user:read", "user:list",
+			"authorization:read", "authorization:list",
+			"media:read", "media:list",
+			"profile:read", "profile:list",
+			"role:read", "role:list",
+			"permission:read", "permission:list",
+			"resource_permission:read", "resource_permission:list",
 		}
 
 		for _, permName := range memberPermissions {
@@ -291,9 +287,13 @@ func (m *AuthorizationModule) seedDefaultData() error {
 	var viewerRole Role
 	if err := tx.Where("name = ? AND is_system = ?", "Viewer", true).First(&viewerRole).Error; err == nil {
 		viewerPermissions := []string{
-			"project:read", "project:list",
-			"client:read", "client:list",
-			"organization:read",
+			"user:read", "user:list",
+			"authorization:read", "authorization:list",
+			"media:read", "media:list",
+			"profile:read", "profile:list",
+			"role:read", "role:list",
+			"permission:read", "permission:list",
+			"resource_permission:read", "resource_permission:list",
 		}
 
 		for _, permName := range viewerPermissions {

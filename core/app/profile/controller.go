@@ -46,10 +46,10 @@ func (c *ProfileController) Get(ctx *router.Context) error {
 	id := ctx.GetUint("user_id")
 	c.logger.Debug("Getting user", logger.Uint("user_id", id))
 	if id == 0 {
-		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{Error: "Invalid user ID"})
+		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{Error: "Invalid user Id"})
 	}
 
-	item, err := c.service.GetByID(uint(id))
+	item, err := c.service.GetById(uint(id))
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return ctx.JSON(http.StatusNotFound, types.ErrorResponse{Error: "User not found"})
@@ -78,7 +78,7 @@ func (c *ProfileController) Get(ctx *router.Context) error {
 func (c *ProfileController) Update(ctx *router.Context) error {
 	id := ctx.GetUint("user_id")
 	if id == 0 {
-		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{Error: "Invalid ID format"})
+		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{Error: "Invalid Id format"})
 	}
 
 	var req UpdateRequest
@@ -113,7 +113,7 @@ func (c *ProfileController) Update(ctx *router.Context) error {
 func (c *ProfileController) UpdateAvatar(ctx *router.Context) error {
 	id := ctx.GetUint("user_id")
 	if id == 0 {
-		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{Error: "Invalid ID format"})
+		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{Error: "Invalid Id format"})
 	}
 
 	file, err := ctx.FormFile("avatar")
@@ -152,7 +152,7 @@ func (c *ProfileController) UpdateAvatar(ctx *router.Context) error {
 func (c *ProfileController) UpdatePassword(ctx *router.Context) error {
 	id := ctx.GetUint("user_id")
 	if id == 0 {
-		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{Error: "Invalid user ID"})
+		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{Error: "Invalid user Id"})
 	}
 
 	var req UpdatePasswordRequest

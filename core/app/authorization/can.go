@@ -13,7 +13,7 @@ func Can(action, resourceType string) router.MiddlewareFunc {
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
 			// Get the authorization service from the context
-			authzServiceValue, exists := c.Get("authz_service")
+			authorizationServiceValue, exists := c.Get("authorization_service")
 			if !exists {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
 					"error": "authorization service not found",
@@ -21,7 +21,7 @@ func Can(action, resourceType string) router.MiddlewareFunc {
 				return nil
 			}
 
-			authzService, ok := authzServiceValue.(*AuthorizationService)
+			authorizationService, ok := authorizationServiceValue.(*AuthorizationService)
 			if !ok {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
 					"error": "invalid authorization service",
@@ -29,7 +29,7 @@ func Can(action, resourceType string) router.MiddlewareFunc {
 				return nil
 			}
 
-			// Get user ID from context
+			// Get user Id from context
 			userId, err := GetUserIdFromContext(c)
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]any{
@@ -38,10 +38,10 @@ func Can(action, resourceType string) router.MiddlewareFunc {
 				return nil
 			}
 
-			// Get organization ID
+			// Get organization Id
 			orgId, err := GetOrganizationIdFromContext(c)
 			if err != nil {
-				// For global endpoints that don't require an organization ID
+				// For global endpoints that don't require an organization Id
 				if action == "read" && (strings.ToLower(resourceType) == "auth" || strings.ToLower(resourceType) == "user") {
 					return next(c)
 				}
@@ -56,7 +56,7 @@ func Can(action, resourceType string) router.MiddlewareFunc {
 			normalizedAction := strings.ToLower(action)
 
 			// Check if the user has permission to perform the action on the resource type
-			hasPermission, err := authzService.HasPermission(userId, orgId, normalizedResourceType, normalizedAction)
+			hasPermission, err := authorizationService.HasPermission(userId, orgId, normalizedResourceType, normalizedAction)
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
 					"error": fmt.Sprintf("error checking permission: %v", err),
@@ -82,7 +82,7 @@ func CanAccess(action, resourceType, resourceIdParam string) router.MiddlewareFu
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
 			// Get the authorization service from the context
-			authzServiceValue, exists := c.Get("authz_service")
+			authorizationServiceValue, exists := c.Get("authorization_service")
 			if !exists {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
 					"error": "authorization service not found",
@@ -90,7 +90,7 @@ func CanAccess(action, resourceType, resourceIdParam string) router.MiddlewareFu
 				return nil
 			}
 
-			authzService, ok := authzServiceValue.(*AuthorizationService)
+			authorizationService, ok := authorizationServiceValue.(*AuthorizationService)
 			if !ok {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
 					"error": "invalid authorization service",
@@ -98,7 +98,7 @@ func CanAccess(action, resourceType, resourceIdParam string) router.MiddlewareFu
 				return nil
 			}
 
-			// Get user ID from context
+			// Get user Id from context
 			userId, err := GetUserIdFromContext(c)
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]any{
@@ -107,7 +107,7 @@ func CanAccess(action, resourceType, resourceIdParam string) router.MiddlewareFu
 				return nil
 			}
 
-			// Get organization ID
+			// Get organization Id
 			orgId, err := GetOrganizationIdFromContext(c)
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusBadRequest, map[string]any{
@@ -116,7 +116,7 @@ func CanAccess(action, resourceType, resourceIdParam string) router.MiddlewareFu
 				return nil
 			}
 
-			// Get resource ID from URL parameters
+			// Get resource Id from URL parameters
 			resourceId := c.Param(resourceIdParam)
 			if resourceId == "" {
 				c.AbortWithStatusJSON(http.StatusBadRequest, map[string]any{
@@ -130,7 +130,7 @@ func CanAccess(action, resourceType, resourceIdParam string) router.MiddlewareFu
 			normalizedAction := strings.ToLower(action)
 
 			// Check if the user has permission to access the specific resource
-			hasPermission, err := authzService.HasResourcePermission(userId, orgId, normalizedResourceType, resourceId, normalizedAction)
+			hasPermission, err := authorizationService.HasResourcePermission(userId, orgId, normalizedResourceType, resourceId, normalizedAction)
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
 					"error": fmt.Sprintf("error checking resource permission: %v", err),
@@ -140,7 +140,7 @@ func CanAccess(action, resourceType, resourceIdParam string) router.MiddlewareFu
 
 			if !hasPermission {
 				c.AbortWithStatusJSON(http.StatusForbidden, map[string]any{
-					"error": fmt.Sprintf("access denied: cannot %s %s with ID %s", action, resourceType, resourceId),
+					"error": fmt.Sprintf("access denied: cannot %s %s with Id %s", action, resourceType, resourceId),
 				})
 				return nil
 			}
@@ -156,7 +156,7 @@ func HasRole(roleName string) router.MiddlewareFunc {
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
 			// Get the authorization service from the context
-			authzServiceValue, exists := c.Get("authz_service")
+			authorizationServiceValue, exists := c.Get("authorization_service")
 			if !exists {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
 					"error": "authorization service not found",
@@ -164,7 +164,7 @@ func HasRole(roleName string) router.MiddlewareFunc {
 				return nil
 			}
 
-			authzService, ok := authzServiceValue.(*AuthorizationService)
+			authorizationService, ok := authorizationServiceValue.(*AuthorizationService)
 			if !ok {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
 					"error": "invalid authorization service",
@@ -172,7 +172,7 @@ func HasRole(roleName string) router.MiddlewareFunc {
 				return nil
 			}
 
-			// Get user ID from context
+			// Get user Id from context
 			userId, err := GetUserIdFromContext(c)
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]any{
@@ -181,7 +181,7 @@ func HasRole(roleName string) router.MiddlewareFunc {
 				return nil
 			}
 
-			// Get organization ID
+			// Get organization Id
 			orgId, err := GetOrganizationIdFromContext(c)
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusBadRequest, map[string]any{
@@ -191,7 +191,7 @@ func HasRole(roleName string) router.MiddlewareFunc {
 			}
 
 			// Check if user has the required role by checking role permissions
-			hasPermission, err := authzService.HasPermission(userId, orgId, "role", "read")
+			hasPermission, err := authorizationService.HasPermission(userId, orgId, "role", "read")
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
 					"error": fmt.Sprintf("error checking role permission: %v", err),
@@ -217,7 +217,7 @@ func CanAny(permissions []string) router.MiddlewareFunc {
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
 			// Get the authorization service from the context
-			authzServiceValue, exists := c.Get("authz_service")
+			authorizationServiceValue, exists := c.Get("authorization_service")
 			if !exists {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
 					"error": "authorization service not found",
@@ -225,7 +225,7 @@ func CanAny(permissions []string) router.MiddlewareFunc {
 				return nil
 			}
 
-			authzService, ok := authzServiceValue.(*AuthorizationService)
+			authorizationService, ok := authorizationServiceValue.(*AuthorizationService)
 			if !ok {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
 					"error": "invalid authorization service",
@@ -233,7 +233,7 @@ func CanAny(permissions []string) router.MiddlewareFunc {
 				return nil
 			}
 
-			// Get user ID from context
+			// Get user Id from context
 			userId, err := GetUserIdFromContext(c)
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]any{
@@ -242,7 +242,7 @@ func CanAny(permissions []string) router.MiddlewareFunc {
 				return nil
 			}
 
-			// Get organization ID
+			// Get organization Id
 			orgId, err := GetOrganizationIdFromContext(c)
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusBadRequest, map[string]any{
@@ -261,7 +261,7 @@ func CanAny(permissions []string) router.MiddlewareFunc {
 				action := strings.ToLower(strings.TrimSpace(parts[0]))
 				resourceType := strings.ToLower(strings.TrimSpace(parts[1]))
 
-				hasPermission, err := authzService.HasPermission(userId, orgId, resourceType, action)
+				hasPermission, err := authorizationService.HasPermission(userId, orgId, resourceType, action)
 				if err != nil {
 					continue // Skip on error, try next permission
 				}
@@ -286,7 +286,7 @@ func CanAll(permissions []string) router.MiddlewareFunc {
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
 			// Get the authorization service from the context
-			authzServiceValue, exists := c.Get("authz_service")
+			authorizationServiceValue, exists := c.Get("authorization_service")
 			if !exists {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
 					"error": "authorization service not found",
@@ -294,7 +294,7 @@ func CanAll(permissions []string) router.MiddlewareFunc {
 				return nil
 			}
 
-			authzService, ok := authzServiceValue.(*AuthorizationService)
+			authorizationService, ok := authorizationServiceValue.(*AuthorizationService)
 			if !ok {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
 					"error": "invalid authorization service",
@@ -302,7 +302,7 @@ func CanAll(permissions []string) router.MiddlewareFunc {
 				return nil
 			}
 
-			// Get user ID from context
+			// Get user Id from context
 			userId, err := GetUserIdFromContext(c)
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]any{
@@ -311,7 +311,7 @@ func CanAll(permissions []string) router.MiddlewareFunc {
 				return nil
 			}
 
-			// Get organization ID
+			// Get organization Id
 			orgId, err := GetOrganizationIdFromContext(c)
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusBadRequest, map[string]any{
@@ -333,7 +333,7 @@ func CanAll(permissions []string) router.MiddlewareFunc {
 				action := strings.ToLower(strings.TrimSpace(parts[0]))
 				resourceType := strings.ToLower(strings.TrimSpace(parts[1]))
 
-				hasPermission, err := authzService.HasPermission(userId, orgId, resourceType, action)
+				hasPermission, err := authorizationService.HasPermission(userId, orgId, resourceType, action)
 				if err != nil {
 					c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
 						"error": fmt.Sprintf("error checking permission %s: %v", permission, err),

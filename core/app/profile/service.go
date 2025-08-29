@@ -51,7 +51,7 @@ func (s *ProfileService) ToResponse(user *User) *UserResponse {
 	return ToResponse(user)
 }
 
-func (s *ProfileService) GetByID(id uint) (*UserResponse, error) {
+func (s *ProfileService) GetById(id uint) (*UserResponse, error) {
 	var user User
 	if err := s.db.First(&user, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

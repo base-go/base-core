@@ -33,14 +33,14 @@ func (c *OAuthController) Routes(router *router.RouterGroup) {
 // @Tags Core/OAuth
 // @Accept json
 // @Produce json
-// @Param idToken body string true "Google ID Token"
+// @Param idToken body string true "Google Id Token"
 // @Success 200 {object} profile.UserResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 401 {object} ErrorResponse
 // @Router /oauth/google/callback [post]
 func (c *OAuthController) GoogleCallback(ctx *router.Context) error {
 	var req struct {
-		IDToken string `json:"idToken"`
+		IdToken string `json:"idToken"`
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -49,7 +49,7 @@ func (c *OAuthController) GoogleCallback(ctx *router.Context) error {
 		return nil
 	}
 
-	user, err := c.Service.ProcessGoogleOAuth(req.IDToken)
+	user, err := c.Service.ProcessGoogleOAuth(req.IdToken)
 	if err != nil {
 		c.Logger.Error("Google OAuth authentication failed", logger.String("error", err.Error()))
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, ErrorResponse{Error: err.Error()})
@@ -101,14 +101,14 @@ func (c *OAuthController) FacebookCallback(ctx *router.Context) error {
 // @Tags Core/OAuth
 // @Accept json
 // @Produce json
-// @Param idToken body string true "Apple ID Token"
+// @Param idToken body string true "Apple Id Token"
 // @Success 200 {object} profile.UserResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 401 {object} ErrorResponse
 // @Router /oauth/apple/callback [post]
 func (c *OAuthController) AppleCallback(ctx *router.Context) error {
 	var req struct {
-		IDToken string `json:"idToken"`
+		IdToken string `json:"idToken"`
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -117,7 +117,7 @@ func (c *OAuthController) AppleCallback(ctx *router.Context) error {
 		return nil
 	}
 
-	user, err := c.Service.ProcessAppleOAuth(req.IDToken)
+	user, err := c.Service.ProcessAppleOAuth(req.IdToken)
 	if err != nil {
 		c.Logger.Error("Apple OAuth authentication failed", logger.String("error", err.Error()))
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, ErrorResponse{Error: err.Error()})

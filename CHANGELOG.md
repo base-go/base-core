@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Enhanced
 - **📚 Swagger Documentation System** - Complete overhaul for better API documentation
-  - Fixed OpenAPI 3.0 compliance with proper `$ref` schema references
+  - Fixed go-swagger compliance with proper schema references
   - Enhanced requestBody handling for POST/PUT endpoints (replaced incorrect `parameters` usage)
   - Improved schema property generation with proper field types, descriptions, and examples
   - Automatic field description and example generation based on field names
@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **🐛 API Documentation Issues**
   - Resolved "Unknown Type" errors in Swagger UI - now shows proper schema structures
-  - Fixed parameter schema references to use correct OpenAPI 3.0 `$ref` format
+  - Fixed parameter schema references to use correct go-swagger format
   - Corrected body parameter handling to use `requestBody` instead of `parameters`
   - Fixed schema generation for dynamically created modules via `./base g` command
 
@@ -90,7 +90,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Zero external dependencies for core HTTP handling
 - Improved performance through optimized route matching algorithms
 - Enhanced path normalization and conflict detection
-- Automatic OpenAPI 3.0 documentation generation
+- Automatic go-swagger documentation generation
 
 ### Migration Guide
 - **Existing projects**: Will automatically use new initialization system on update

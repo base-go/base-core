@@ -11,7 +11,7 @@ import (
 const (
 	// Server defaults
 	DefaultServerAddress = "localhost"
-	DefaultServerPort    = ":8080"
+	DefaultServerPort    = ":8001"
 	DefaultAppHost       = "http://localhost"
 	DefaultEnvironment   = "debug"
 	DefaultVersion       = "0.0.1"
@@ -252,7 +252,7 @@ func buildBaseURL(baseURL, port string) string {
 }
 
 // logConfigError logs configuration errors in a consistent format
-func logConfigError(format string, args ...interface{}) {
+func logConfigError(format string, args ...any) {
 	fmt.Printf("[CONFIG ERROR] "+format+"\n", args...)
 }
 

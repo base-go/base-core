@@ -54,7 +54,7 @@ func (c *AuthorizationController) Routes(router *router.RouterGroup) {
 
 // GetRoles returns all roles for an organization
 // @Summary Get all roles for an organization
-// @Description Retrieves all roles associated with a specific organization
+// @Description Retrieves all roles associated with a specific organization via Base-Orgid header, you need to provide it in the header
 // @Tags Core/Authorization
 // @Security BearerAuth
 // @Security ApiKeyAuth
@@ -65,29 +65,29 @@ func (c *AuthorizationController) Routes(router *router.RouterGroup) {
 // @Failure 500 {object} types.ErrorResponse "Internal server error"
 // @Router /authorization/roles [get]
 func (c *AuthorizationController) GetRoles(ctx *router.Context) error {
-	orgIDStr := ctx.GetHeader("Base-Orgid")
-	var orgID uint64
-	if orgIDStr != "" {
-		parsedID, err := strconv.ParseUint(orgIDStr, 10, 64)
+	orgIdStr := ctx.GetHeader("Base-Orgid")
+	var orgId uint64
+	if orgIdStr != "" {
+		parsedId, err := strconv.ParseUint(orgIdStr, 10, 64)
 		if err == nil {
-			// Successfully parsed the organization ID
-			orgID = parsedID
+			// Successfully parsed the organization Id
+			orgId = parsedId
 			c.Logger.Info("Fetching roles for organization",
-				logger.String("organization_id", fmt.Sprintf("%d", orgID)))
+				logger.String("organization_id", fmt.Sprintf("%d", orgId)))
 		} else {
-			c.Logger.Warn("Invalid organization ID in header",
-				logger.String("Base-Orgid", orgIDStr),
+			c.Logger.Warn("Invalid organization Id in header",
+				logger.String("Base-Orgid", orgIdStr),
 				logger.String("error", err.Error()))
 		}
 	} else {
-		c.Logger.Info("No organization ID provided, fetching system roles only")
+		c.Logger.Info("No organization Id provided, fetching system roles only")
 	}
 
-	roles, err := c.Service.GetRoles(orgID)
+	roles, err := c.Service.GetRoles(orgId)
 	if err != nil {
 		c.Logger.Error("Error getting roles",
 			logger.String("error", err.Error()),
-			logger.String("organization_id", fmt.Sprintf("%d", orgID)))
+			logger.String("organization_id", fmt.Sprintf("%d", orgId)))
 
 		return ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
 			Error: "Failed to retrieve roles",
@@ -99,15 +99,15 @@ func (c *AuthorizationController) GetRoles(ctx *router.Context) error {
 	})
 }
 
-// GetRole returns a specific role by ID
-// @Summary Get role by ID
-// @Description Retrieves a specific role by its ID
+// GetRole returns a specific role by Id
+// @Summary Get role by Id
+// @Description Retrieves a specific role by its Id
 // @Tags Core/Authorization
 // @Security BearerAuth
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
-// @Param id path string true "Role ID"
+// @Param id path string true "Role Id"
 // @Success 200 {object} object{data=Role} "Successful operation"
 // @Failure 404 {object} types.ErrorResponse "Role not found"
 // @Failure 500 {object} types.ErrorResponse "Internal server error"
@@ -117,7 +117,7 @@ func (c *AuthorizationController) GetRole(ctx *router.Context) error {
 	roleIdUint, err := strconv.ParseUint(roleId, 10, 64)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
-			Error: "Invalid role ID: " + err.Error(),
+			Error: "Invalid role Id: " + err.Error(),
 		})
 	}
 
@@ -187,7 +187,7 @@ func (c *AuthorizationController) CreateRole(ctx *router.Context) error {
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
-// @Param id path string true "Role ID"
+// @Param id path string true "Role Id"
 // @Param role body Role true "Updated role object"
 // @Success 200 {object} object{data=Role} "Role updated successfully"
 // @Failure 400 {object} types.ErrorResponse "Invalid role data"
@@ -200,7 +200,7 @@ func (c *AuthorizationController) UpdateRole(ctx *router.Context) error {
 	roleIdInt, err := strconv.ParseUint(roleId, 10, 64)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
-			Error: "Invalid role ID: " + err.Error(),
+			Error: "Invalid role Id: " + err.Error(),
 		})
 	}
 
@@ -241,13 +241,13 @@ func (c *AuthorizationController) UpdateRole(ctx *router.Context) error {
 
 // DeleteRole deletes a role
 // @Summary Delete a role
-// @Description Deletes a role by its ID
+// @Description Deletes a role by its Id
 // @Tags Core/Authorization
 // @Security BearerAuth
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
-// @Param id path string true "Role ID"
+// @Param id path string true "Role Id"
 // @Success 200 {object} object{success=boolean} "Role deleted successfully"
 // @Failure 403 {object} types.ErrorResponse "System role cannot be deleted"
 // @Failure 404 {object} types.ErrorResponse "Role not found"
@@ -258,7 +258,7 @@ func (c *AuthorizationController) DeleteRole(ctx *router.Context) error {
 	roleIdUint, err := strconv.ParseUint(roleId, 10, 64)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
-			Error: "Invalid role ID: " + err.Error(),
+			Error: "Invalid role Id: " + err.Error(),
 		})
 	}
 
@@ -296,7 +296,7 @@ func (c *AuthorizationController) DeleteRole(ctx *router.Context) error {
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
-// @Param id path string true "Role ID"
+// @Param id path string true "Role Id"
 // @Success 200 {object} object{data=[]Permission} "Successful operation"
 // @Failure 404 {object} types.ErrorResponse "Role not found"
 // @Failure 500 {object} types.ErrorResponse "Internal server error"
@@ -306,7 +306,7 @@ func (c *AuthorizationController) GetRolePermissions(ctx *router.Context) error 
 	roleIdUint, err := strconv.ParseUint(roleId, 10, 64)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
-			Error: "Invalid role ID: " + err.Error(),
+			Error: "Invalid role Id: " + err.Error(),
 		})
 	}
 
@@ -340,8 +340,8 @@ func (c *AuthorizationController) GetRolePermissions(ctx *router.Context) error 
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
-// @Param id path string true "Role ID"
-// @Param assignRequest body object{permission_id=string} true "Permission ID to assign"
+// @Param id path string true "Role Id"
+// @Param assignRequest body object{permission_id=string} true "Permission Id to assign"
 // @Success 200 {object} object{success=boolean} "Permission assigned successfully"
 // @Failure 400 {object} types.ErrorResponse "Invalid request data"
 // @Failure 404 {object} types.ErrorResponse "Role or permission not found"
@@ -353,7 +353,7 @@ func (c *AuthorizationController) AssignPermission(ctx *router.Context) error {
 	roleIdUint, err := strconv.ParseUint(roleId, 10, 64)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
-			Error: "Invalid role ID: " + err.Error(),
+			Error: "Invalid role Id: " + err.Error(),
 		})
 	}
 
@@ -370,7 +370,7 @@ func (c *AuthorizationController) AssignPermission(ctx *router.Context) error {
 	permissionIdUint, err := strconv.ParseUint(request.PermissionId, 10, 64)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
-			Error: "Invalid permission ID: " + err.Error(),
+			Error: "Invalid permission Id: " + err.Error(),
 		})
 	}
 
@@ -413,8 +413,8 @@ func (c *AuthorizationController) AssignPermission(ctx *router.Context) error {
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
-// @Param id path string true "Role ID"
-// @Param permissionId path string true "Permission ID"
+// @Param id path string true "Role Id"
+// @Param permissionId path string true "Permission Id"
 // @Success 200 {object} object{success=boolean} "Permission revoked successfully"
 // @Failure 404 {object} types.ErrorResponse "Role or permission not found"
 // @Failure 500 {object} types.ErrorResponse "Internal server error"
@@ -426,14 +426,14 @@ func (c *AuthorizationController) RevokePermission(ctx *router.Context) error {
 	roleIdUint, err := strconv.ParseUint(roleId, 10, 64)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
-			Error: "Invalid role ID: " + err.Error(),
+			Error: "Invalid role Id: " + err.Error(),
 		})
 	}
 
 	permissionIdUint, err := strconv.ParseUint(permissionId, 10, 64)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
-			Error: "Invalid permission ID: " + err.Error(),
+			Error: "Invalid permission Id: " + err.Error(),
 		})
 	}
 
@@ -509,7 +509,7 @@ func (c *AuthorizationController) CreateResourcePermission(ctx *router.Context) 
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
-// @Param id path string true "Resource Permission ID"
+// @Param id path string true "Resource Permission Id"
 // @Success 200 {object} object{success=boolean} "Resource permission deleted successfully"
 // @Failure 500 {object} types.ErrorResponse "Internal server error"
 // @Router /authorization/resource-permissions/{id} [delete]
@@ -518,7 +518,7 @@ func (c *AuthorizationController) DeleteResourcePermission(ctx *router.Context) 
 	idUint, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
-			Error: "Invalid resource permission ID: " + err.Error(),
+			Error: "Invalid resource permission Id: " + err.Error(),
 		})
 	}
 

@@ -16,15 +16,13 @@ type CoreModuleProvider interface {
 type CoreOrchestrator struct {
 	initializer *Initializer
 	provider    CoreModuleProvider
-	authRouter  *router.RouterGroup
 }
 
 // NewCoreOrchestrator creates a new core module orchestrator
-func NewCoreOrchestrator(initializer *Initializer, provider CoreModuleProvider, authRouter *router.RouterGroup) *CoreOrchestrator {
+func NewCoreOrchestrator(initializer *Initializer, provider CoreModuleProvider) *CoreOrchestrator {
 	return &CoreOrchestrator{
 		initializer: initializer,
 		provider:    provider,
-		authRouter:  authRouter,
 	}
 }
 
@@ -82,14 +80,9 @@ func (co *CoreOrchestrator) initializeCoreModules(modules map[string]Module, dep
 			}
 		}
 
-		// Setup routes with special handling for auth modules
+		// Setup routes
 		if routeModule, ok := mod.(interface{ Routes(*router.RouterGroup) }); ok {
-			// Use AuthRouter for auth modules, protected Router for others
-			if name == "authentication" || name == "authorization" {
-				routeModule.Routes(co.authRouter)
-			} else {
-				routeModule.Routes(deps.Router)
-			}
+			routeModule.Routes(deps.Router)
 		}
 
 		initializedModules = append(initializedModules, mod)

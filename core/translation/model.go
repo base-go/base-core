@@ -15,11 +15,11 @@ type Translation struct {
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `json:"deleted_at,omitempty" gorm:"index"`
-	Key       string         `json:"key" gorm:"index:idx_translation_lookup"`
+	Key       string         `json:"key" gorm:"type:varchar(255);index:idx_translation_lookup"`
 	Value     string         `json:"value" gorm:"type:text"`
-	Model     string         `json:"model" gorm:"index:idx_translation_lookup"`
-	ModelId   uint           `json:"model_id" gorm:"index:idx_translation_lookup"`
-	Language  string         `json:"language" gorm:"index:idx_translation_lookup;size:5"`
+	Model     string         `json:"model" gorm:"type:varchar(255);index:idx_translation_lookup"`
+	ModelId   uint           `json:"model_id" gorm:"type:uint;index:idx_translation_lookup"`
+	Language  string         `json:"language" gorm:"type:char(5);index:idx_translation_lookup"`
 }
 
 // Field represents a field that can be translated into multiple languages
@@ -43,8 +43,15 @@ func (f Field) MarshalJSON() ([]byte, error) {
 		return json.Marshal(f.Original)
 	}
 
-	// Create the response structure with only translations
+	// Create the response structure with original value + translations
 	result := make(map[string]string)
+
+	// Always include the original value if we have translations
+	if f.Original != "" {
+		result["original"] = f.Original
+	}
+
+	// Add all translations
 	for lang, value := range f.Values {
 		result[lang] = value
 	}

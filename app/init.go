@@ -1,8 +1,7 @@
 package app
 
 import (
-
-
+	"base/app/posts"
 	"base/core/module"
 )
 
@@ -14,6 +13,8 @@ type AppModules struct{}
 func (am *AppModules) GetAppModules(deps module.Dependencies) map[string]module.Module {
 	modules := make(map[string]module.Module)
 
+	// Posts module
+	modules["posts"] = posts.Init(deps)
 	return modules
 }
 

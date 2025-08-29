@@ -133,26 +133,26 @@ func Recovery(log logger.Logger) router.MiddlewareFunc {
 	}
 }
 
-// RequestID generates and adds a request ID to the context
-func RequestID() router.MiddlewareFunc {
+// RequestId generates and adds a request Id to the context
+func RequestId() router.MiddlewareFunc {
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
-			// Generate request ID
-			requestID := generateRequestID()
+			// Generate request Id
+			requestId := generateRequestId()
 
 			// Add to context
-			c.Set("request_id", requestID)
+			c.Set("request_id", requestId)
 
 			// Add to response header
-			c.SetHeader("X-Request-ID", requestID)
+			c.SetHeader("X-Request-Id", requestId)
 
 			return next(c)
 		}
 	}
 }
 
-// generateRequestID generates a unique request ID
-func generateRequestID() string {
+// generateRequestId generates a unique request Id
+func generateRequestId() string {
 	return fmt.Sprintf("%d-%d", time.Now().UnixNano(), time.Now().Nanosecond())
 }
 

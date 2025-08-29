@@ -80,7 +80,7 @@ func (c *MediaController) Create(ctx *router.Context) error {
 // @Tags Core/Media
 // @Accept multipart/form-data
 // @Produce json
-// @Param id path int true "Media ID"
+// @Param id path int true "Media Id"
 // @Param file formData file true "Media file"
 // @Success 200 {object} MediaResponse
 // @Router /media/{id}/file [put]
@@ -110,7 +110,7 @@ func (c *MediaController) UpdateFile(ctx *router.Context) error {
 // @Description Remove the file attached to a media item
 // @Tags Core/Media
 // @Produce json
-// @Param id path int true "Media ID"
+// @Param id path int true "Media Id"
 // @Success 200 {object} MediaResponse
 // @Router /media/{id}/file [delete]
 // @Security ApiKeyAuth
@@ -135,7 +135,7 @@ func (c *MediaController) RemoveFile(ctx *router.Context) error {
 // @Tags Core/Media
 // @Accept multipart/form-data
 // @Produce json
-// @Param id path int true "Media ID"
+// @Param id path int true "Media Id"
 // @Param name formData string false "Media name"
 // @Param type formData string false "Media type"
 // @Param description formData string false "Media description"
@@ -173,7 +173,7 @@ func (c *MediaController) Update(ctx *router.Context) error {
 // @Description Delete a media item and its associated file
 // @Tags Core/Media
 // @Produce json
-// @Param id path int true "Media ID"
+// @Param id path int true "Media Id"
 // @Success 204 "No Content"
 // @Router /media/{id} [delete]
 // @Security ApiKeyAuth
@@ -194,10 +194,10 @@ func (c *MediaController) Delete(ctx *router.Context) error {
 
 // Get godoc
 // @Summary Get a media item
-// @Description Get a media item by ID
+// @Description Get a media item by Id
 // @Tags Core/Media
 // @Produce json
-// @Param id path int true "Media ID"
+// @Param id path int true "Media Id"
 // @Success 200 {object} MediaResponse
 // @Router /media/{id} [get]
 // @Security ApiKeyAuth

@@ -41,6 +41,10 @@ func NewAuthService(db *gorm.DB, emailSender email.Sender, emitter *emitter.Emit
 	}
 }
 
+func (s *AuthService) ValidateKey(key string) (any, error) {
+	return nil, nil
+}
+
 // validateUser checks if username or email already exists
 func (s *AuthService) validateUser(email, username string) error {
 	var count int64

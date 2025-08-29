@@ -189,7 +189,6 @@ func (s *TranslationService) Delete(id uint) error {
 	return nil
 }
 
-// GetTranslationsForModel retrieves all translations for a specific model and model_id
 func (s *TranslationService) GetTranslationsForModel(model string, modelId uint, language string) (map[string]string, error) {
 	s.Logger.Info("Fetching translations for model", zap.String("model", model), zap.Uint("model_id", modelId), zap.String("language", language))
 
@@ -205,12 +204,12 @@ func (s *TranslationService) GetTranslationsForModel(model string, modelId uint,
 	}
 
 	result := make(map[string]string)
-	for _, translation := range translations {
-		key := translation.Key
+	for _, t := range translations {
+		key := t.Key
 		if language == "" {
-			key = fmt.Sprintf("%s_%s", translation.Key, translation.Language)
+			key = fmt.Sprintf("%s_%s", t.Key, t.Language)
 		}
-		result[key] = translation.Value
+		result[key] = t.Value
 	}
 
 	return result, nil

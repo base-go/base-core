@@ -1,7 +1,6 @@
 package translation
 
 import (
-	"base/core/module"
 	"fmt"
 	"reflect"
 
@@ -22,9 +21,13 @@ func NewHelper(service *TranslationService) *Helper {
 	}
 }
 
-// GetTranslatedFields retrieves the translated fields for a given module
-func GetTranslatedFields(mod module.Module) []string {
-	if translatable, ok := mod.(module.Translatable); ok {
+type Translatable interface {
+	TranslatedFields() []string
+}
+
+// GetTranslatedFields retrieves the translated fields for a given model
+func GetTranslatedFields(model interface{}) []string {
+	if translatable, ok := model.(Translatable); ok {
 		return translatable.TranslatedFields()
 	}
 	return []string{}

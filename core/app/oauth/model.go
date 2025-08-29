@@ -10,7 +10,7 @@ import (
 type OAuthUser struct {
 	profile.User   `gorm:"embedded"`
 	Provider       string    `gorm:"column:provider"`
-	ProviderID     string    `gorm:"column:provider_id"`
+	ProviderId     string    `gorm:"column:provider_id"`
 	AccessToken    string    `gorm:"column:access_token"`
 	OAuthLastLogin time.Time `gorm:"column:oauth_last_login"`
 }
@@ -21,9 +21,9 @@ func (OAuthUser) TableName() string {
 
 type AuthProvider struct {
 	gorm.Model
-	UserID      uint
+	UserId      uint
 	Provider    string
-	ProviderID  string
+	ProviderId  string
 	AccessToken string
 	LastLogin   time.Time
 }
@@ -42,7 +42,7 @@ type OAuthResponse struct {
 	AccessToken string `json:"accessToken"`
 	Exp         int64  `json:"exp"`
 	Username    string `json:"username"`
-	ID          uint   `json:"id"`
+	Id          uint   `json:"id"`
 	Avatar      string `json:"avatar"`
 	Email       string `json:"email"`
 	Name        string `json:"name"`

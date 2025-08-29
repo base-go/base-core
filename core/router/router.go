@@ -129,7 +129,13 @@ func (r *Router) handleRequest(c *Context) {
 	r.mu.RUnlock()
 
 	if root != nil {
-		if handler, params, _ := root.getValue(c.Request.URL.Path); handler != nil {
+		// Normalize path: remove trailing slash except for root "/"
+		reqPath := c.Request.URL.Path
+		if len(reqPath) > 1 {
+			reqPath = strings.TrimSuffix(reqPath, "/")
+		}
+
+		if handler, params, _ := root.getValue(reqPath); handler != nil {
 			c.params = params
 			if err := handler(c); err != nil {
 				c.Error(http.StatusInternalServerError, err)
@@ -151,15 +157,30 @@ func (r *Router) NotFound(handler HandlerFunc) {
 
 // Static serves static files
 func (r *Router) Static(prefix, root string) {
-	r.GET(prefix+"/*filepath", func(c *Context) error {
-		file := c.Param("filepath")
-		if file == "" {
+	// Ensure prefix starts with /
+	if !strings.HasPrefix(prefix, "/") {
+		prefix = "/" + prefix
+	}
+
+	handler := func(c *Context) error {
+		reqPath := c.Request.URL.Path
+
+		// Remove the prefix
+		file := strings.TrimPrefix(reqPath, prefix)
+		file = strings.TrimPrefix(file, "/") // clean leading slash
+
+		if file == "" || strings.HasSuffix(reqPath, "/") {
 			file = "index.html"
 		}
+
 		fullPath := path.Join(root, file)
 		http.ServeFile(c.Writer, c.Request, fullPath)
 		return nil
-	})
+	}
+
+	// register route with wildcard
+	r.GET(prefix+"/*filepath", handler)
+	r.GET(prefix, handler) // also serve the exact prefix URL
 }
 
 // defaultNotFound is the default 404 handler

@@ -7,6 +7,7 @@ import (
 	"base/core/app/oauth"
 	"base/core/app/profile"
 	"base/core/module"
+	"base/core/scheduler"
 	"base/core/translation"
 )
 
@@ -61,6 +62,13 @@ func (cm *CoreModules) GetCoreModules(deps module.Dependencies) map[string]modul
 		deps.Logger,
 		deps.Emitter,
 		deps.Storage,
+	)
+
+	modules["scheduler"] = scheduler.NewSchedulerModule(
+		deps.DB,
+		deps.Router,
+		deps.Logger,
+		deps.Emitter,
 	)
 
 	return modules

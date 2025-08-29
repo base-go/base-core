@@ -10,39 +10,53 @@ import (
 	"base/core/logger"
 	"base/core/module"
 	"base/core/router"
+	"base/core/router/middleware"
 	"base/core/storage"
-	"base/core/swagger"
 	_ "base/core/translation"
 	"base/core/websocket"
-	"flag"
 	"fmt"
 	"net"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/joho/godotenv"
+	"github.com/joho/godotenv" // swagger embed files
 	"gorm.io/gorm"
 )
 
-// @title Base API
-// @version 2.0.0
-// @description This is the API documentation for Base Framework, change this on main.go
-// @host http://localhost:8100
-// @BasePath /api
-// @schemes http https
-// @produces json
-// @consumes json
-
-// @securityDefinitions.apikey ApiKeyAuth
-// @in header
-// @name X-Api-Key
-// @description API Key for authentication
-
-// @securityDefinitions.apikey BearerAuth
-// @in header
-// @name Authorization
-// @description Enter your token with the prefix "Bearer "
+// Package main Base Framework API
+//
+// This is the API documentation for Base Framework
+//
+// Terms Of Service:
+// https://base.al/terms
+//
+// Schemes: http, https
+// Host: localhost:8100
+// BasePath: /api
+// Version: 2.0.0
+// License: MIT https://opensource.org/licenses/MIT
+// Contact: Base Team <info@base.al> https://github.com/BaseTechStack
+//
+// Consumes:
+// - application/json
+//
+// Produces:
+// - application/json
+//
+// SecurityDefinitions:
+// ApiKeyAuth:
+//   type: apiKey
+//   name: X-Api-Key
+//   in: header
+//   description: API Key for authentication
+// BearerAuth:
+//   type: apiKey
+//   name: Authorization
+//   in: header
+//   description: Enter your token with the prefix "Bearer "
+//
+// swagger:meta
 
 // DeletedAt is a type definition for GORM's soft delete functionality
 type DeletedAt gorm.DeletedAt
@@ -59,7 +73,6 @@ type App struct {
 	emitter     *emitter.Emitter
 	storage     *storage.ActiveStorage
 	emailSender email.Sender
-	swagger     *swagger.SwaggerService
 	wsHub       *websocket.Hub
 
 	// State
@@ -177,7 +190,6 @@ func (app *App) initRouter() *App {
 	app.router = router.New()
 	app.setupMiddleware()
 	app.setupStaticRoutes()
-	app.setupSwagger()
 	app.initWebSocket()
 
 	app.logger.Info("✅ Router initialized")
@@ -215,24 +227,10 @@ func (app *App) setupMiddleware() {
 			return err
 		}
 	})
+	corsOrigins := strings.Split(os.Getenv("CORS_ALLOWED_ORIGINS"), ",")
 
 	// CORS middleware
-	app.router.Use(func(next router.HandlerFunc) router.HandlerFunc {
-		return func(c *router.Context) error {
-			c.SetHeader("Access-Control-Allow-Origin", "*")
-			c.SetHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-			c.SetHeader("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization, X-Api-Key, Base-Orgid")
-			c.SetHeader("Access-Control-Expose-Headers", "Content-Length, Content-Type")
-			c.SetHeader("Access-Control-Allow-Credentials", "true")
-			c.SetHeader("Access-Control-Max-Age", "43200")
-
-			if c.Request.Method == "OPTIONS" {
-				return c.NoContent()
-			}
-
-			return next(c)
-		}
-	})
+	app.router.Use(middleware.CORSMiddleware(corsOrigins))
 }
 
 // setupStaticRoutes configures static file serving
@@ -242,25 +240,13 @@ func (app *App) setupStaticRoutes() {
 	app.router.Static("/docs", "./docs")
 }
 
-// setupSwagger initializes swagger documentation
-func (app *App) setupSwagger() {
-	app.swagger = swagger.NewSwaggerService(app.config)
-
-	if app.config.SwaggerEnabled {
-		app.swagger.RegisterRoutes(app.router)
-		app.logger.Info("✅ Swagger documentation enabled at /swagger/")
-	} else {
-		app.logger.Info("⏩ Swagger documentation disabled via SWAGGER_ENABLED=false")
-	}
-}
-
 // initWebSocket initializes the WebSocket hub if enabled
 func (app *App) initWebSocket() {
 	if !app.config.WebSocketEnabled {
 		app.logger.Info("⏩ WebSocket disabled via WS_ENABLED=false")
 		return
 	}
-	
+
 	app.wsHub = websocket.InitWebSocketModule(app.router.Group("/api"))
 	app.logger.Info("✅ WebSocket hub initialized")
 }
@@ -288,11 +274,9 @@ func (app *App) registerCoreModules() {
 	}
 
 	// Initialize core modules via orchestrator to ensure proper init/migrate/routes
-	// Auth-related modules will mount under /api/auth
 	initializer := module.NewInitializer(app.logger)
-	authRouter := app.router.Group("/api/auth")
 	coreProvider := coremodules.NewCoreModules()
-	orchestrator := module.NewCoreOrchestrator(initializer, coreProvider, authRouter)
+	orchestrator := module.NewCoreOrchestrator(initializer, coreProvider)
 
 	initialized, err := orchestrator.InitializeCoreModules(deps)
 	if err != nil {
@@ -356,6 +340,9 @@ func (app *App) setupRoutes() *App {
 			"swagger": "/swagger/index.html",
 		})
 	})
+
+	// Swagger documentation
+	app.router.Static("/swagger", "./static/swagger-ui")
 
 	return app
 }
@@ -429,50 +416,10 @@ func (app *App) Stop() error {
 	return nil
 }
 
-// GenerateSwaggerDocs generates static Swagger documentation files
-func (app *App) GenerateSwaggerDocs(outputDir string) error {
-	// Initialize only what's needed for Swagger generation
-	app.loadEnvironment().initConfig()
-
-	// Initialize minimal logger for output
-	logConfig := logger.Config{
-		Environment: app.config.Env,
-		LogPath:     "logs",
-		Level:       "info",
-	}
-
-	log, err := logger.NewLogger(logConfig)
-	if err != nil {
-		return fmt.Errorf("failed to initialize logger: %w", err)
-	}
-	app.logger = log
-
-	// Initialize swagger service
-	swaggerService := swagger.NewSwaggerService(app.config)
-
-	// Generate static files
-	return swaggerService.GenerateStaticFiles(outputDir)
-}
-
 func main() {
-	// Parse command line flags
-	var generateDocs = flag.Bool("generate-docs", false, "Generate static Swagger documentation files")
-	var docsOutput = flag.String("docs-output", "docs", "Output directory for generated documentation")
-	flag.Parse()
 
 	// Initialize the Base application
 	app := New()
-
-	// Handle documentation generation
-	if *generateDocs {
-		fmt.Println("🔧 Generating static Swagger documentation...")
-		if err := app.GenerateSwaggerDocs(*docsOutput); err != nil {
-			fmt.Printf("\n❌ Documentation generation failed:\n%v\n\n", err)
-			os.Exit(1)
-		}
-		fmt.Println("✅ Documentation generated successfully!")
-		return
-	}
 
 	// Normal application startup
 	if err := app.Start(); err != nil {

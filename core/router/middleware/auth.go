@@ -9,15 +9,40 @@ import (
 	"base/core/router"
 )
 
+// contextKey is an empty struct with a descriptive name tag. Using a
+// pointer to a unique struct instance avoids allocations on every
+// WithValue call and guarantees key uniqueness across packages.
+type contextKey struct{ name string }
+
+var (
+	userContextKey = &contextKey{"user"}
+)
+
+// ContextValue retrieves a value of type T from the context using the provided key.
+func ContextValue[T any](ctx context.Context, key *contextKey) (T, bool) {
+	val := ctx.Value(key)
+	// if nil or wrong type, return zero value
+	if v, ok := val.(T); ok {
+		return v, true
+	}
+	var zero T
+	return zero, false
+}
+
+// UserFromContext is a convenience wrapper to get the user stored by the auth middlewares.
+func UserFromContext[T any](ctx context.Context) (T, bool) {
+	return ContextValue[T](ctx, userContextKey)
+}
+
 // AuthConfig contains authentication middleware configuration
 type AuthConfig struct {
 	// TokenValidator validates the token and returns user data
 	TokenValidator func(token string) (any, error)
 
-	// ContextKey is the key used to store user data in context
-	ContextKey string
+	// Context Key is used to store user data in context
+	Key string
 
-	// HeaderName is the header name to look for the token
+	// Header Name is to look for the token
 	HeaderName string
 
 	// Scheme is the authentication scheme (e.g., "Bearer")
@@ -35,7 +60,7 @@ func DefaultAuthConfig() *AuthConfig {
 	return &AuthConfig{
 		HeaderName: "Authorization",
 		Scheme:     "Bearer",
-		ContextKey: "user",
+		Key:        "user",
 		ErrorHandler: func(c *router.Context, err error) error {
 			return c.JSON(http.StatusUnauthorized, map[string]string{
 				"error": "Unauthorized",
@@ -84,10 +109,10 @@ func Auth(config *AuthConfig) router.MiddlewareFunc {
 			}
 
 			// Store user in context
-			c.Set(config.ContextKey, user)
+			c.Set(config.Key, user)
 
 			// Also add to request context for deeper layers
-			ctx := context.WithValue(c.Request.Context(), config.ContextKey, user)
+			ctx := context.WithValue(c.Request.Context(), userContextKey, user)
 			c.Request = c.Request.WithContext(ctx)
 
 			return next(c)
@@ -96,14 +121,14 @@ func Auth(config *AuthConfig) router.MiddlewareFunc {
 }
 
 // RequireAuth is a simple auth middleware that just checks if user is present
-func RequireAuth(contextKey string) router.MiddlewareFunc {
-	if contextKey == "" {
-		contextKey = "user"
+func RequireAuth(key string) router.MiddlewareFunc {
+	if key == "" {
+		key = "user"
 	}
 
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
-			if _, exists := c.Get(contextKey); !exists {
+			if _, exists := c.Get(key); !exists {
 				return c.JSON(http.StatusUnauthorized, map[string]string{
 					"error": "Authentication required",
 				})
@@ -167,6 +192,11 @@ func BasicAuth(validateCredentials func(username, password string) (any, error))
 			}
 
 			c.Set("user", user)
+
+			// Also add to request context for deeper layers
+			ctx := context.WithValue(c.Request.Context(), userContextKey, user)
+			c.Request = c.Request.WithContext(ctx)
+
 			return next(c)
 		}
 	}

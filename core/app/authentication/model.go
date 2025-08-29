@@ -25,6 +25,7 @@ type LoginEvent struct {
 
 // RegisterRequest represents the payload for user registration
 // @Description Registration request payload
+// @name RegisterRequest
 type RegisterRequest struct {
 	// @Description User's first name
 	FirstName string `json:"first_name" example:"John" gorm:"column:first_name"`
@@ -40,6 +41,9 @@ type RegisterRequest struct {
 	Password string `json:"password" binding:"required,min=8" example:"password123"`
 }
 
+// LoginRequest represents the payload for user login
+// @Description Login request payload
+// @name LoginRequest
 type LoginRequest struct {
 	Email    string `json:"email" binding:"required,email" example:"john@example.com"`
 	Password string `json:"password" binding:"required" example:"password123"`

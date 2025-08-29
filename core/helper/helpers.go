@@ -7,13 +7,20 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gertd/go-pluralize"
 	"github.com/golang-jwt/jwt/v5"
 	"gorm.io/gorm"
 )
 
+var PluralizeClient *pluralize.Client
+
+func init() {
+	PluralizeClient = pluralize.NewClient()
+}
+
 // GenerateJWT is a wrapper around types.GenerateJWT for backward compatibility
-func GenerateJWT(userID uint) (string, error) {
-	return types.GenerateJWT(userID, nil)
+func GenerateJWT(userId uint) (string, error) {
+	return types.GenerateJWT(userId, nil)
 }
 
 func ValidateJWT(tokenString string) (any, uint, error) {
@@ -28,20 +35,20 @@ func ValidateJWT(tokenString string) (any, uint, error) {
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		userID := uint(claims["user_id"].(float64))
+		userId := uint(claims["user_id"].(float64))
 
-		return nil, userID, nil
+		return nil, userId, nil
 	}
 
 	return nil, 0, jwt.ErrSignatureInvalid
 }
 
 // ModelRegistry holds registered model constructors for dynamic object retrieval
-var ModelRegistry = make(map[string]func() interface{})
+var ModelRegistry = make(map[string]func() any)
 
 // RegisterModel registers a model constructor for dynamic retrieval
 // Example: RegisterModel("category", func() interface{} { return &Category{} })
-func RegisterModel(tableName string, constructor func() interface{}) {
+func RegisterModel(tableName string, constructor func() any) {
 	ModelRegistry[tableName] = constructor
 }
 
@@ -105,32 +112,10 @@ func GetObjectAs[T any](db *gorm.DB, fieldName string, fieldValue interface{}) (
 
 // extractTableNameFromField extracts plural table name from field name
 // Examples: "category_id" -> "categories", "user_id" -> "users", "tag_id" -> "tags"
+// English pluralization rules are used, add custom rules if needed
 func extractTableNameFromField(fieldName string) string {
 	// Remove "_id" suffix if present
-	if strings.HasSuffix(fieldName, "_id") {
-		fieldName = strings.TrimSuffix(fieldName, "_id")
-	}
+	fieldName = strings.TrimSuffix(fieldName, "_id")
 
-	// Common pluralization rules
-	switch fieldName {
-	case "category":
-		return "categories"
-	case "user", "author":
-		return "users"
-	case "company":
-		return "companies"
-	case "country":
-		return "countries"
-	case "city":
-		return "cities"
-	default:
-		// Simple pluralization - add 's'
-		if strings.HasSuffix(fieldName, "y") {
-			return strings.TrimSuffix(fieldName, "y") + "ies"
-		}
-		if strings.HasSuffix(fieldName, "s") || strings.HasSuffix(fieldName, "x") || strings.HasSuffix(fieldName, "z") {
-			return fieldName + "es"
-		}
-		return fieldName + "s"
-	}
+	return PluralizeClient.Pluralize(fieldName, 1, false)
 }

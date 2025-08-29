@@ -18,7 +18,7 @@ type Media struct {
 	File        *storage.Attachment `json:"file,omitempty" gorm:"polymorphic:Model"`
 	CreatedAt   time.Time           `json:"created_at"`
 	UpdatedAt   time.Time           `json:"updated_at"`
-	DeletedAt   gorm.DeletedAt      `json:"deleted_at,omitempty" gorm:"index"`
+	DeletedAt   gorm.DeletedAt      `json:"deleted_at" gorm:"index"`
 }
 
 // TableName returns the table name for the Media model

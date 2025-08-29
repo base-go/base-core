@@ -28,6 +28,7 @@ type Role struct {
 	CreatedAt       time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt       time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 	PermissionCount int       `json:"permission_count"` // New field
+	OrganizationId  uint      `gorm:"default:0" json:"organization_id"`
 }
 
 // ToResponse converts the role to a response object
@@ -43,6 +44,7 @@ func (r *Role) ToResponse() *RoleResponse {
 		CreatedAt:       r.CreatedAt,
 		UpdatedAt:       r.UpdatedAt,
 		PermissionCount: r.PermissionCount,
+		OrganizationId:  r.OrganizationId,
 	}
 }
 
@@ -55,19 +57,22 @@ type RoleResponse struct {
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
 	PermissionCount int       `json:"permission_count"` // New field
+	OrganizationId  uint      `json:"organization_id"`
 }
 
 // CreateRoleRequest represents the payload for creating a role
 type CreateRoleRequest struct {
-	Name        string `json:"name" binding:"required"`
-	Description string `json:"description"`
-	IsSystem    bool   `json:"is_system"`
+	Name           string `json:"name" binding:"required"`
+	Description    string `json:"description"`
+	IsSystem       bool   `json:"is_system"`
+	OrganizationId uint   `json:"organization_id"`
 }
 
 // UpdateRoleRequest represents the payload for updating a role
 type UpdateRoleRequest struct {
-	Name        string `json:"name,omitempty"`
-	Description string `json:"description,omitempty"`
+	Name           string `json:"name,omitempty"`
+	Description    string `json:"description,omitempty"`
+	OrganizationId uint   `json:"organization_id"`
 }
 
 // Permission defines an action that can be performed on a resource
@@ -118,8 +123,9 @@ type CreatePermissionRequest struct {
 
 // UpdatePermissionRequest represents the payload for updating a permission
 type UpdatePermissionRequest struct {
-	Name        string `json:"name,omitempty"`
-	Description string `json:"description,omitempty"`
+	Name           string `json:"name,omitempty"`
+	Description    string `json:"description,omitempty"`
+	OrganizationId uint   `json:"organization_id"`
 }
 
 // RolePermission associates permissions with roles
@@ -157,12 +163,12 @@ type RolePermissionResponse struct {
 type ResourcePermission struct {
 	Id           uint       `gorm:"primaryKey;autoIncrement;column:id" json:"id"`
 	ResourceType string     `gorm:"not null" json:"resource_type"` // Resource type (e.g., "project", "employee", etc.)
-	ResourceId   string     `json:"resource_id"`                   // Optional: specific resource ID if applicable
-	UserId       uint       `json:"user_id"`                       // Optional: specific user ID if applicable
-	RoleId       string     `gorm:"index" json:"role_id"`          // Optional: role ID for role-based permissions
+	ResourceId   string     `json:"resource_id"`                   // Optional: specific resource Id if applicable
+	UserId       uint       `json:"user_id"`                       // Optional: specific user Id if applicable
+	RoleId       string     `gorm:"index" json:"role_id"`          // Optional: role Id for role-based permissions
 	Action       string     `json:"action"`                        // Action type (e.g., "create", "read", "update", "delete")
 	DefaultScope string     `json:"default_scope"`                 // Default permission scope (e.g., "own", "team", "all")
-	PermissionId uint       `gorm:"index" json:"permission_id"`    // Optional: legacy permission ID
+	PermissionId uint       `gorm:"index" json:"permission_id"`    // Optional: legacy permission Id
 	CreatedAt    time.Time  `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt    time.Time  `gorm:"autoUpdateTime" json:"updated_at"`
 	Permission   Permission `gorm:"foreignKey:PermissionId" json:"-"`

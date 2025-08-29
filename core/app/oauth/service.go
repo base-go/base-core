@@ -33,63 +33,63 @@ func NewOAuthService(db *gorm.DB, config *OAuthConfig, activeStorage *storage.Ac
 }
 
 func (s *OAuthService) ProcessAppleOAuth(idToken string) (*OAuthUser, error) {
-	email, name, username, picture, providerID, err := s.handleAppleOAuth(idToken)
+	email, name, username, picture, providerId, err := s.handleAppleOAuth(idToken)
 	if err != nil {
 		return nil, err
 	}
 
-	return s.processUser(email, name, username, picture, "apple", providerID, idToken)
+	return s.processUser(email, name, username, picture, "apple", providerId, idToken)
 }
 
 func (s *OAuthService) ProcessGoogleOAuth(idToken string) (*OAuthUser, error) {
-	email, name, username, picture, providerID, err := s.handleGoogleOAuth(idToken)
+	email, name, username, picture, providerId, err := s.handleGoogleOAuth(idToken)
 	if err != nil {
 		return nil, err
 	}
 
-	return s.processUser(email, name, username, picture, "google", providerID, idToken)
+	return s.processUser(email, name, username, picture, "google", providerId, idToken)
 }
 
 func (s *OAuthService) ProcessFacebookOAuth(accessToken string) (*OAuthUser, error) {
-	email, name, username, picture, providerID, err := s.handleFacebookOAuth(accessToken)
+	email, name, username, picture, providerId, err := s.handleFacebookOAuth(accessToken)
 	if err != nil {
 		return nil, err
 	}
 
-	return s.processUser(email, name, username, picture, "facebook", providerID, accessToken)
+	return s.processUser(email, name, username, picture, "facebook", providerId, accessToken)
 }
 
-func (s *OAuthService) handleAppleOAuth(idToken string) (email, name, username, picture, providerID string, err error) {
-	payload, err := idtoken.Validate(context.Background(), idToken, s.Config.Apple.ClientID)
+func (s *OAuthService) handleAppleOAuth(idToken string) (email, name, username, picture, providerId string, err error) {
+	payload, err := idtoken.Validate(context.Background(), idToken, s.Config.Apple.ClientId)
 	if err != nil {
-		return "", "", "", "", "", fmt.Errorf("invalid ID token: %w", err)
+		return "", "", "", "", "", fmt.Errorf("invalid Id token: %w", err)
 	}
 
 	email, _ = payload.Claims["email"].(string)
 	name, _ = payload.Claims["name"].(string)
 	username = strings.ToLower(strings.ReplaceAll(name, " ", ""))
 	picture, _ = payload.Claims["picture"].(string)
-	providerID, _ = payload.Claims["sub"].(string)
+	providerId, _ = payload.Claims["sub"].(string)
 
-	return email, name, username, picture, providerID, nil
+	return email, name, username, picture, providerId, nil
 }
 
-func (s *OAuthService) handleGoogleOAuth(idToken string) (email, name, username, picture, providerID string, err error) {
-	payload, err := idtoken.Validate(context.Background(), idToken, s.Config.Google.ClientID)
+func (s *OAuthService) handleGoogleOAuth(idToken string) (email, name, username, picture, providerId string, err error) {
+	payload, err := idtoken.Validate(context.Background(), idToken, s.Config.Google.ClientId)
 	if err != nil {
-		return "", "", "", "", "", fmt.Errorf("invalid ID token: %w", err)
+		return "", "", "", "", "", fmt.Errorf("invalid Id token: %w", err)
 	}
 
 	email, _ = payload.Claims["email"].(string)
 	name, _ = payload.Claims["name"].(string)
 	username = strings.ToLower(strings.ReplaceAll(name, " ", ""))
 	picture, _ = payload.Claims["picture"].(string)
-	providerID, _ = payload.Claims["sub"].(string)
+	providerId, _ = payload.Claims["sub"].(string)
 
-	return email, name, username, picture, providerID, nil
+	return email, name, username, picture, providerId, nil
 }
 
-func (s *OAuthService) handleFacebookOAuth(accessToken string) (email, name, username, picture, providerID string, err error) {
+func (s *OAuthService) handleFacebookOAuth(accessToken string) (email, name, username, picture, providerId string, err error) {
 	url := fmt.Sprintf("https://graph.facebook.com/me?fields=id,name,email,picture.type(large)&access_token=%s", accessToken)
 
 	resp, err := http.Get(url)
@@ -108,7 +108,7 @@ func (s *OAuthService) handleFacebookOAuth(accessToken string) (email, name, use
 		return "", "", "", "", "", fmt.Errorf("failed to parse Facebook response: %w", err)
 	}
 
-	providerID, _ = result["id"].(string)
+	providerId, _ = result["id"].(string)
 	name, _ = result["name"].(string)
 	email, _ = result["email"].(string)
 	username = strings.ToLower(strings.ReplaceAll(name, " ", ""))
@@ -119,10 +119,10 @@ func (s *OAuthService) handleFacebookOAuth(accessToken string) (email, name, use
 		}
 	}
 
-	return email, name, username, picture, providerID, nil
+	return email, name, username, picture, providerId, nil
 }
 
-func (s *OAuthService) processUser(email, name, username, pictureURL, provider, providerID, token string) (*OAuthUser, error) {
+func (s *OAuthService) processUser(email, name, username, pictureURL, provider, providerId, token string) (*OAuthUser, error) {
 	var user OAuthUser
 	err := s.DB.Where("email = ?", email).First(&user).Error
 
@@ -137,7 +137,7 @@ func (s *OAuthService) processUser(email, name, username, pictureURL, provider, 
 					Username:  s.generateUniqueUsername(username),
 				},
 				Provider:       provider,
-				ProviderID:     providerID,
+				ProviderId:     providerId,
 				AccessToken:    token,
 				OAuthLastLogin: time.Now(),
 			}
@@ -165,7 +165,7 @@ func (s *OAuthService) processUser(email, name, username, pictureURL, provider, 
 		user.User.FirstName = name[:strings.Index(name, " ")]
 		user.User.LastName = name[strings.Index(name, " ")+1:]
 		user.Provider = provider
-		user.ProviderID = providerID
+		user.ProviderId = providerId
 		user.AccessToken = token
 		user.OAuthLastLogin = time.Now()
 
@@ -186,9 +186,9 @@ func (s *OAuthService) processUser(email, name, username, pictureURL, provider, 
 
 	// Update or create AuthProvider
 	authProvider := AuthProvider{
-		UserID:      user.Id,
+		UserId:      user.Id,
 		Provider:    provider,
-		ProviderID:  providerID,
+		ProviderId:  providerId,
 		AccessToken: token,
 		LastLogin:   time.Now(),
 	}

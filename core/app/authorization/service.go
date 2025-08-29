@@ -57,7 +57,7 @@ func (s *AuthorizationService) GetRoles(organizationId uint64) ([]Role, error) {
 	return roles, nil
 }
 
-// GetRole returns a role by ID
+// GetRole returns a role by Id
 func (s *AuthorizationService) GetRole(id uint64) (*Role, error) {
 	var role Role
 	result := s.DB.First(&role, "id = ?", id)
@@ -144,7 +144,7 @@ func (s *AuthorizationService) DeleteRole(id uint64) error {
 
 // GetRolePermissions returns all permissions for a role
 func (s *AuthorizationService) GetRolePermissions(roleId uint64) ([]Permission, error) {
-	// Convert string ID to uint
+	// Convert string Id to uint
 
 	// Check if role exists
 	var role Role
@@ -446,14 +446,14 @@ func (s *AuthorizationService) HasResourcePermission(userId uint64, orgId uint64
 
 // GetUserPermissions returns all permissions for a user across all organizations
 func (s *AuthorizationService) GetUserPermissions(userId string) ([]Permission, error) {
-	// Convert string ID to uint
+	// Convert string Id to uint
 	userIdUint, err := strconv.ParseUint(userId, 10, 32)
 	if err != nil {
-		fmt.Printf("GetUserPermissions: Invalid user ID format: %s, error: %v\n", userId, err)
+		fmt.Printf("GetUserPermissions: Invalid user Id format: %s, error: %v\n", userId, err)
 		return nil, ErrInvalidId
 	}
 
-	fmt.Printf("GetUserPermissions: Getting permissions for user ID: %d\n", userIdUint)
+	fmt.Printf("GetUserPermissions: Getting permissions for user Id: %d\n", userIdUint)
 
 	// Get permissions from role-based permissions
 	var permissions []Permission
@@ -509,13 +509,11 @@ func (s *AuthorizationService) GetUserPermissions(userId string) ([]Permission, 
 
 // SeedPermissions creates default permissions if they don't exist
 func (s *AuthorizationService) SeedPermissions() error {
-	// Define resource types and actions (aligned with module seeding)
+	// Define resource types and actions (aligned with module seeding) Only for system roles and core modules
 	resourceTypes := []string{
-		"organization", "project", "client", "employee", "invitation", "organization_member",
-		"absence", "finance", "expense", "invoice", "notification", "user", "progress",
-		"scope_version", "idea", "idea_group", "github", "github_integration",
+		"user", "authorization", "media", "profile",
 	}
-	actions := []string{"create", "read", "update", "delete", "list", "manage_members", "approve", "decline", "export", "email", "manage"}
+	actions := []string{"create", "read", "update", "delete", "list"}
 
 	// Create permissions for each resource type and action
 	for _, resourceType := range resourceTypes {
@@ -656,12 +654,9 @@ func (s *AuthorizationService) SetupRolePermissions() error {
 
 	// Define admin permissions
 	adminPermissionTypes := map[string][]string{
-		"project":             {"create", "read", "update", "delete", "list", "manage_members"},
-		"client":              {"create", "read", "update", "delete", "list"},
-		"employee":            {"create", "read", "update", "delete", "list"},
-		"invitation":          {"create", "read", "update", "delete", "list"},
-		"organization_member": {"read", "list"},
-		"organization":        {"read", "update"},
+		"user":    {"create", "read", "update", "delete", "list"},
+		"media":   {"create", "read", "update", "delete", "list"},
+		"profile": {"create", "read", "update", "delete", "list"},
 	}
 
 	// Assign admin permissions
@@ -700,11 +695,9 @@ func (s *AuthorizationService) SetupRolePermissions() error {
 
 	// Define member permissions
 	memberPermissionTypes := map[string][]string{
-		"project":             {"read", "list"},
-		"client":              {"read", "list"},
-		"employee":            {"read", "list"},
-		"organization":        {"read"},
-		"organization_member": {"read", "list"},
+		"user":    {"read", "list"},
+		"media":   {"read", "list"},
+		"profile": {"read", "list"},
 	}
 
 	// Assign member permissions
@@ -743,9 +736,9 @@ func (s *AuthorizationService) SetupRolePermissions() error {
 
 	// Define external permissions
 	externalPermissionTypes := map[string][]string{
-		"project":      {"read", "list"},
-		"client":       {"read", "list"},
-		"organization": {"read"},
+		"user":    {"read", "list"},
+		"media":   {"read", "list"},
+		"profile": {"read"},
 	}
 
 	// Assign external permissions
@@ -777,212 +770,4 @@ func (s *AuthorizationService) SetupRolePermissions() error {
 	}
 
 	return nil
-}
-
-// SeedTestPermissionsForUser creates test permissions for a user
-// This is for testing purposes only and should not be used in production
-func (s *AuthorizationService) SeedTestPermissionsForUser(userId string) error {
-	// Convert string ID to uint
-	userIdUint, err := strconv.ParseUint(userId, 10, 32)
-	if err != nil {
-		return ErrInvalidId
-	}
-
-	fmt.Printf("SeedTestPermissionsForUser: Creating test permissions for user ID: %d\n", userIdUint)
-
-	// First, make sure we have permissions in the database
-	if err := s.SeedPermissions(); err != nil {
-		return fmt.Errorf("failed to seed permissions: %w", err)
-	}
-
-	// Get the owner role for organization ID 1 (assuming it exists)
-	var ownerRole Role
-	if err := s.DB.Where("name = ? AND is_system = ?", "Owner", true).First(&ownerRole).Error; err != nil {
-		// Try to create the owner role if it doesn't exist
-		ownerRole = Role{
-			Name:        "Owner",
-			Description: "Full access to all resources",
-			IsSystem:    true,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-		}
-		if err := s.DB.Create(&ownerRole).Error; err != nil {
-			return fmt.Errorf("failed to create owner role: %w", err)
-		}
-	}
-
-	// Check if the user is already a member of the organization
-	// Use raw SQL to avoid import cycles
-	var count int64
-	if err := s.DB.Raw("SELECT COUNT(*) FROM organization_members WHERE user_id = ? AND organization_id = ?", uint(userIdUint), 1).Count(&count).Error; err != nil {
-		return fmt.Errorf("failed to check organization membership: %w", err)
-	}
-
-	// If not, create an organization member record
-	if count == 0 {
-		// Use raw SQL to avoid import cycles
-		if err := s.DB.Exec("INSERT INTO organization_members (user_id, organization_id, role_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
-			uint(userIdUint), 1, fmt.Sprintf("%d", ownerRole.Id), time.Now(), time.Now()).Error; err != nil {
-			return fmt.Errorf("failed to create organization member: %w", err)
-		}
-		fmt.Printf("SeedTestPermissionsForUser: Created organization member for user ID: %d with role ID: %d\n", userIdUint, ownerRole.Id)
-	} else {
-		// Update the existing organization member with the owner role
-		// Use raw SQL to avoid import cycles
-		if err := s.DB.Exec("UPDATE organization_members SET role_id = ? WHERE user_id = ? AND organization_id = ?",
-			fmt.Sprintf("%d", ownerRole.Id), uint(userIdUint), 1).Error; err != nil {
-			return fmt.Errorf("failed to update organization member: %w", err)
-		}
-		fmt.Printf("SeedTestPermissionsForUser: Updated organization member for user ID: %d with role ID: %d\n", userIdUint, ownerRole.Id)
-	}
-
-	// Assign permissions to the owner role
-	var permissions []Permission
-	if err := s.DB.Find(&permissions).Error; err != nil {
-		return fmt.Errorf("failed to get permissions: %w", err)
-	}
-
-	fmt.Printf("SeedTestPermissionsForUser: Found %d permissions to assign\n", len(permissions))
-
-	// Assign each permission to the owner role
-	for _, perm := range permissions {
-		// Check if the role already has this permission
-		var rpCount int64
-		if err := s.DB.Model(&RolePermission{}).Where("role_id = ? AND permission_id = ?", ownerRole.Id, perm.Id).Count(&rpCount).Error; err != nil {
-			return fmt.Errorf("failed to check role permission: %w", err)
-		}
-
-		if rpCount == 0 {
-			rolePermission := RolePermission{
-				RoleId:       ownerRole.Id,
-				PermissionId: perm.Id,
-				CreatedAt:    time.Now(),
-			}
-			if err := s.DB.Create(&rolePermission).Error; err != nil {
-				return fmt.Errorf("failed to create role permission: %w", err)
-			}
-		}
-	}
-
-	fmt.Printf("SeedTestPermissionsForUser: Successfully assigned permissions to user ID: %d\n", userIdUint)
-	return nil
-}
-
-// GetAccessibleResources returns a list of resource IDs that a user has access to for a specific resource type
-// This is used for filtering resources in API endpoints
-func (s *AuthorizationService) GetAccessibleResources(userId uint64, orgId uint64, resourceType string) ([]string, string, error) {
-	// Skip organization check if orgId is 0 (indicates a global endpoint)
-	if orgId == 0 {
-		return nil, AccessScopeAll, nil // Allow all resources
-	}
-
-	// Get the organization member record
-	var memberId uint
-	var roleId string
-	var isOwnerFlag bool
-	var department string
-
-	memberErr := s.DB.Raw(`
-		SELECT id, role_id, is_owner, COALESCE(department, '') as department
-		FROM organization_members
-		WHERE user_id = ? AND organization_id = ?
-	`, userId, orgId).Row().Scan(&memberId, &roleId, &isOwnerFlag, &department)
-
-	if memberErr != nil {
-		return nil, "", ErrUserNotAuthorized
-	}
-
-	// Check if the user is an owner (either direct flag or role)
-	if isOwnerFlag {
-		return nil, AccessScopeAll, nil // Owners can access all resources
-	}
-
-	// Check if the user has the Owner role
-	var isOwnerRole int64
-	s.DB.Raw(`
-		SELECT COUNT(*) FROM organization_members om
-		JOIN roles r ON om.role_id = r.id
-		WHERE om.user_id = ?
-		AND om.organization_id = ?
-		AND r.name = 'Owner'
-	`, userId, orgId).Count(&isOwnerRole)
-
-	if isOwnerRole > 0 {
-		return nil, AccessScopeAll, nil // Owners can access all resources
-	}
-
-	// Check if there are any specific resource access entries for this member and resource type
-	var resourceIds []string
-	var defaultScope string = "" // Will store the default scope if no specific resources are found
-
-	// First, check for specific resource access entries
-	var resourceAccessList []ResourceAccess
-	if err := s.DB.Where(
-		"member_id = ? AND resource_type = ?",
-		memberId, resourceType,
-	).Find(&resourceAccessList).Error; err != nil {
-		return nil, "", err
-	}
-
-	if len(resourceAccessList) > 0 {
-		// Extract the resource IDs the user has explicit access to
-		for _, access := range resourceAccessList {
-			resourceIds = append(resourceIds, access.ResourceId)
-		}
-		return resourceIds, "", nil // Return the specific resource IDs with no default scope
-	}
-
-	// If no specific resources are defined, check ResourcePermission for default scope
-	if roleId != "" {
-		var resourcePerm ResourcePermission
-		if err := s.DB.Where(
-			"role_id = ? AND resource_type = ?",
-			roleId, resourceType,
-		).First(&resourcePerm).Error; err == nil {
-			// Found a default scope for this role and resource type
-			defaultScope = resourcePerm.DefaultScope
-			return nil, defaultScope, nil
-		}
-	}
-
-	// Check department-based access (if department is specified)
-	if department != "" {
-		// Check if this resource type belongs to the user's department
-		// This would require a mapping of resource types to departments
-		belongsToDepartment := s.isResourceInDepartment(resourceType, department)
-		if belongsToDepartment {
-			return nil, AccessScopeTeam, nil // Department members get team access
-		}
-	}
-
-	// Default to most restrictive scope if nothing else applies
-	return nil, AccessScopeOwn, nil
-}
-
-// isResourceInDepartment checks if a resource type belongs to a department
-func (s *AuthorizationService) isResourceInDepartment(resourceType, department string) bool {
-	// This is a simplified implementation - in a real system you'd likely
-	// have a database table mapping resources to departments
-
-	// Map departments to their resource types
-	departmentResources := map[string][]string{
-		"HR":          {"employee", "absence", "timesheet"},
-		"Finance":     {"invoice", "payment", "expense"},
-		"Engineering": {"project", "scope_version", "idea", "idea_group"},
-		"Sales":       {"client", "lead", "opportunity"},
-	}
-
-	// Check if the resource type belongs to the specified department
-	resources, exists := departmentResources[department]
-	if !exists {
-		return false
-	}
-
-	for _, res := range resources {
-		if res == resourceType {
-			return true
-		}
-	}
-
-	return false
 }

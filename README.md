@@ -309,9 +309,9 @@ type Post struct {
     types.Model
     Title     string     `json:"title" gorm:"not null"`
     Content   string     `json:"content" gorm:"type:text"`
-    AuthorID  uint      `json:"author_id"`
-    Author    User      `json:"author" gorm:"foreignKey:AuthorID"`    // Can reference User model
-    Comments  []Comment `json:"comments" gorm:"foreignKey:PostID"`    // Can reference Comment model
+    AuthorId  uint      `json:"author_id"`
+    Author    User      `json:"author" gorm:"foreignKey:AuthorId"`    // Can reference User model
+    Comments  []Comment `json:"comments" gorm:"foreignKey:PostId"`    // Can reference Comment model
 }
 
 // app/posts/service.go
@@ -435,10 +435,10 @@ type Post struct {
     Title     string     `json:"title" gorm:"not null"`
     Content   string     `json:"content" gorm:"type:text"`
     Published bool       `json:"published" gorm:"default:false"`
-    AuthorID  uint      `json:"author_id"`
-    Author    User      `json:"author" gorm:"foreignKey:AuthorID"`
+    AuthorId  uint      `json:"author_id"`
+    Author    User      `json:"author" gorm:"foreignKey:AuthorId"`
     Tags      []Tag     `json:"tags" gorm:"many2many:post_tags;"`
-    Comments  []Comment `json:"comments" gorm:"foreignKey:PostID"`
+    Comments  []Comment `json:"comments" gorm:"foreignKey:PostId"`
 }
 
 // app/posts/controller.go
