@@ -154,7 +154,7 @@ func (s *PostService) Create(post *models.Post) error {
 Install Base CLI with a single command:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/base-go/cmd/main/install.sh | bash
+curl -fsSL https://get.base.al | bash
 ```
 
 ### Available Commands
