@@ -24,39 +24,28 @@ import (
 	"gorm.io/gorm"
 )
 
-// Package main Base Framework API
-//
-// This is the API documentation for Base Framework
-//
-// Terms Of Service:
-// https://base.al/terms
-//
-// Schemes: http, https
-// Host: localhost:8100
-// BasePath: /api
-// Version: 2.0.0
-// License: MIT https://opensource.org/licenses/MIT
-// Contact: Base Team <info@base.al> https://github.com/BaseTechStack
-//
-// Consumes:
-// - application/json
-//
-// Produces:
-// - application/json
-//
-// SecurityDefinitions:
-// ApiKeyAuth:
-//   type: apiKey
-//   name: X-Api-Key
-//   in: header
-//   description: API Key for authentication
-// BearerAuth:
-//   type: apiKey
-//   name: Authorization
-//   in: header
-//   description: Enter your token with the prefix "Bearer "
-//
-// swagger:meta
+// @title Base Framework API
+// @description This is the API documentation for Base Framework
+// @termsOfService https://base.al/terms
+// @contact.name Base Team
+// @contact.email info@base.al
+// @contact.url https://github.com/BaseTechStack
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+// @version 2.0.0
+// @host localhost:8100
+// @BasePath /api
+// @schemes http https
+// @accept json
+// @produce json
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name X-Api-Key
+// @description API Key for authentication
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Enter your token with the prefix "Bearer "
 
 // DeletedAt is a type definition for GORM's soft delete functionality
 type DeletedAt gorm.DeletedAt
@@ -359,7 +348,7 @@ func (app *App) displayServerInfo() *App {
 	fmt.Printf("   • Local:   http://localhost%s\n", port)
 	fmt.Printf("   • Network: http://%s%s\n", localIP, port)
 	fmt.Printf("\n📚 Documentation:\n")
-	fmt.Printf("   • Swagger: http://localhost%s/swagger/index.html\n", port)
+	fmt.Printf("   • Swagger: http://localhost%s/docs/index.html\n", port)
 	fmt.Printf("\n")
 
 	return app
