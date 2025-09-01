@@ -61,6 +61,21 @@ func (s *MediaService) GetById(id uint) (*Media, error) {
 	return &item, nil
 }
 
+// GetByIds returns multiple media items by their IDs
+func (s *MediaService) GetByIds(ids []uint) ([]*Media, error) {
+	if len(ids) == 0 {
+		return []*Media{}, nil
+	}
+
+	var items []*Media
+	if err := s.DB.Where("id IN ?", ids).Preload(clause.Associations).Find(&items).Error; err != nil {
+		s.Logger.Error("failed to get media by ids", logger.String("error", err.Error()))
+		return nil, fmt.Errorf("failed to get media by ids: %w", err)
+	}
+
+	return items, nil
+}
+
 // GetAll returns a paginated list of media items
 func (s *MediaService) GetAll(page, limit *int) (*types.PaginatedResponse, error) {
 	var items []*Media
