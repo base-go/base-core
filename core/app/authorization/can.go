@@ -38,25 +38,12 @@ func Can(action, resourceType string) router.MiddlewareFunc {
 				return nil
 			}
 
-			// Get organization Id
-			orgId, err := GetOrganizationIdFromContext(c)
-			if err != nil {
-				// For global endpoints that don't require an organization Id
-				if action == "read" && (strings.ToLower(resourceType) == "auth" || strings.ToLower(resourceType) == "user") {
-					return next(c)
-				}
-				c.AbortWithStatusJSON(http.StatusBadRequest, map[string]any{
-					"error": err.Error(),
-				})
-				return nil
-			}
-
 			// Convert resource type to lowercase for consistency
 			normalizedResourceType := strings.ToLower(resourceType)
 			normalizedAction := strings.ToLower(action)
 
 			// Check if the user has permission to perform the action on the resource type
-			hasPermission, err := authorizationService.HasPermission(userId, orgId, normalizedResourceType, normalizedAction)
+			hasPermission, err := authorizationService.HasPermission(userId, normalizedResourceType, normalizedAction)
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
 					"error": fmt.Sprintf("error checking permission: %v", err),
@@ -107,15 +94,6 @@ func CanAccess(action, resourceType, resourceIdParam string) router.MiddlewareFu
 				return nil
 			}
 
-			// Get organization Id
-			orgId, err := GetOrganizationIdFromContext(c)
-			if err != nil {
-				c.AbortWithStatusJSON(http.StatusBadRequest, map[string]any{
-					"error": err.Error(),
-				})
-				return nil
-			}
-
 			// Get resource Id from URL parameters
 			resourceId := c.Param(resourceIdParam)
 			if resourceId == "" {
@@ -126,11 +104,10 @@ func CanAccess(action, resourceType, resourceIdParam string) router.MiddlewareFu
 			}
 
 			// Convert resource type to lowercase for consistency
-			normalizedResourceType := strings.ToLower(resourceType)
 			normalizedAction := strings.ToLower(action)
 
 			// Check if the user has permission to access the specific resource
-			hasPermission, err := authorizationService.HasResourcePermission(userId, orgId, normalizedResourceType, resourceId, normalizedAction)
+			hasResourcePermission, err := authorizationService.HasResourcePermission(userId, resourceType, resourceId, normalizedAction)
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
 					"error": fmt.Sprintf("error checking resource permission: %v", err),
@@ -138,7 +115,7 @@ func CanAccess(action, resourceType, resourceIdParam string) router.MiddlewareFu
 				return nil
 			}
 
-			if !hasPermission {
+			if !hasResourcePermission {
 				c.AbortWithStatusJSON(http.StatusForbidden, map[string]any{
 					"error": fmt.Sprintf("access denied: cannot %s %s with Id %s", action, resourceType, resourceId),
 				})
@@ -181,17 +158,8 @@ func HasRole(roleName string) router.MiddlewareFunc {
 				return nil
 			}
 
-			// Get organization Id
-			orgId, err := GetOrganizationIdFromContext(c)
-			if err != nil {
-				c.AbortWithStatusJSON(http.StatusBadRequest, map[string]any{
-					"error": err.Error(),
-				})
-				return nil
-			}
-
 			// Check if user has the required role by checking role permissions
-			hasPermission, err := authorizationService.HasPermission(userId, orgId, "role", "read")
+			hasPermission, err := authorizationService.HasPermission(userId, "role", "read")
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
 					"error": fmt.Sprintf("error checking role permission: %v", err),
@@ -242,15 +210,6 @@ func CanAny(permissions []string) router.MiddlewareFunc {
 				return nil
 			}
 
-			// Get organization Id
-			orgId, err := GetOrganizationIdFromContext(c)
-			if err != nil {
-				c.AbortWithStatusJSON(http.StatusBadRequest, map[string]any{
-					"error": err.Error(),
-				})
-				return nil
-			}
-
 			// Check if user has any of the specified permissions
 			for _, permission := range permissions {
 				parts := strings.Split(permission, ":")
@@ -261,7 +220,7 @@ func CanAny(permissions []string) router.MiddlewareFunc {
 				action := strings.ToLower(strings.TrimSpace(parts[0]))
 				resourceType := strings.ToLower(strings.TrimSpace(parts[1]))
 
-				hasPermission, err := authorizationService.HasPermission(userId, orgId, resourceType, action)
+				hasPermission, err := authorizationService.HasPermission(userId, resourceType, action)
 				if err != nil {
 					continue // Skip on error, try next permission
 				}
@@ -311,15 +270,6 @@ func CanAll(permissions []string) router.MiddlewareFunc {
 				return nil
 			}
 
-			// Get organization Id
-			orgId, err := GetOrganizationIdFromContext(c)
-			if err != nil {
-				c.AbortWithStatusJSON(http.StatusBadRequest, map[string]any{
-					"error": err.Error(),
-				})
-				return nil
-			}
-
 			// Check if user has all specified permissions
 			for _, permission := range permissions {
 				parts := strings.Split(permission, ":")
@@ -333,7 +283,7 @@ func CanAll(permissions []string) router.MiddlewareFunc {
 				action := strings.ToLower(strings.TrimSpace(parts[0]))
 				resourceType := strings.ToLower(strings.TrimSpace(parts[1]))
 
-				hasPermission, err := authorizationService.HasPermission(userId, orgId, resourceType, action)
+				hasPermission, err := authorizationService.HasPermission(userId, resourceType, action)
 				if err != nil {
 					c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
 						"error": fmt.Sprintf("error checking permission %s: %v", permission, err),

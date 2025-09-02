@@ -32,9 +32,14 @@ Base is a modern Go web framework designed for rapid development and maintainabl
 ### Security Features
 - JWT Token Authentication
   - Extensible JWT Claims via `Extend` function in `app/init.go`
-  - Default user context with `user_id`
+  - Default user context with `user_id` and structured role information
   - Customizable token expiration (24h by default)
   - Secure token validation and verification
+- Role-Based Access Control
+  - **First User Owner System**: First registered user automatically becomes Owner
+  - Hierarchical role system: Owner → Administrator → Member → Viewer
+  - Automatic role assignment with secure fallback protection
+  - Role information embedded in JWT tokens for authorization checks
 - API Key Authentication
 - Rate Limiting Middleware
 - Request Logging

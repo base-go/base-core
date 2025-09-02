@@ -13,7 +13,6 @@ var (
 	ErrUserNotAuthorized      = errors.New("user not authorized")
 	ErrRolePermissionNotFound = errors.New("role permission not found")
 	ErrInvalidId              = errors.New("invalid id")
-	ErrInvalidOrganizationId  = errors.New("invalid organization id")
 	ErrInvalidRoleId          = errors.New("invalid role id")
 	ErrSystemRoleUnmodifiable = errors.New("system role unmodifiable")
 	ErrDuplicatePermission    = errors.New("duplicate permission")
@@ -28,7 +27,6 @@ type Role struct {
 	CreatedAt       time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt       time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 	PermissionCount int       `json:"permission_count"` // New field
-	OrganizationId  uint      `gorm:"default:0" json:"organization_id"`
 }
 
 // ToResponse converts the role to a response object
@@ -44,7 +42,6 @@ func (r *Role) ToResponse() *RoleResponse {
 		CreatedAt:       r.CreatedAt,
 		UpdatedAt:       r.UpdatedAt,
 		PermissionCount: r.PermissionCount,
-		OrganizationId:  r.OrganizationId,
 	}
 }
 
@@ -57,22 +54,19 @@ type RoleResponse struct {
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
 	PermissionCount int       `json:"permission_count"` // New field
-	OrganizationId  uint      `json:"organization_id"`
 }
 
 // CreateRoleRequest represents the payload for creating a role
 type CreateRoleRequest struct {
-	Name           string `json:"name" binding:"required"`
-	Description    string `json:"description"`
-	IsSystem       bool   `json:"is_system"`
-	OrganizationId uint   `json:"organization_id"`
+	Name        string `json:"name" binding:"required"`
+	Description string `json:"description"`
+	IsSystem    bool   `json:"is_system"`
 }
 
 // UpdateRoleRequest represents the payload for updating a role
 type UpdateRoleRequest struct {
-	Name           string `json:"name,omitempty"`
-	Description    string `json:"description,omitempty"`
-	OrganizationId uint   `json:"organization_id"`
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
 }
 
 // Permission defines an action that can be performed on a resource
@@ -123,9 +117,8 @@ type CreatePermissionRequest struct {
 
 // UpdatePermissionRequest represents the payload for updating a permission
 type UpdatePermissionRequest struct {
-	Name           string `json:"name,omitempty"`
-	Description    string `json:"description,omitempty"`
-	OrganizationId uint   `json:"organization_id"`
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
 }
 
 // RolePermission associates permissions with roles
@@ -321,6 +314,16 @@ func (ResourcePermission) TableName() string {
 
 func (ResourceAccess) TableName() string {
 	return TableResourceAccess
+}
+
+// UserMembershipInfo represents user membership information
+type UserMembershipInfo struct {
+	UserId         uint64 `json:"user_id"`
+	MemberId       uint64 `json:"member_id"`
+	RoleId         uint64 `json:"role_id"`
+	IsOwner        bool   `json:"is_owner"`
+	Department     string `json:"department"`
+	MembershipType string `json:"membership_type"`
 }
 
 func (Role) TableName() string {

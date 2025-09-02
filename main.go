@@ -29,7 +29,7 @@ import (
 // @termsOfService https://base.al/terms
 // @contact.name Base Team
 // @contact.email info@base.al
-// @contact.url https://github.com/BaseTechStack
+// @contact.url https://base.al
 // @license.name MIT
 // @license.url https://opensource.org/licenses/MIT
 // @version 2.0.0
@@ -189,12 +189,12 @@ func (app *App) initRouter() *App {
 func (app *App) setupMiddleware() {
 	// Apply configurable middleware system
 	middleware.ApplyConfigurableMiddleware(app.router, &app.config.Middleware)
-	
+
 	// Custom request logging middleware (conditional based on config)
 	app.router.Use(func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
 			path := c.Request.URL.Path
-			
+
 			// Check if logging is required for this path
 			if app.config.Middleware.IsLoggingRequired(path) {
 				start := time.Now()
@@ -209,12 +209,12 @@ func (app *App) setupMiddleware() {
 				)
 				return err
 			}
-			
+
 			// Skip logging for this path
 			return next(c)
 		}
 	})
-	
+
 	// CORS middleware (conditional based on config)
 	if app.config.Middleware.CORSEnabled {
 		corsOrigins := strings.Split(os.Getenv("CORS_ALLOWED_ORIGINS"), ",")

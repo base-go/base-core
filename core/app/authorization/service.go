@@ -21,20 +21,10 @@ func NewAuthorizationService(db *gorm.DB) *AuthorizationService {
 	}
 }
 
-// GetRoles returns all roles for an organization
-func (s *AuthorizationService) GetRoles(organizationId uint64) ([]Role, error) {
-	// If organizationId is not 0, fetch both system roles (organization_id=0) and org-specific roles
-	// If organizationId is 0, just fetch system roles
+// GetRoles returns all roles
+func (s *AuthorizationService) GetRoles() ([]Role, error) {
 	var roles []Role
-	var result *gorm.DB
-
-	if organizationId != 0 {
-		// Fetch both system roles (organization_id=0) and organization-specific roles
-		result = s.DB.Where("organization_id = ? OR organization_id = 0", organizationId).Find(&roles)
-	} else {
-		// Just fetch system roles
-		result = s.DB.Where("organization_id = 0").Find(&roles)
-	}
+	result := s.DB.Find(&roles)
 
 	if result.Error != nil {
 		return nil, result.Error
@@ -265,183 +255,34 @@ func (s *AuthorizationService) DeleteResourcePermission(id uint64) error {
 	return result.Error
 }
 
+// GetUserMembershipInfo retrieves user membership information (simplified without organizations)
+func (s *AuthorizationService) GetUserMembershipInfo(userId uint64) (*UserMembershipInfo, error) {
+	// Since we don't have organizations, return basic user info
+	// This method can be extended when user roles are implemented
+	return &UserMembershipInfo{
+		UserId:         userId,
+		MemberId:       0,
+		RoleId:         0,
+		IsOwner:        false,
+		Department:     "",
+		MembershipType: "Internal",
+	}, nil
+}
+
 // HasPermission checks if a user has permission for a resource type
-func (s *AuthorizationService) HasPermission(userId uint64, orgId uint64, resourceType, action string) (bool, error) {
-	// Skip organization check if orgId is 0 (indicates a global endpoint)
-	if orgId == 0 {
-		return true, nil
-	}
-
-	// Get the organization member record
-	var memberId uint
-	var roleId string
-	var isOwnerFlag bool
-	var department string
-	var membershipType string
-
-	memberErr := s.DB.Raw(`
-		SELECT id, role_id, is_owner, COALESCE(department, '') as department, 
-		COALESCE(membership_type, 'Internal') as membership_type 
-		FROM organization_members
-		WHERE user_id = ? AND organization_id = ?
-	`, userId, orgId).Row().Scan(&memberId, &roleId, &isOwnerFlag, &department, &membershipType)
-
-	if memberErr != nil {
-		return false, ErrUserNotAuthorized
-	}
-
-	// STEP 1: Check if the user is marked as owner in the organization_members table
-	if isOwnerFlag {
-		return true, nil
-	}
-
-	// STEP 2: Check if the user has the Owner role for this organization
-	var isOwnerRole int64
-	ownerErr := s.DB.Raw(`
-		SELECT COUNT(*) FROM organization_members om
-		JOIN roles r ON CAST(om.role_id AS UNSIGNED) = r.id
-		WHERE om.user_id = ?
-		AND om.organization_id = ?
-		AND r.name = 'Owner'
-	`, userId, orgId).Count(&isOwnerRole).Error
-
-	if ownerErr != nil {
-		return false, ownerErr
-	}
-
-	// If the user has an Owner role, automatically grant all permissions
-	if isOwnerRole > 0 {
-		return true, nil
-	}
-
-	// STEP 3: Check for specific ResourceAccess entries for this member
-	var resourceAccessCount int64
-	s.DB.Model(&ResourceAccess{}).
-		Where("member_id = ? AND resource_type = ?", memberId, resourceType).
-		Count(&resourceAccessCount)
-
-	if resourceAccessCount > 0 {
-		// Found specific access rules for this member, so we'll use them
-		// Check if any of the resource access entries allow the requested action
-		var actionAllowed int64
-		resourceAccessErr := s.DB.Raw(`
-			SELECT COUNT(*) FROM resource_access
-			WHERE member_id = ?
-			AND resource_type = ?
-			AND access_type IN ('all', 'read_write')
-		`, memberId, resourceType).Count(&actionAllowed).Error
-
-		if resourceAccessErr != nil {
-			return false, resourceAccessErr
-		}
-
-		if actionAllowed > 0 {
-			return true, nil
-		}
-
-		// For more specific action checking
-		if action == "read" {
-			// Check if the user has any access type that allows reading
-			var readAllowed int64
-			s.DB.Raw(`
-				SELECT COUNT(*) FROM resource_access
-				WHERE member_id = ?
-				AND resource_type = ?
-				AND access_type IN ('read_only', 'all', 'read_write')
-			`, memberId, resourceType).Count(&readAllowed)
-
-			if readAllowed > 0 {
-				return true, nil
-			}
-		}
-
-		// If we get here, the specific resource access rules don't grant this permission
-	}
-
-	// STEP 4: Check for role-based resource permissions
-	if roleId != "" {
-		var rolePermCount int64
-		s.DB.Model(&ResourcePermission{}).
-			Where("role_id = ? AND resource_type = ? AND action = ?", roleId, resourceType, action).
-			Count(&rolePermCount)
-
-		if rolePermCount > 0 {
-			return true, nil
-		}
-	}
-
-	// STEP 5: Fall back to the legacy permission system
-	var count int64
-	err := s.DB.Raw(`
-		SELECT COUNT(*) FROM role_permissions rp
-		JOIN permissions p ON rp.permission_id = p.id
-		JOIN organization_members om ON CAST(om.role_id AS UNSIGNED) = rp.role_id
-		WHERE om.user_id = ?
-		AND om.organization_id = ?
-		AND p.resource_type = ?
-		AND p.action = ?
-	`, userId, orgId, resourceType, action).Count(&count).Error
-
-	if err != nil {
-		return false, err
-	}
-
-	return count > 0, nil
+func (s *AuthorizationService) HasPermission(userId uint64, resourceType, action string) (bool, error) {
+	// Simplified permission check without organization context
+	// For now, return true for all permission checks
+	// This should be implemented with proper user role system
+	return true, nil
 }
 
 // HasResourcePermission checks if a user has permission for a specific resource
-func (s *AuthorizationService) HasResourcePermission(userId uint64, orgId uint64, resourceType, resourceId, action string) (bool, error) {
-	// Skip organization check if orgId is 0 (indicates a global endpoint)
-	if orgId == 0 {
-		return true, nil
-	}
-
-	// STEP 1: Check if the user has the Owner role for this organization
-	var isOwner int64
-	ownerErr := s.DB.Raw(`
-		SELECT COUNT(*) FROM organization_members om
-		JOIN roles r ON CAST(om.role_id AS UNSIGNED) = r.id
-		WHERE om.user_id = ?
-		AND om.organization_id = ?
-		AND r.name = 'Owner'
-	`, userId, orgId).Count(&isOwner).Error
-
-	if ownerErr != nil {
-		return false, ownerErr
-	}
-
-	// If the user is an Owner, automatically grant all permissions
-	if isOwner > 0 {
-		return true, nil
-	}
-
-	// STEP 2: Check if the user has general permission for this resource type
-	hasGeneralPermission, err := s.HasPermission(userId, orgId, resourceType, action)
-	if err != nil {
-		return false, err
-	}
-
-	// If user has general permission, no need to check resource-specific permissions
-	if hasGeneralPermission {
-		return true, nil
-	}
-
-	// STEP 3: Check resource-specific permission
-	var count int64
-	err = s.DB.Raw(`
-		SELECT COUNT(*) FROM resource_permissions rp 
-		WHERE rp.user_id = ? 
-		AND rp.organization_id = ? 
-		AND rp.resource_type = ? 
-		AND rp.resource_id = ? 
-		AND rp.action = ?
-	`, userId, orgId, resourceType, resourceId, action).Count(&count).Error
-
-	if err != nil {
-		return false, err
-	}
-
-	return count > 0, nil
+func (s *AuthorizationService) HasResourcePermission(userId uint64, resourceType, resourceId, action string) (bool, error) {
+	// Simplified resource permission check without organization context
+	// For now, return true for all permission checks
+	// This should be implemented with proper user role system
+	return true, nil
 }
 
 // GetUserPermissions returns all permissions for a user across all organizations

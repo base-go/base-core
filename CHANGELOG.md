@@ -5,6 +5,37 @@ All notable changes to the Base Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.1.2] - 2025-09-02
+
+### Added
+- **👑 First User Owner System** - Automatic role assignment for system initialization
+  - First registered user automatically receives Owner role (full system access)
+  - Subsequent users receive Member role (standard limited access) 
+  - Secure user counting logic with fallback protection
+  - Enhanced JWT token with structured role information (`id` and `name`)
+  - Updated `Extend` function to properly load role relationships
+
+### Enhanced
+- **🔐 Role-Based Access Control** - Improved user role management
+  - Fixed role relationship loading in JWT token generation
+  - Enhanced authentication service with `determineUserRole()` method
+  - Proper role preloading to prevent null role data in tokens
+  - Updated profile model with correct field naming consistency
+
+### Fixed
+- **🐛 Authentication Issues**
+  - Resolved null role data in JWT tokens and authentication responses
+  - Fixed RoleId field casing inconsistencies in profile model
+  - Corrected default role assignment from Owner (1) to Member (3)
+  - Enhanced role information structure in JWT extend claims
+
+### Technical Implementation
+- **Core Components**:
+  - `/core/app/authentication/service.go` - Added first user detection logic
+  - `/core/app/profile/model.go` - Updated role field consistency and defaults
+  - `/app/init.go` - Enhanced Extend function with proper role preloading
+  - Role hierarchy: Owner (1) → Administrator (2) → Member (3) → Viewer (4)
+
 ## [v2.1.1] - 2025-09-02
 
 ### Added

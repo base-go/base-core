@@ -1,3 +1,6 @@
+basePath: /api
+consumes:
+- application/json
 definitions:
   authentication.AuthResponse:
     properties:
@@ -19,6 +22,10 @@ definitions:
       last_name:
         type: string
       phone:
+        type: string
+      role_id:
+        type: integer
+      role_name:
         type: string
       username:
         type: string
@@ -161,8 +168,6 @@ definitions:
         type: boolean
       name:
         type: string
-      organization_id:
-        type: integer
       permission_count:
         description: New field
         type: integer
@@ -271,6 +276,10 @@ definitions:
         type: string
       phone:
         type: string
+      role:
+        $ref: '#/definitions/authorization.Role'
+      roleId:
+        type: integer
       updatedAt:
         type: string
       username:
@@ -291,6 +300,10 @@ definitions:
       last_name:
         type: string
       phone:
+        type: string
+      role_id:
+        type: integer
+      role_name:
         type: string
       username:
         type: string
@@ -424,8 +437,19 @@ definitions:
       error:
         type: string
     type: object
+host: localhost:8100
 info:
-  contact: {}
+  contact:
+    email: info@base.al
+    name: Base Team
+    url: https://base.al
+  description: This is the API documentation for Base Framework
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://base.al/terms
+  title: Base Framework API
+  version: 2.0.0
 paths:
   /auth/forgot-password:
     post:
@@ -722,8 +746,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieves all roles associated with a specific organization via
-        Base-Orgid header, you need to provide it in the header
+      description: Get all roles in the system
       produces:
       - application/json
       responses:
@@ -736,18 +759,13 @@ paths:
                   $ref: '#/definitions/authorization.Role'
                 type: array
             type: object
-        "400":
-          description: Bad request - Missing organization_id
-          schema:
-            $ref: '#/definitions/types.ErrorResponse'
         "500":
           description: Internal server error
           schema:
             $ref: '#/definitions/types.ErrorResponse'
       security:
-      - BearerAuth: []
       - ApiKeyAuth: []
-      summary: Get all roles for an organization
+      summary: Get all roles
       tags:
       - Core/Authorization
     post:
@@ -1928,4 +1946,20 @@ paths:
       summary: Connect to WebSocket
       tags:
       - Core/Websocket
+produces:
+- application/json
+schemes:
+- http
+- https
+securityDefinitions:
+  ApiKeyAuth:
+    description: API Key for authentication
+    in: header
+    name: X-Api-Key
+    type: apiKey
+  BearerAuth:
+    description: Enter your token with the prefix "Bearer "
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

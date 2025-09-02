@@ -23,12 +23,12 @@ func Api() router.MiddlewareFunc {
 			apiKey := c.GetHeader("X-Api-Key")
 			expectedAPIKey := os.Getenv("API_KEY")
 			if apiKey == "" {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+				c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized: API key is required"})
 				return nil
 			}
 
 			if apiKey != expectedAPIKey {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]string{"error": "Invalid API key"})
+				c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized: Invalid API key"})
 				return nil
 			}
 

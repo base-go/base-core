@@ -1,8 +1,32 @@
 {
+    "consumes": [
+        "application/json"
+    ],
+    "produces": [
+        "application/json"
+    ],
+    "schemes": [
+        "http",
+        "https"
+    ],
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "This is the API documentation for Base Framework",
+        "title": "Base Framework API",
+        "termsOfService": "https://base.al/terms",
+        "contact": {
+            "name": "Base Team",
+            "url": "https://base.al",
+            "email": "info@base.al"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "2.0.0"
     },
+    "host": "localhost:8100",
+    "basePath": "/api",
     "paths": {
         "/auth/forgot-password": {
             "post": {
@@ -474,13 +498,10 @@
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
-                    },
-                    {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieves all roles associated with a specific organization via Base-Orgid header, you need to provide it in the header",
+                "description": "Get all roles in the system",
                 "consumes": [
                     "application/json"
                 ],
@@ -490,7 +511,7 @@
                 "tags": [
                     "Core/Authorization"
                 ],
-                "summary": "Get all roles for an organization",
+                "summary": "Get all roles",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -504,12 +525,6 @@
                                     }
                                 }
                             }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request - Missing organization_id",
-                        "schema": {
-                            "$ref": "#/definitions/types.ErrorResponse"
                         }
                     },
                     "500": {
@@ -2446,6 +2461,12 @@
                 "phone": {
                     "type": "string"
                 },
+                "role_id": {
+                    "type": "integer"
+                },
+                "role_name": {
+                    "type": "string"
+                },
                 "username": {
                     "type": "string"
                 }
@@ -2646,9 +2667,6 @@
                 "name": {
                     "type": "string"
                 },
-                "organization_id": {
-                    "type": "integer"
-                },
                 "permission_count": {
                     "description": "New field",
                     "type": "integer"
@@ -2809,6 +2827,12 @@
                 "phone": {
                     "type": "string"
                 },
+                "role": {
+                    "$ref": "#/definitions/authorization.Role"
+                },
+                "roleId": {
+                    "type": "integer"
+                },
                 "updatedAt": {
                     "type": "string"
                 },
@@ -2839,6 +2863,12 @@
                     "type": "string"
                 },
                 "phone": {
+                    "type": "string"
+                },
+                "role_id": {
+                    "type": "integer"
+                },
+                "role_name": {
                     "type": "string"
                 },
                 "username": {
@@ -3038,6 +3068,20 @@
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "description": "API Key for authentication",
+            "type": "apiKey",
+            "name": "X-Api-Key",
+            "in": "header"
+        },
+        "BearerAuth": {
+            "description": "Enter your token with the prefix \"Bearer \"",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }

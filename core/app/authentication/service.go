@@ -10,10 +10,10 @@ import (
 	"text/template"
 	"time"
 
+	"base/app"
 	"base/core/app/profile"
 	"base/core/email"
 	"base/core/emitter"
-	"base/core/helper"
 	"base/core/types"
 
 	"golang.org/x/crypto/bcrypt"
@@ -72,6 +72,9 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 		return nil, fmt.Errorf("failed to hash password: %w", err)
 	}
 
+	// Determine role: first user gets Owner (1), subsequent users get Member (3)
+	roleId := s.determineUserRole()
+
 	now := time.Now()
 
 	user := AuthUser{
@@ -82,6 +85,7 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 			LastName:  req.LastName,
 			Username:  req.Username,
 			Phone:     req.Phone,
+			RoleId:    roleId,
 		},
 		LastLogin: &now,
 	}
@@ -104,8 +108,11 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
+	// Get extended data for JWT token
+	extendData := app.Extend(user.User.Id)
+
 	// Generate JWT token
-	token, err := helper.GenerateJWT(user.User.Id)
+	token, err := types.GenerateJWT(user.User.Id, extendData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
@@ -139,6 +146,7 @@ func (s *AuthService) Register(req *RegisterRequest) (*AuthResponse, error) {
 		UserResponse: *userResponse,
 		AccessToken:  token,
 		Exp:          now.Add(24 * time.Hour).Unix(),
+		Extend:       extendData,
 	}, nil
 }
 
@@ -155,9 +163,12 @@ func (s *AuthService) Login(req *LoginRequest) (*AuthResponse, error) {
 		return nil, errors.New("invalid credentials")
 	}
 
+	// Get extended data for JWT token
+	extendData := app.Extend(user.User.Id)
+
 	// Proceed with generating token and response
 	now := time.Now()
-	token, err := helper.GenerateJWT(user.User.Id)
+	token, err := types.GenerateJWT(user.User.Id, extendData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
@@ -172,6 +183,7 @@ func (s *AuthService) Login(req *LoginRequest) (*AuthResponse, error) {
 		UserResponse: *userResponse,
 		AccessToken:  token,
 		Exp:          now.Add(24 * time.Hour).Unix(),
+		Extend:       extendData,
 	}
 
 	// Prepare the login event
@@ -363,4 +375,20 @@ func (s *AuthService) sendPasswordChangedEmail(user *AuthUser) error {
 	title := "Your Base Password Has Been Changed"
 	content := fmt.Sprintf("<p>Hi %s,</p><p>Your password has been successfully changed. If you did not make this change, please contact support immediately.</p>", user.FirstName)
 	return s.sendEmail(user.Email, title, title, content)
+}
+
+// determineUserRole returns the appropriate role ID for a new user
+// First user gets Owner role (1), subsequent users get Member role (3)
+func (s *AuthService) determineUserRole() uint {
+	var userCount int64
+	if err := s.db.Model(&AuthUser{}).Count(&userCount).Error; err != nil {
+		// If we can't count users, default to Member role for safety
+		return 3 // Member role
+	}
+
+	// First user gets Owner role, all others get Member role
+	if userCount == 0 {
+		return 1 // Owner role
+	}
+	return 3 // Member role
 }

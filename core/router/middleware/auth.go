@@ -63,7 +63,7 @@ func DefaultAuthConfig() *AuthConfig {
 		Key:        "user",
 		ErrorHandler: func(c *router.Context, err error) error {
 			return c.JSON(http.StatusUnauthorized, map[string]string{
-				"error": "Unauthorized",
+				"error": "Unauthorized: " + err.Error(),
 			})
 		},
 	}

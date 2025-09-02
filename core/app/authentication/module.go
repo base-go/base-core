@@ -6,7 +6,6 @@ import (
 	"base/core/logger"
 	"base/core/module"
 	"base/core/router"
-	"base/core/router/middleware"
 
 	"gorm.io/gorm"
 )
@@ -38,11 +37,10 @@ func NewAuthenticationModule(db *gorm.DB, router *router.RouterGroup, emailSende
 }
 
 func (m *AuthenticationModule) Routes(router *router.RouterGroup) {
-	// Router is already /api/auth from start.go
-	authMiddleware := middleware.Api() // your X-Api-Key middleware
-	authRouter := router.Group("", authMiddleware)
+	// Create /auth group under /api (router is already /api from main.go)
+	authGroup := router.Group("/auth")
 
-	m.Controller.Routes(authRouter)
+	m.Controller.Routes(authGroup)
 }
 
 func (m *AuthenticationModule) Migrate() error {

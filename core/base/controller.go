@@ -91,7 +91,7 @@ func (bc *Controller) RespondInternalError(c *router.Context, message string) {
 
 // RespondUnauthorized sends an unauthorized error response
 func (bc *Controller) RespondUnauthorized(c *router.Context, message ...string) {
-	msg := "Unauthorized"
+	msg := "Unauthorized: Api-Key is missing."
 	if len(message) > 0 {
 		msg = message[0]
 	}

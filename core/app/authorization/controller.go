@@ -52,42 +52,23 @@ func (c *AuthorizationController) Routes(router *router.RouterGroup) {
 	c.Logger.Info("Authorization routes registered successfully")
 }
 
-// GetRoles returns all roles for an organization
-// @Summary Get all roles for an organization
-// @Description Retrieves all roles associated with a specific organization via Base-Orgid header, you need to provide it in the header
+// GetRoles returns all roles in the system
+// @Summary Get all roles
+// @Description Get all roles in the system
 // @Tags Core/Authorization
-// @Security BearerAuth
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
 // @Success 200 {object} object{data=[]Role} "Successful operation"
-// @Failure 400 {object} types.ErrorResponse "Bad request - Missing organization_id"
 // @Failure 500 {object} types.ErrorResponse "Internal server error"
 // @Router /authorization/roles [get]
 func (c *AuthorizationController) GetRoles(ctx *router.Context) error {
-	orgIdStr := ctx.GetHeader("Base-Orgid")
-	var orgId uint64
-	if orgIdStr != "" {
-		parsedId, err := strconv.ParseUint(orgIdStr, 10, 64)
-		if err == nil {
-			// Successfully parsed the organization Id
-			orgId = parsedId
-			c.Logger.Info("Fetching roles for organization",
-				logger.String("organization_id", fmt.Sprintf("%d", orgId)))
-		} else {
-			c.Logger.Warn("Invalid organization Id in header",
-				logger.String("Base-Orgid", orgIdStr),
-				logger.String("error", err.Error()))
-		}
-	} else {
-		c.Logger.Info("No organization Id provided, fetching system roles only")
-	}
+	c.Logger.Info("Fetching all roles")
 
-	roles, err := c.Service.GetRoles(orgId)
+	roles, err := c.Service.GetRoles()
 	if err != nil {
 		c.Logger.Error("Error getting roles",
-			logger.String("error", err.Error()),
-			logger.String("organization_id", fmt.Sprintf("%d", orgId)))
+			logger.String("error", err.Error()))
 
 		return ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
 			Error: "Failed to retrieve roles",
@@ -571,7 +552,6 @@ func (c *AuthorizationController) CheckPermission(ctx *router.Context) error {
 	if request.ResourceId != "" {
 		hasPermission, err = c.Service.HasResourcePermission(
 			request.UserId,
-			request.OrgId,
 			request.ResourceType,
 			request.ResourceId,
 			request.Action,
@@ -579,7 +559,6 @@ func (c *AuthorizationController) CheckPermission(ctx *router.Context) error {
 	} else {
 		hasPermission, err = c.Service.HasPermission(
 			request.UserId,
-			request.OrgId,
 			request.ResourceType,
 			request.Action,
 		)

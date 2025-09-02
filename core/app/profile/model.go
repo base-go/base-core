@@ -1,6 +1,7 @@
 package profile
 
 import (
+	"base/core/app/authorization"
 	"base/core/storage"
 	"time"
 
@@ -14,6 +15,8 @@ type User struct {
 	Username  string              `gorm:"column:username;unique;not null;size:255"`
 	Phone     string              `gorm:"column:phone;unique;size:255"`
 	Email     string              `gorm:"column:email;unique;not null;size:255"`
+	RoleId    uint                `gorm:"column:role_id;default:3"`
+	Role      *authorization.Role `gorm:"foreignKey:RoleId"`
 	Avatar    *storage.Attachment `gorm:"foreignKey:ModelId;references:Id"`
 	Password  string              `gorm:"column:password;size:255"`
 	LastLogin *time.Time          `gorm:"column:last_login"`
@@ -65,6 +68,8 @@ type UserResponse struct {
 	Username  string `json:"username"`
 	Phone     string `json:"phone"`
 	Email     string `json:"email"`
+	RoleId    uint   `json:"role_id"`
+	RoleName  string `json:"role_name"`
 	AvatarURL string `json:"avatar_url"`
 	LastLogin string `json:"last_login"`
 }
@@ -88,6 +93,12 @@ func (u *User) ToResponse() *UserResponse {
 		Username:  u.Username,
 		Phone:     u.Phone,
 		Email:     u.Email,
+		RoleId:    u.RoleId,
+	}
+
+	// Include role name if role relationship is loaded
+	if u.Role != nil {
+		response.RoleName = u.Role.Name
 	}
 
 	if u.Avatar != nil {
