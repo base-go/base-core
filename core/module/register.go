@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"sync"
 
+	"base/core/router"
 	"gorm.io/gorm"
 )
 
@@ -14,6 +15,7 @@ type Module interface {
 	Init() error
 	Migrate() error
 	GetModels() []any
+	Routes(*router.RouterGroup)
 }
 
 // DefaultModule provides a default implementation for the Module interface.
@@ -32,7 +34,7 @@ func (DefaultModule) Migrate() error {
 	return nil // Default implementation does nothing
 }
 
-func (DefaultModule) Routes() {
+func (DefaultModule) Routes(router *router.RouterGroup) {
 	// Default implementation does nothing
 }
 func (DefaultModule) GetModels() []any {

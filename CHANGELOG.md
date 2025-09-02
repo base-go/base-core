@@ -5,6 +5,52 @@ All notable changes to the Base Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.1.1] - 2025-09-02
+
+### Added
+- **🛡️ Configurable Middleware System** - Revolutionary environment-driven middleware management
+  - Complete middleware configuration system with environment variable control
+  - Path-based middleware rules with wildcard pattern support
+  - Module-level middleware overrides through `ConfigurableModule` interface
+  - Webhook-specific middleware handling with signature verification support
+  - Convention over Configuration approach with sensible defaults
+
+- **🔧 Advanced Middleware Configuration** - Comprehensive middleware control system
+  - `MiddlewareConfig` struct with global toggles for API key, auth, rate limiting, and logging
+  - Path-based skip rules for fine-grained middleware control
+  - Custom rate limiting with configurable requests per window
+  - Webhook path detection and specialized middleware handling
+  - JSON-based middleware overrides for complex routing rules
+
+- **🎣 Module Middleware Overrides** - Module-specific middleware customization
+  - `ConfigurableModule` interface extending base `Module` interface
+  - `MiddlewareOverrides` struct for path-specific and global module settings
+  - Helper functions: `DisableAPIKey()`, `RequireAuth()`, `CustomRateLimit()`, `WebhookSignature()`
+  - Complete webhook module example with Stripe, GitHub, and PayPal integrations
+  - Per-endpoint middleware configuration with provider-specific settings
+
+### Enhanced
+- **⚡ Conditional Middleware Application** - Smart middleware execution
+  - `ConditionalAPIKey()`, `ConditionalAuth()`, `ConditionalRateLimit()` middleware functions
+  - Path-based middleware evaluation with wildcard pattern matching
+  - Webhook-specific rate limiting and signature verification
+  - `ApplyConfigurableMiddleware()` helper for easy router setup
+  - Automatic middleware ordering with recovery and CORS support
+
+### Technical Implementation
+- **Core Components**:
+  - `/core/router/middleware/configurable.go` - Main configurable middleware system
+  - `/core/config/config.go` - Enhanced with `MiddlewareConfig` and parsing functions
+  - `/core/module/interface.go` - Extended with `ConfigurableModule` interface
+  - `/examples/webhooks_module.go` - Complete webhook implementation example
+
+### Configuration Examples
+- **Environment Variables**: 25+ middleware configuration options
+- **Path-Based Rules**: Skip middleware for specific endpoints (health checks, docs, etc.)
+- **Rate Limiting**: Configurable requests per window with webhook-specific limits
+- **Webhook Security**: Provider-specific signature verification (Stripe, GitHub, PayPal)
+- **Module Overrides**: JSON-based complex routing rules for advanced use cases
+
 ## [v2.0.2] - 2025-08-20
 
 ### Added

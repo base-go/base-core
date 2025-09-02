@@ -185,41 +185,41 @@ func (app *App) initRouter() *App {
 	return app
 }
 
-// setupMiddleware configures all middleware
+// setupMiddleware configures all middleware using the new configurable system
 func (app *App) setupMiddleware() {
-	// Recovery middleware
+	// Apply configurable middleware system
+	middleware.ApplyConfigurableMiddleware(app.router, &app.config.Middleware)
+	
+	// Custom request logging middleware (conditional based on config)
 	app.router.Use(func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
-			defer func() {
-				if r := recover(); r != nil {
-					app.logger.Error("Panic recovered", logger.Any("panic", r))
-					c.JSON(500, map[string]any{"error": "Internal server error"})
-				}
-			}()
+			path := c.Request.URL.Path
+			
+			// Check if logging is required for this path
+			if app.config.Middleware.IsLoggingRequired(path) {
+				start := time.Now()
+				err := next(c)
+
+				app.logger.Info("Request",
+					logger.String("method", c.Request.Method),
+					logger.String("path", path),
+					logger.Int("status", c.Writer.Status()),
+					logger.Duration("duration", time.Since(start)),
+					logger.String("ip", c.ClientIP()),
+				)
+				return err
+			}
+			
+			// Skip logging for this path
 			return next(c)
 		}
 	})
-
-	// Request logging middleware
-	app.router.Use(func(next router.HandlerFunc) router.HandlerFunc {
-		return func(c *router.Context) error {
-			start := time.Now()
-			err := next(c)
-
-			app.logger.Info("Request",
-				logger.String("method", c.Request.Method),
-				logger.String("path", c.Request.URL.Path),
-				logger.Int("status", c.Writer.Status()),
-				logger.Duration("duration", time.Since(start)),
-				logger.String("ip", c.ClientIP()),
-			)
-			return err
-		}
-	})
-	corsOrigins := strings.Split(os.Getenv("CORS_ALLOWED_ORIGINS"), ",")
-
-	// CORS middleware
-	app.router.Use(middleware.CORSMiddleware(corsOrigins))
+	
+	// CORS middleware (conditional based on config)
+	if app.config.Middleware.CORSEnabled {
+		corsOrigins := strings.Split(os.Getenv("CORS_ALLOWED_ORIGINS"), ",")
+		app.router.Use(middleware.CORSMiddleware(corsOrigins))
+	}
 }
 
 // setupStaticRoutes configures static file serving

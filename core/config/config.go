@@ -1,10 +1,12 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // Configuration defaults - centralized for easier maintenance
@@ -90,6 +92,172 @@ type Config struct {
 	StorageAllowedExt    []string `json:"storage_allowed_ext"`
 	WebSocketEnabled     bool     `json:"websocket_enabled"`
 	SwaggerEnabled       bool     `json:"swagger_enabled"`
+	
+	// Middleware configuration
+	Middleware MiddlewareConfig `json:"middleware"`
+}
+
+// MiddlewareConfig holds middleware configuration settings
+type MiddlewareConfig struct {
+	// Global middleware toggles
+	APIKeyEnabled     bool     `json:"api_key_enabled"`
+	APIKeySkipPaths   []string `json:"api_key_skip_paths"`
+	AuthEnabled       bool     `json:"auth_enabled"`
+	AuthSkipPaths     []string `json:"auth_skip_paths"`
+	RateLimitEnabled  bool     `json:"rate_limit_enabled"`
+	RateLimitRequests int      `json:"rate_limit_requests"`
+	RateLimitWindow   string   `json:"rate_limit_window"`
+	RateLimitSkipPaths []string `json:"rate_limit_skip_paths"`
+	LoggingEnabled    bool     `json:"logging_enabled"`
+	LoggingSkipPaths  []string `json:"logging_skip_paths"`
+	RecoveryEnabled   bool     `json:"recovery_enabled"`
+	CORSEnabled       bool     `json:"cors_enabled"`
+	
+	// Webhook-specific settings
+	WebhookPaths              []string `json:"webhook_paths"`
+	WebhookAPIKeyEnabled      bool     `json:"webhook_api_key_enabled"`
+	WebhookAuthEnabled        bool     `json:"webhook_auth_enabled"`
+	WebhookSignatureEnabled   bool     `json:"webhook_signature_enabled"`
+	WebhookRateLimitRequests  int      `json:"webhook_rate_limit_requests"`
+	WebhookRateLimitWindow    string   `json:"webhook_rate_limit_window"`
+	
+	// Per-endpoint overrides
+	Overrides map[string]map[string]string `json:"overrides"`
+}
+
+// GetRateLimitDuration returns the rate limit window as time.Duration
+func (m *MiddlewareConfig) GetRateLimitDuration() time.Duration {
+	duration, err := time.ParseDuration(m.RateLimitWindow)
+	if err != nil {
+		return time.Minute // default to 1 minute
+	}
+	return duration
+}
+
+// GetWebhookRateLimitDuration returns the webhook rate limit window as time.Duration
+func (m *MiddlewareConfig) GetWebhookRateLimitDuration() time.Duration {
+	duration, err := time.ParseDuration(m.WebhookRateLimitWindow)
+	if err != nil {
+		return time.Hour // default to 1 hour
+	}
+	return duration
+}
+
+// IsAPIKeyRequired checks if API key is required for a given path
+func (m *MiddlewareConfig) IsAPIKeyRequired(path string) bool {
+	if !m.APIKeyEnabled {
+		return false
+	}
+	
+	// Check if it's a webhook path
+	if m.isWebhookPath(path) {
+		return m.WebhookAPIKeyEnabled
+	}
+	
+	// Check global skip paths
+	for _, skipPath := range m.APIKeySkipPaths {
+		if m.pathMatches(path, skipPath) {
+			return false
+		}
+	}
+	
+	// Check per-endpoint overrides
+	for overridePath, settings := range m.Overrides {
+		if m.pathMatches(path, overridePath) {
+			if apiKeySetting, exists := settings["api_key"]; exists {
+				return apiKeySetting != "disabled"
+			}
+		}
+	}
+	
+	return true
+}
+
+// IsAuthRequired checks if authentication is required for a given path
+func (m *MiddlewareConfig) IsAuthRequired(path string) bool {
+	if !m.AuthEnabled {
+		return false
+	}
+	
+	// Check if it's a webhook path
+	if m.isWebhookPath(path) {
+		return m.WebhookAuthEnabled
+	}
+	
+	// Check global skip paths
+	for _, skipPath := range m.AuthSkipPaths {
+		if m.pathMatches(path, skipPath) {
+			return false
+		}
+	}
+	
+	// Check per-endpoint overrides
+	for overridePath, settings := range m.Overrides {
+		if m.pathMatches(path, overridePath) {
+			if authSetting, exists := settings["auth"]; exists {
+				return authSetting != "disabled"
+			}
+		}
+	}
+	
+	return true
+}
+
+// IsRateLimitRequired checks if rate limiting is required for a given path
+func (m *MiddlewareConfig) IsRateLimitRequired(path string) bool {
+	if !m.RateLimitEnabled {
+		return false
+	}
+	
+	// Check global skip paths
+	for _, skipPath := range m.RateLimitSkipPaths {
+		if m.pathMatches(path, skipPath) {
+			return false
+		}
+	}
+	
+	return true
+}
+
+// IsLoggingRequired checks if logging is required for a given path
+func (m *MiddlewareConfig) IsLoggingRequired(path string) bool {
+	if !m.LoggingEnabled {
+		return false
+	}
+	
+	// Check global skip paths
+	for _, skipPath := range m.LoggingSkipPaths {
+		if m.pathMatches(path, skipPath) {
+			return false
+		}
+	}
+	
+	return true
+}
+
+// isWebhookPath checks if a path is configured as a webhook path
+func (m *MiddlewareConfig) isWebhookPath(path string) bool {
+	for _, webhookPath := range m.WebhookPaths {
+		if m.pathMatches(path, webhookPath) {
+			return true
+		}
+	}
+	return false
+}
+
+// pathMatches checks if a path matches a pattern (supports wildcards)
+func (m *MiddlewareConfig) pathMatches(path, pattern string) bool {
+	if pattern == path {
+		return true
+	}
+	
+	// Handle wildcard patterns
+	if strings.HasSuffix(pattern, "/*") {
+		prefix := strings.TrimSuffix(pattern, "/*")
+		return strings.HasPrefix(path, prefix)
+	}
+	
+	return false
 }
 
 // NewConfig returns a new Config instance with default values.
@@ -152,6 +320,7 @@ func NewConfig() *Config {
 	parseStorageExtensions(config)
 	parseIntegerValues(config)
 	parseBooleanValues(config)
+	parseMiddlewareConfig(config)
 
 	return config
 }
@@ -198,6 +367,72 @@ func parseBooleanValues(config *Config) {
 
 	// Swagger enabled
 	config.SwaggerEnabled = parseBoolWithDefault("SWAGGER_ENABLED", DefaultSwaggerEnabled)
+}
+
+// parseMiddlewareConfig parses middleware configuration from environment variables
+func parseMiddlewareConfig(config *Config) {
+	// Parse middleware overrides JSON if provided
+	overridesStr := getEnvWithLog("MIDDLEWARE_OVERRIDES", "{}")
+	var overrides map[string]map[string]string
+	if err := json.Unmarshal([]byte(overridesStr), &overrides); err != nil {
+		logConfigError("Invalid MIDDLEWARE_OVERRIDES JSON: %s. Using empty overrides", overridesStr)
+		overrides = make(map[string]map[string]string)
+	}
+	
+	// Parse webhook paths
+	webhookPathsStr := getEnvWithLog("MIDDLEWARE_WEBHOOK_PATHS", "/api/webhooks/*,/webhooks/*")
+	webhookPaths := []string{}
+	if webhookPathsStr != "" {
+		paths := strings.Split(webhookPathsStr, ",")
+		for _, path := range paths {
+			webhookPaths = append(webhookPaths, strings.TrimSpace(path))
+		}
+	}
+	
+	config.Middleware = MiddlewareConfig{
+		// Global middleware settings
+		APIKeyEnabled:     parseBoolWithDefault("MIDDLEWARE_API_KEY_ENABLED", true),
+		APIKeySkipPaths:   parsePathList("MIDDLEWARE_API_KEY_SKIP_PATHS", "/health,/,/docs,/swagger"),
+		AuthEnabled:       parseBoolWithDefault("MIDDLEWARE_AUTH_ENABLED", false),
+		AuthSkipPaths:     parsePathList("MIDDLEWARE_AUTH_SKIP_PATHS", "/api/auth/login,/api/auth/register,/api/auth/forgot-password"),
+		RateLimitEnabled:  parseBoolWithDefault("MIDDLEWARE_RATE_LIMIT_ENABLED", true),
+		RateLimitRequests: parseIntWithDefault("MIDDLEWARE_RATE_LIMIT_REQUESTS", 60),
+		RateLimitWindow:   getEnvWithLog("MIDDLEWARE_RATE_LIMIT_WINDOW", "1m"),
+		RateLimitSkipPaths: parsePathList("MIDDLEWARE_RATE_LIMIT_SKIP_PATHS", "/health,/"),
+		LoggingEnabled:    parseBoolWithDefault("MIDDLEWARE_LOGGING_ENABLED", true),
+		LoggingSkipPaths:  parsePathList("MIDDLEWARE_LOGGING_SKIP_PATHS", ""),
+		RecoveryEnabled:   parseBoolWithDefault("MIDDLEWARE_RECOVERY_ENABLED", true),
+		CORSEnabled:       parseBoolWithDefault("MIDDLEWARE_CORS_ENABLED", true),
+		
+		// Webhook-specific settings
+		WebhookPaths:              webhookPaths,
+		WebhookAPIKeyEnabled:      parseBoolWithDefault("MIDDLEWARE_WEBHOOK_API_KEY_ENABLED", false),
+		WebhookAuthEnabled:        parseBoolWithDefault("MIDDLEWARE_WEBHOOK_AUTH_ENABLED", false),
+		WebhookSignatureEnabled:   parseBoolWithDefault("MIDDLEWARE_WEBHOOK_SIGNATURE_ENABLED", true),
+		WebhookRateLimitRequests:  parseIntWithDefault("MIDDLEWARE_WEBHOOK_RATE_LIMIT_REQUESTS", 1000),
+		WebhookRateLimitWindow:    getEnvWithLog("MIDDLEWARE_WEBHOOK_RATE_LIMIT_WINDOW", "1h"),
+		
+		// Per-endpoint overrides
+		Overrides: overrides,
+	}
+}
+
+// parsePathList parses a comma-separated list of paths
+func parsePathList(key, defaultValue string) []string {
+	pathsStr := getEnvWithLog(key, defaultValue)
+	if pathsStr == "" {
+		return []string{}
+	}
+	
+	paths := strings.Split(pathsStr, ",")
+	result := make([]string, 0, len(paths))
+	for _, path := range paths {
+		trimmed := strings.TrimSpace(path)
+		if trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+	return result
 }
 
 // Helper functions for type parsing with error handling
