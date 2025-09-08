@@ -25,7 +25,6 @@
         },
         "version": "2.0.0"
     },
-    "host": "localhost:8100",
     "basePath": "/api",
     "paths": {
         "/auth/forgot-password": {

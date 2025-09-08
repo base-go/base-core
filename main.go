@@ -33,7 +33,6 @@ import (
 // @license.name MIT
 // @license.url https://opensource.org/licenses/MIT
 // @version 2.0.0
-// @host localhost:8100
 // @BasePath /api
 // @schemes http https
 // @accept json
@@ -219,6 +218,13 @@ func (app *App) setupMiddleware() {
 	if app.config.Middleware.CORSEnabled {
 		corsOrigins := strings.Split(os.Getenv("CORS_ALLOWED_ORIGINS"), ",")
 		app.router.Use(middleware.CORSMiddleware(corsOrigins))
+
+		// Add a catch-all OPTIONS handler for preflight requests
+		// This ensures OPTIONS requests don't 404 even if no explicit OPTIONS route exists
+		app.router.OPTIONS("/*catchall", func(c *router.Context) error {
+			// CORS headers are already set by the middleware above
+			return c.NoContent()
+		})
 	}
 }
 

@@ -22,18 +22,22 @@ func CORSMiddleware(allowedOrigins []string) router.MiddlewareFunc {
 				}
 			}
 
+			// Always set CORS headers if origin is allowed
 			if allowOrigin != "" {
 				c.SetHeader("Access-Control-Allow-Origin", allowOrigin)
-				c.SetHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+				c.SetHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD")
 				c.SetHeader("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization, X-Api-Key, Base-Orgid")
 				c.SetHeader("Access-Control-Expose-Headers", "Content-Length, Content-Type")
 				c.SetHeader("Access-Control-Allow-Credentials", "true")
 				c.SetHeader("Access-Control-Max-Age", "43200") // 12 hours
 			}
 
-			// Handle preflight OPTIONS requests
+			// Handle preflight OPTIONS requests - respond immediately with 204
 			if c.Request.Method == "OPTIONS" {
-				return c.NoContent()
+				if allowOrigin != "" {
+					return c.NoContent()
+				}
+				// If origin not allowed, continue to next handler (will likely 404)
 			}
 
 			return next(c)

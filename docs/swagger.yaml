@@ -437,7 +437,6 @@ definitions:
       error:
         type: string
     type: object
-host: localhost:8100
 info:
   contact:
     email: info@base.al
