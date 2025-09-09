@@ -64,6 +64,18 @@ type MediaResponse struct {
 	File        *storage.Attachment `json:"file,omitempty"`
 }
 
+// MediaResponse represents the detailed view response
+type MediaModelResponse struct {
+	Id          uint                `json:"id"`
+	CreatedAt   time.Time           `json:"created_at"`
+	UpdatedAt   time.Time           `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt      `json:"deleted_at,omitempty"`
+	Name        string              `json:"name"`
+	Type        string              `json:"type"`
+	Description string              `json:"description"`
+	File        *storage.Attachment `json:"file,omitempty"`
+}
+
 // CreateMediaRequest represents the request payload for creating a Media
 type CreateMediaRequest struct {
 	Name        string                `form:"name" binding:"required"`
