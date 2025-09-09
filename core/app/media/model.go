@@ -119,6 +119,20 @@ func (item *Media) ToResponse() *MediaResponse {
 	}
 }
 
+// ToResponse converts the model to a detailed response
+func (item *Media) ToModelResponse() *MediaModelResponse {
+	return &MediaModelResponse{
+		Id:          item.Id,
+		CreatedAt:   item.CreatedAt,
+		UpdatedAt:   item.UpdatedAt,
+		DeletedAt:   item.DeletedAt,
+		Name:        item.Name,
+		Type:        item.Type,
+		Description: item.Description,
+		File:        item.File,
+	}
+}
+
 var _ storage.Attachable = (*Media)(nil)
 
 // GetAttachmentConfig returns the attachment configuration for the model
