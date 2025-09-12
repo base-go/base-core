@@ -36,8 +36,12 @@ func (c *AuthorizationController) Routes(router *router.RouterGroup) {
 		authzRoutes.PUT("/roles/:id", c.UpdateRole)
 		authzRoutes.DELETE("/roles/:id", c.DeleteRole)
 
+		// Permission management
+		authzRoutes.GET("/permissions", c.GetPermissions)
+
 		// Role-permission management
 		authzRoutes.GET("/roles/:id/permissions", c.GetRolePermissions)
+		authzRoutes.PUT("/roles/:id/permissions", c.UpdateRolePermissions)
 		authzRoutes.POST("/roles/:id/permissions", c.AssignPermission)
 		authzRoutes.DELETE("/roles/:id/permissions/:permissionId", c.RevokePermission)
 
@@ -269,6 +273,34 @@ func (c *AuthorizationController) DeleteRole(ctx *router.Context) error {
 	})
 }
 
+// GetPermissions returns all permissions in the system
+// @Summary Get all permissions
+// @Description Get all permissions in the system
+// @Tags Core/Authorization
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} object{data=[]Permission} "Successful operation"
+// @Failure 500 {object} types.ErrorResponse "Internal server error"
+// @Router /authorization/permissions [get]
+func (c *AuthorizationController) GetPermissions(ctx *router.Context) error {
+	c.Logger.Info("Fetching all permissions")
+
+	permissions, err := c.Service.GetPermissions()
+	if err != nil {
+		c.Logger.Error("Error getting permissions",
+			logger.String("error", err.Error()))
+
+		return ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
+			Error: "Failed to retrieve permissions",
+		})
+	}
+
+	return ctx.JSON(http.StatusOK, map[string]any{
+		"data": permissions,
+	})
+}
+
 // GetRolePermissions returns all permissions for a role
 // @Summary Get permissions for a role
 // @Description Retrieves all permissions associated with a specific role
@@ -310,6 +342,68 @@ func (c *AuthorizationController) GetRolePermissions(ctx *router.Context) error 
 
 	return ctx.JSON(http.StatusOK, map[string]any{
 		"data": permissions,
+	})
+}
+
+// UpdateRolePermissions updates all permissions for a role (bulk update)
+// @Summary Update all permissions for a role
+// @Description Replaces all permissions for a role with the provided list
+// @Tags Core/Authorization
+// @Security BearerAuth
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param id path string true "Role Id"
+// @Param permissions body object{permission_ids=[]int} true "List of permission IDs to assign"
+// @Success 200 {object} object{success=boolean} "Permissions updated successfully"
+// @Failure 400 {object} types.ErrorResponse "Invalid request data"
+// @Failure 404 {object} types.ErrorResponse "Role not found"
+// @Failure 500 {object} types.ErrorResponse "Internal server error"
+// @Router /authorization/roles/{id}/permissions [put]
+func (c *AuthorizationController) UpdateRolePermissions(ctx *router.Context) error {
+	roleId := ctx.Param("id")
+	roleIdUint, err := strconv.ParseUint(roleId, 10, 64)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
+			Error: "Invalid role Id: " + err.Error(),
+		})
+	}
+
+	var request struct {
+		PermissionIds []int `json:"permission_ids" binding:"required"`
+	}
+
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		return ctx.JSON(http.StatusBadRequest, types.ErrorResponse{
+			Error: "Invalid request: " + err.Error(),
+		})
+	}
+
+	// Convert int slice to uint64 slice
+	permissionIds := make([]uint64, len(request.PermissionIds))
+	for i, id := range request.PermissionIds {
+		permissionIds[i] = uint64(id)
+	}
+
+	if err := c.Service.UpdateRolePermissions(roleIdUint, permissionIds); err != nil {
+		switch err {
+		case ErrRoleNotFound:
+			return ctx.JSON(http.StatusNotFound, types.ErrorResponse{
+				Error: "Role not found",
+			})
+		}
+
+		c.Logger.Error("Error updating role permissions",
+			logger.String("error", err.Error()),
+			logger.String("role_id", roleId))
+
+		return ctx.JSON(http.StatusInternalServerError, types.ErrorResponse{
+			Error: "Failed to update role permissions",
+		})
+	}
+
+	return ctx.JSON(http.StatusOK, map[string]any{
+		"success": true,
 	})
 }
 

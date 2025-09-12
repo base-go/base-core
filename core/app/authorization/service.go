@@ -47,6 +47,18 @@ func (s *AuthorizationService) GetRoles() ([]Role, error) {
 	return roles, nil
 }
 
+// GetPermissions returns all permissions
+func (s *AuthorizationService) GetPermissions() ([]Permission, error) {
+	var permissions []Permission
+	result := s.DB.Find(&permissions)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return permissions, nil
+}
+
 // GetRole returns a role by Id
 func (s *AuthorizationService) GetRole(id uint64) (*Role, error) {
 	var role Role
@@ -160,6 +172,66 @@ func (s *AuthorizationService) GetRolePermissions(roleId uint64) ([]Permission, 
 	}
 
 	return permissions, nil
+}
+
+// UpdateRolePermissions replaces all permissions for a role
+func (s *AuthorizationService) UpdateRolePermissions(roleId uint64, permissionIds []uint64) error {
+	// Check if role exists
+	var role Role
+	result := s.DB.First(&role, "id = ?", roleId)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return ErrRoleNotFound
+		}
+		return result.Error
+	}
+
+	// Begin transaction
+	tx := s.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	// Delete all existing permissions for this role
+	if err := tx.Where("role_id = ?", roleId).Delete(&RolePermission{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Add new permissions
+	for _, permissionId := range permissionIds {
+		// Check if permission exists
+		var permission Permission
+		if err := tx.First(&permission, "id = ?", permissionId).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				tx.Rollback()
+				return ErrPermissionNotFound
+			}
+			tx.Rollback()
+			return err
+		}
+
+		// Create role permission
+		rolePermission := RolePermission{
+			RoleId:       uint(roleId),
+			PermissionId: uint(permissionId),
+			CreatedAt:    time.Now(),
+		}
+
+		if err := tx.Create(&rolePermission).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	// Commit transaction
+	return tx.Commit().Error
 }
 
 // AssignPermissionToRole assigns a permission to a role
