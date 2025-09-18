@@ -28,6 +28,10 @@ func New() *Router {
 			keys:   make(map[string]any),
 		}
 	}
+	
+	// Add default global OPTIONS handler for CORS support
+	r.setupDefaultOptionsHandler()
+	
 	return r
 }
 
@@ -273,4 +277,12 @@ func (r *Router) Run(addr string) error {
 	}
 
 	return server.ListenAndServe()
+}
+
+// setupDefaultOptionsHandler adds a catch-all OPTIONS handler for CORS support
+func (r *Router) setupDefaultOptionsHandler() {
+	// Add a low-priority OPTIONS handler for all routes
+	r.OPTIONS("/*", func(c *Context) error {
+		return c.NoContent()
+	})
 }
