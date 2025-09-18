@@ -301,8 +301,8 @@ func (s *AuthorizationService) GetUserPermissions(userId string) ([]Permission, 
 	err = s.DB.Raw(`
 		SELECT DISTINCT p.* FROM permissions p
 		JOIN role_permissions rp ON p.id = rp.permission_id
-		JOIN organization_members om ON om.role_id = rp.role_id
-		WHERE om.user_id = ?
+		JOIN users u ON u.role_id = rp.role_id
+		WHERE u.id = ?
 	`, uint(userIdUint)).Scan(&permissions).Error
 
 	if err != nil {

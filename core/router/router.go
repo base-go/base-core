@@ -242,6 +242,11 @@ func (g *RouterGroup) PATCH(path string, handler HandlerFunc, middleware ...Midd
 	g.Handle(http.MethodPatch, path, handler, middleware...)
 }
 
+// OPTIONS registers an OPTIONS route in the group
+func (g *RouterGroup) OPTIONS(path string, handler HandlerFunc, middleware ...MiddlewareFunc) {
+	g.Handle(http.MethodOptions, path, handler, middleware...)
+}
+
 // Handle registers a route in the group
 func (g *RouterGroup) Handle(method, path string, handler HandlerFunc, middleware ...MiddlewareFunc) {
 	finalPath := g.prefix + path
