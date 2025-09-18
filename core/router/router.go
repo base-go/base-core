@@ -282,7 +282,7 @@ func (r *Router) Run(addr string) error {
 // setupDefaultOptionsHandler adds a catch-all OPTIONS handler for CORS support
 func (r *Router) setupDefaultOptionsHandler() {
 	// Add a low-priority OPTIONS handler for all routes
-	r.OPTIONS("/*", func(c *Context) error {
+	r.OPTIONS("/*filepath", func(c *Context) error {
 		return c.NoContent()
 	})
 }
