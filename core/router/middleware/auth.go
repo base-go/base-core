@@ -81,6 +81,11 @@ func Auth(config *AuthConfig) router.MiddlewareFunc {
 
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
+			// Skip authentication for CORS preflight requests
+			if c.Request.Method == "OPTIONS" {
+				return next(c)
+			}
+
 			// Check if path should be skipped
 			for _, path := range config.SkipPaths {
 				if c.Request.URL.Path == path {
@@ -108,8 +113,15 @@ func Auth(config *AuthConfig) router.MiddlewareFunc {
 				return config.ErrorHandler(c, err)
 			}
 
-			// Store user in context
-			c.Set(config.Key, user)
+			// Store user ID with "user_id" key for authorization middleware
+			// This is the essential information needed for permission checks
+			if userID, ok := user.(uint); ok {
+				c.Set("user_id", userID)
+				c.Set(config.Key, userID) // Also store with configured key for backward compatibility
+			} else if userID, ok := user.(uint64); ok {
+				c.Set("user_id", userID)
+				c.Set(config.Key, userID) // Also store with configured key for backward compatibility
+			}
 
 			// Also add to request context for deeper layers
 			ctx := context.WithValue(c.Request.Context(), userContextKey, user)
@@ -128,6 +140,11 @@ func RequireAuth(key string) router.MiddlewareFunc {
 
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
+			// Skip authentication for CORS preflight requests
+			if c.Request.Method == "OPTIONS" {
+				return next(c)
+			}
+
 			if _, exists := c.Get(key); !exists {
 				return c.JSON(http.StatusUnauthorized, map[string]string{
 					"error": "Authentication required",
@@ -142,6 +159,11 @@ func RequireAuth(key string) router.MiddlewareFunc {
 func APIKeyAuth(validateKey func(string) (any, error)) router.MiddlewareFunc {
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
+			// Skip authentication for CORS preflight requests
+			if c.Request.Method == "OPTIONS" {
+				return next(c)
+			}
+
 			// Check header first
 			apiKey := c.Header("X-API-Key")
 
@@ -176,6 +198,11 @@ func APIKeyAuth(validateKey func(string) (any, error)) router.MiddlewareFunc {
 func BasicAuth(validateCredentials func(username, password string) (any, error)) router.MiddlewareFunc {
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
+			// Skip authentication for CORS preflight requests
+			if c.Request.Method == "OPTIONS" {
+				return next(c)
+			}
+
 			username, password, hasAuth := c.Request.BasicAuth()
 			if !hasAuth {
 				c.SetHeader("WWW-Authenticate", `Basic realm="Restricted"`)

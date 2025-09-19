@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"base/core/config"
+	"base/core/helper"
 	"base/core/router"
 	"strings"
 )
@@ -40,13 +41,19 @@ func (cm *ConfigurableMiddleware) ConditionalAPIKey() router.MiddlewareFunc {
 func (cm *ConfigurableMiddleware) ConditionalAuth() router.MiddlewareFunc {
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
+			// Skip authentication for CORS preflight requests
+			if c.Request.Method == "OPTIONS" {
+				return next(c)
+			}
+
 			path := c.Request.URL.Path
 			
 			if cm.config.IsAuthRequired(path) {
 				// Apply auth middleware
-				authConfig := &AuthConfig{
-					HeaderName: "Authorization",
-					Scheme:     "Bearer",
+				authConfig := DefaultAuthConfig()
+				authConfig.TokenValidator = func(token string) (any, error) {
+					_, userID, err := helper.ValidateJWT(token)
+					return userID, err
 				}
 				authMiddleware := Auth(authConfig)
 				return authMiddleware(next)(c)

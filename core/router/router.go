@@ -29,8 +29,6 @@ func New() *Router {
 		}
 	}
 	
-	// Add default global OPTIONS handler for CORS support
-	r.setupDefaultOptionsHandler()
 	
 	return r
 }
@@ -128,6 +126,12 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 // handleRequest processes the HTTP request
 func (r *Router) handleRequest(c *Context) {
+	// Apply global middleware for all requests
+	finalHandler := r.notFound
+	for i := len(r.middleware) - 1; i >= 0; i-- {
+		finalHandler = r.middleware[i](finalHandler)
+	}
+
 	r.mu.RLock()
 	root := r.trees[c.Request.Method]
 	r.mu.RUnlock()
@@ -148,8 +152,8 @@ func (r *Router) handleRequest(c *Context) {
 		}
 	}
 
-	// Handle 404
-	if err := r.notFound(c); err != nil {
+	// Handle 404 with global middleware applied
+	if err := finalHandler(c); err != nil {
 		c.Error(http.StatusInternalServerError, err)
 	}
 }
