@@ -78,23 +78,25 @@ func NewLogger(config Config) (Logger, error) {
 	consoleConfig := zap.NewDevelopmentEncoderConfig()
 	consoleConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	consoleConfig.EncodeTime = func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
-		enc.AppendString(t.Format("2006-01-02 15:04:05"))
+		// Add blue color to timestamp
+		enc.AppendString(fmt.Sprintf("\033[36m%s\033[0m", t.Format("2006-01-02 15:04:05")))
 	}
 	consoleConfig.EncodeCaller = func(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
-		enc.AppendString(caller.TrimmedPath())
+		// Add gray/dim color to file path
+		enc.AppendString(fmt.Sprintf("\033[2m%s\033[0m", caller.TrimmedPath()))
 	}
 	consoleConfig.EncodeLevel = func(l zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
 		switch l {
 		case zapcore.InfoLevel:
-			enc.AppendString("ℹ️  INFO ")
+			enc.AppendString("\033[34mℹ️  INFO \033[0m") // Blue
 		case zapcore.WarnLevel:
-			enc.AppendString("⚠️  WARN ")
+			enc.AppendString("\033[33m⚠️  WARN \033[0m") // Yellow
 		case zapcore.ErrorLevel:
-			enc.AppendString("❌ ERROR")
+			enc.AppendString("\033[31m❌ ERROR\033[0m") // Red
 		case zapcore.DebugLevel:
-			enc.AppendString("🔍 DEBUG")
+			enc.AppendString("\033[35m🔍 DEBUG\033[0m") // Purple
 		case zapcore.FatalLevel:
-			enc.AppendString("💀 FATAL")
+			enc.AppendString("\033[31m\033[1m💀 FATAL\033[0m") // Bold Red
 		default:
 			enc.AppendString(l.String())
 		}
@@ -141,8 +143,36 @@ func Int(key string, value int) Field {
 	return zap.Int(key, value)
 }
 
+func Int64(key string, value int64) Field {
+	return zap.Int64(key, value)
+}
+
 func Uint(key string, value uint) Field {
 	return zap.Uint(key, value)
+}
+
+func Uint64(key string, value uint64) Field {
+	return zap.Uint64(key, value)
+}
+
+func Float64(key string, value float64) Field {
+	return zap.Float64(key, value)
+}
+
+func Float32(key string, value float32) Field {
+	return zap.Float32(key, value)
+}
+
+func Bool(key string, value bool) Field {
+	return zap.Bool(key, value)
+}
+
+func Any(key string, value any) Field {
+	return zap.Any(key, value)
+}
+
+func Duration(key string, value time.Duration) Field {
+	return zap.Duration(key, value)
 }
 
 // Logger interface implementation

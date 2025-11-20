@@ -54,6 +54,24 @@ func (dt DateTime) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf("\"%s\"", dt.Time.Format(time.RFC3339))), nil
 }
 
+// JSONSchema returns the JSON schema for DateTime to be treated as a string
+func (DateTime) JSONSchema() *JSONSchemaType {
+	return &JSONSchemaType{
+		Type:        "string",
+		Format:      "date-time",
+		Example:     "2024-12-23",
+		Description: "DateTime field that accepts multiple formats like '2024-12-23' or '2024-12-23T15:04:05Z'",
+	}
+}
+
+// JSONSchemaType represents the JSON schema structure
+type JSONSchemaType struct {
+	Type        string `json:"type"`
+	Format      string `json:"format,omitempty"`
+	Example     string `json:"example,omitempty"`
+	Description string `json:"description,omitempty"`
+}
+
 // Value implements the driver.Valuer interface for database operations
 func (dt DateTime) Value() (driver.Value, error) {
 	if dt.Time.IsZero() {
@@ -63,7 +81,7 @@ func (dt DateTime) Value() (driver.Value, error) {
 }
 
 // Scan implements the sql.Scanner interface for database operations
-func (dt *DateTime) Scan(value interface{}) error {
+func (dt *DateTime) Scan(value any) error {
 	if value == nil {
 		dt.Time = time.Time{}
 		return nil

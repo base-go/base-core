@@ -29,3 +29,8 @@ core/app/.DS_Store
 .DS_Store
 .env
 logs/app.log
+base
+basecmd
+destroy.sh
+storage/base.db
+test_runner.sh

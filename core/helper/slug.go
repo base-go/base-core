@@ -17,14 +17,14 @@ func NewSlugHelper() *SlugHelper {
 // Normalize ensures the slug is properly formatted
 // If customSlug is provided, it will be used as the base for the slug
 // Otherwise, name will be used to generate a slug
-func (h *SlugHelper) Normalize(name string, customSlug string) string {
+func (h *SlugHelper) Normalize(name string, customSlug string, lang string) string {
 	if customSlug != "" {
 		// If a custom slug is provided, use it but ensure it's properly formatted
-		return slug.MakeLang(customSlug, "en")
+		return slug.MakeLang(customSlug, lang)
 	}
 
 	// Generate slug from name
-	return slug.MakeLang(name, "en")
+	return slug.MakeLang(name, lang)
 }
 
 // GenerateUniqueSlug generates a unique slug based on the given base slug and a function to check if a slug exists

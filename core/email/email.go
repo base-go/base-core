@@ -4,8 +4,6 @@ import (
 	"base/core/config"
 	"fmt"
 	"sync"
-
-	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -44,7 +42,7 @@ func Send(msg Message) error {
 
 // NewEmailSender creates a new email sender based on the configuration
 func NewSender(cfg *config.Config) (Sender, error) {
-	logrus.Infof("Initializing email sender with provider: %s", cfg.EmailProvider)
+	fmt.Printf("Initializing email sender with provider: %s\n", cfg.EmailProvider)
 
 	switch cfg.EmailProvider {
 	case "smtp":
@@ -56,7 +54,7 @@ func NewSender(cfg *config.Config) (Sender, error) {
 	case "default":
 		return NewDefaultSender(cfg)
 	case "":
-		logrus.Warnf("EMAIL_PROVIDER not set, using default sender")
+		fmt.Println("EMAIL_PROVIDER not set, using default sender")
 		return NewDefaultSender(cfg)
 	default:
 		return nil, fmt.Errorf("unsupported email provider: %s", cfg.EmailProvider)
