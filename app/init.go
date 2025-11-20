@@ -1,192 +1,128 @@
 package app
 
 import (
-	// MODULE_IMPORT_MARKER - Do not remove this comment because it's used by the CLI to add new module imports
-
-	"base/core/config"
+	"base/core/app/profile"
 	"base/core/database"
-	"base/core/emitter"
-	"base/core/logger"
 	"base/core/module"
-	"base/core/storage"
-
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
-type App struct {
-	DB      *gorm.DB
-	Router  *gin.Engine
-	Log     logger.Logger
-	Emitter *emitter.Emitter
-	Storage *storage.ActiveStorage
-	Modules []module.Module
-}
+// AppModules implements module.AppModuleProvider interface
+type AppModules struct{}
 
-// NewApp creates and initializes a new App instance
-func NewApp(cfg *config.Config) (*App, error) {
-	// Initialize logger
-	logConfig := logger.Config{
-		Environment: "development",
-		LogPath:     "logs",
-		Level:       "debug",
-	}
-	log, err := logger.NewLogger(logConfig)
-	if err != nil {
-		return nil, err
-	}
-	// Initialize router
-	router := gin.Default()
-	// Initialize emitter
-	emitter := &emitter.Emitter{}
-	// Initialize database (you'll need to implement this)
-	db, err := initDB(cfg)
-	if err != nil {
-		return nil, err
-	}
-	// Initialize storage
-	storageConfig := storage.Config{
-		Provider:  cfg.StorageProvider,
-		Path:      cfg.StoragePath,
-		BaseURL:   cfg.StorageBaseURL,
-		APIKey:    cfg.StorageAPIKey,
-		APISecret: cfg.StorageAPISecret,
-		Endpoint:  cfg.StorageEndpoint,
-		Bucket:    cfg.StorageBucket,
-		CDN:       cfg.CDN,
-	}
-	activeStorage, err := storage.NewActiveStorage(db, storageConfig)
-	if err != nil {
-		return nil, err
-	}
-	app := &App{
-		DB:      db,
-		Router:  router,
-		Log:     log,
-		Emitter: emitter,
-		Storage: activeStorage,
-		Modules: make([]module.Module, 0),
-	}
-	// Initialize modules
-	moduleInitializer := &AppModuleInitializer{
-		DB:      db,
-		Router:  router.Group("/api"),
-		Logger:  log,
-		Emitter: emitter,
-		Storage: activeStorage,
-	}
-	app.Modules = moduleInitializer.InitializeModules(db)
-	return app, nil
-}
-
-// AppModuleInitializer holds all dependencies needed for app module initialization
-type AppModuleInitializer struct {
-	DB      *gorm.DB
-	Router  *gin.RouterGroup
-	Logger  logger.Logger
-	Emitter *emitter.Emitter
-	Storage *storage.ActiveStorage
-}
-
-// InitializeModules initializes all application modules
-func (a *AppModuleInitializer) InitializeModules(db *gorm.DB) []module.Module {
-	var modules []module.Module
-	// Initialize modules
-	moduleMap := a.getModules(db)
-	// Register and initialize each module
-	for name, mod := range moduleMap {
-
-		if err := module.RegisterModule(name, mod); err != nil {
-			a.Logger.Error("Failed to register module",
-				logger.String("module", name),
-				logger.String("error", err.Error()))
-			continue
-		}
-		// Initialize the module
-		if err := mod.Init(); err != nil {
-			a.Logger.Error("Failed to initialize module",
-				logger.String("module", name),
-				logger.String("error", err.Error()))
-			continue
-		}
-		// Migrate the module
-		if err := mod.Migrate(); err != nil {
-			a.Logger.Error("Failed to migrate module",
-				logger.String("module", name),
-				logger.String("error", err.Error()))
-			continue
-		}
-		// Set up routes for the module
-		if routeModule, ok := mod.(interface{ Routes(*gin.RouterGroup) }); ok {
-			routeModule.Routes(a.Router)
-		}
-		modules = append(modules, mod)
-	}
-	return modules
-}
-
-// getModules returns a map of module name to module instance
-func (a *AppModuleInitializer) getModules(db *gorm.DB) map[string]module.Module {
+// GetAppModules returns the list of app modules to initialize
+// This is the only function that needs to be updated when adding new app modules
+func (am *AppModules) GetAppModules(deps module.Dependencies) map[string]module.Module {
 	modules := make(map[string]module.Module)
-	// Define the module initializers directly
-	moduleInitializers := map[string]func(*gorm.DB, *gin.RouterGroup, logger.Logger, *emitter.Emitter, *storage.ActiveStorage) module.Module{
-		// MODULE_INITIALIZER_MARKER - Do not remove this comment because it's used by the CLI to add new module initializers
-	}
-
-	// Initialize and register each module
-	for name, initializer := range moduleInitializers {
-		modules[name] = initializer(db, a.Router, a.Logger, a.Emitter, a.Storage)
-	}
 
 	return modules
 }
 
-// initDB initializes the database connection
-func initDB(cfg *config.Config) (*gorm.DB, error) {
-	db, err := database.InitDB(cfg)
-	if err != nil {
-		return nil, err
-	}
-	return db.DB, nil
+// NewAppModules creates a new AppModules provider
+func NewAppModules() *AppModules {
+	return &AppModules{}
 }
 
 /*
- This function returns an extension of the user's context with a company ID
- If no company is found, returns just the user ID
- This is useful for contexts where you want to extend the user context with additional information
- For example, you could use this to pass the user ID and the company ID to the handler function
+Extend function is called during authentication (login/register) to add custom data
+to both the JWT token payload and the authentication response.
 
- Example:
+This function allows you to extend the user context with additional information
+such as company IDs, roles, permissions, or any other data your application needs.
 
-	Let's find the company for the user
-	since we have access to the database, we can do it here instead of in the handler function
+Usage from app/ directory:
+1. Import required models and packages at the top of this file
+2. Query the database to fetch related data for the user
+3. Return a map[string]any with the additional context data
 
-	var company models.Company
-	if err := database.DB.Where("user_id = ?", user_id).First(&company).Error; err != nil {
-		// If no company found, return just the user ID
-		return map[string]interface{}{
+Common Use Cases:
+- Multi-tenant applications: Include company_id or tenant_id
+- Role-based access: Include user roles and permissions
+- User preferences: Include settings or configuration data
+- Organization data: Include department, team, or group information
+
+Example Implementation:
+
+	// Import your models at the top of the file
+	// import "base/app/models"
+
+	func Extend(user_id uint) any {
+		// Basic fallback if database is not available
+		if database.DB == nil {
+			return map[string]any{
+				"user_id": user_id,
+			}
+		}
+
+		// Example: Multi-tenant application with company association
+		// var company models.Company
+		// if err := database.DB.Where("user_id = ?", user_id).First(&company).Error; err != nil {
+		//     // If no company found, return just the user ID
+		//     return map[string]any{
+		//         "user_id": user_id,
+		//     }
+		// }
+		//
+		// return map[string]any{
+		//     "user_id":    user_id,
+		//     "company_id": company.Id,
+		//     "company_name": company.Name,
+		// }
+
+		// Example: Role-based access control
+		// var userRoles []models.UserRole
+		// database.DB.Where("user_id = ?", user_id).Find(&userRoles)
+		//
+		// roles := make([]string, len(userRoles))
+		// for i, role := range userRoles {
+		//     roles[i] = role.RoleName
+		// }
+		//
+		// return map[string]any{
+		//     "user_id": user_id,
+		//     "roles":   roles,
+		// }
+
+		// Default: Return minimal context
+		return map[string]any{
 			"user_id": user_id,
 		}
 	}
 
-	Then return the context with both user ID and company ID
-	return map[string]interface{}{
-		"user_id": user_id,
-		"company_id": company.Id,
-	}
+The returned data will be:
+1. Added to the "extend" field in the authentication response
+2. Embedded in the JWT token payload under the "extend" claim
+3. Available in middleware and authorization checks without additional database queries
 */
 
-func Extend(user_id uint) interface{} {
+func Extend(user_id uint) any {
 	// Get database instance
 	if database.DB == nil {
-		return map[string]interface{}{
+		return map[string]any{
 			"user_id": user_id,
 		}
 	}
 
-	// Get company for the user Here like in Examle above
+	// Get user's role from the database with role relationship preloaded
+	var user profile.User
+	if err := database.DB.Preload("Role").Where("id = ?", user_id).First(&user).Error; err != nil {
+		// If user not found, return minimal context
+		return map[string]any{
+			"user_id": user_id,
+		}
+	}
 
-	return map[string]interface{}{
+	// Return user context with role information
+	roleInfo := map[string]any{
+		"id":   user.RoleId,
+		"name": "",
+	}
+
+	if user.Role != nil {
+		roleInfo["name"] = user.Role.Name
+	}
+
+	return map[string]any{
 		"user_id": user_id,
+		"role":    roleInfo,
 	}
 }

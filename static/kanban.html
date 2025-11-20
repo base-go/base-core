@@ -265,7 +265,7 @@
         function connect() {
             const clientId = 'kanban_' + Math.random().toString(36).substr(2, 9);
             const nickname = nicknameInput.value.trim() || 'User';
-            socket = new WebSocket(`ws://localhost:8001/api/ws?id=${clientId}&room=kanban&nickname=${encodeURIComponent(nickname)}`);
+            socket = new WebSocket(`ws://localhost:8100/api/ws?id=${clientId}&room=kanban&nickname=${encodeURIComponent(nickname)}`);
 
             socket.onopen = function() {
                 updateStatus('Connected');

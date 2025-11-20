@@ -166,7 +166,7 @@
         function connect() {
             const clientId = 'drawer_' + Math.random().toString(36).substr(2, 9);
             const nickname = nicknameInput.value.trim() || 'Artist';
-            socket = new WebSocket(`ws://localhost:8001/api/ws?id=${clientId}&room=drawing&nickname=${encodeURIComponent(nickname)}`);
+            socket = new WebSocket(`ws://localhost:8100/api/ws?id=${clientId}&room=drawing&nickname=${encodeURIComponent(nickname)}`);
 
             socket.onopen = function() {
                 updateStatus('Connected');

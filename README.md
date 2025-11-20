@@ -32,9 +32,14 @@ Base is a modern Go web framework designed for rapid development and maintainabl
 ### Security Features
 - JWT Token Authentication
   - Extensible JWT Claims via `Extend` function in `app/init.go`
-  - Default user context with `user_id`
+  - Default user context with `user_id` and structured role information
   - Customizable token expiration (24h by default)
   - Secure token validation and verification
+- Role-Based Access Control
+  - **First User Owner System**: First registered user automatically becomes Owner
+  - Hierarchical role system: Owner → Administrator → Member → Viewer
+  - Automatic role assignment with secure fallback protection
+  - Role information embedded in JWT tokens for authorization checks
 - API Key Authentication
 - Rate Limiting Middleware
 - Request Logging
@@ -66,6 +71,8 @@ Base is a modern Go web framework designed for rapid development and maintainabl
   - belongs_to (One-to-one with foreign key in this model)
   - has_one (One-to-one with foreign key in other model)
   - has_many (One-to-many)
+  - to_many (Many-to-many with join table)
+  - **Automatic Relationship Detection**: Fields ending with `_id` automatically generate relationships
 - Auto-Migration
 - Transaction Support
 - Connection Management
@@ -124,7 +131,7 @@ type PostService struct {
 // Register event listeners
 func (s *PostService) Init() {
     // Listen for post creation events
-    s.Emitter.On("post.created", func(data interface{}) {
+    s.Emitter.On("post.created", func(data any) {
         if post, ok := data.(*models.Post); ok {
             s.Logger.Info("Post created", 
                 logger.Int("id", int(post.Id)),
@@ -152,7 +159,7 @@ func (s *PostService) Create(post *models.Post) error {
 Install Base CLI with a single command:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/base-go/cmd/main/install.sh | bash
+curl -fsSL https://get.base.al | bash
 ```
 
 ### Available Commands
@@ -175,6 +182,13 @@ base g post \
   gallery:attachment \
   author:belongsTo:User \
   comments:hasMany:Comment
+
+# Generate with automatic relationship detection
+base g article \
+  title:string \
+  content:text \
+  category_id:uint \      # Automatically creates Category relationship
+  author_id:uint          # Automatically creates Author relationship
 
 # Generate with specialized attachments
 base g document \
@@ -205,14 +219,14 @@ cd myapp
 base start
 ```
 
-Your API will be available at `http://localhost:8080`
+Your API will be available at `http://localhost:8100`
 
 ### Configuration
 
 Base uses environment variables for configuration. A `.env` file is automatically created with your new project:
 
 ```bash
-SERVER_ADDRESS=:8080
+SERVER_ADDRESS=:8100
 JWT_SECRET=your_jwt_secret
 API_KEY=your_api_key
 
@@ -249,11 +263,13 @@ Base follows a modular architecture with a centralized models directory:
 │   ├── posts/            # Post module
 │   │   ├── controller.go # HTTP handlers & file upload
 │   │   ├── service.go    # Business logic & storage
-│   │   └── module.go     # Module registration
+│   │   ├── module.go     # Module registration
+│   │   └── validation.go # Validation rules
 │   ├── users/            # User module
 │   │   ├── controller.go
 │   │   ├── service.go
-│   │   └── module.go
+│   │   ├── module.go
+│   │   └── validation.go # Validation rules
 │   └── init.go           # Module initialization
 ├── core/                 # Framework core
 │   ├── storage/         # File storage system
@@ -277,7 +293,8 @@ app/
 └── posts/              # Post module
     ├── controller.go   # HTTP handlers & validation
     ├── service.go      # Business logic
-    └── module.go       # Module registration
+    ├── module.go       # Module registration
+    └── validation.go   # Validation rules
 ```
 
 ### Model Organization
@@ -297,9 +314,9 @@ type Post struct {
     types.Model
     Title     string     `json:"title" gorm:"not null"`
     Content   string     `json:"content" gorm:"type:text"`
-    AuthorID  uint      `json:"author_id"`
-    Author    User      `json:"author" gorm:"foreignKey:AuthorID"`    // Can reference User model
-    Comments  []Comment `json:"comments" gorm:"foreignKey:PostID"`    // Can reference Comment model
+    AuthorId  uint      `json:"author_id"`
+    Author    User      `json:"author" gorm:"foreignKey:AuthorId"`    // Can reference User model
+    Comments  []Comment `json:"comments" gorm:"foreignKey:PostId"`    // Can reference Comment model
 }
 
 // app/posts/service.go
@@ -360,12 +377,36 @@ base g post title:string content:text
 
 # Creates:
 app/
-└── post/
+├── models/
+│   └── post.go        # Model with automatic relationships
+└── posts/
     ├── controller.go  # RESTful endpoints
     ├── service.go     # Business logic
     ├── module.go      # Registration
-    └── types.go       # Types and DTOs
+    └── validator.go   # Input validation
 ```
+
+#### Automatic Relationship Detection
+
+Base automatically detects and creates relationships when field names end with `_id`:
+
+```bash
+# This command:
+base g article title:string content:text category_id:uint author_id:uint
+
+# Automatically generates:
+type Article struct {
+    Id         uint     `json:"id" gorm:"primarykey"`
+    Title      string   `json:"title"`
+    Content    string   `json:"content"`
+    CategoryId uint     `json:"category_id"`
+    Category   Category `json:"category,omitempty" gorm:"foreignKey:CategoryId"`
+    AuthorId   uint     `json:"author_id"`  
+    Author     Author   `json:"author,omitempty" gorm:"foreignKey:AuthorId"`
+}
+```
+
+This eliminates the need to manually specify relationships - just use the `_id` suffix convention!
 
 The module is automatically registered in `app/init.go` and integrated with the dependency injection system.
 
@@ -399,10 +440,10 @@ type Post struct {
     Title     string     `json:"title" gorm:"not null"`
     Content   string     `json:"content" gorm:"type:text"`
     Published bool       `json:"published" gorm:"default:false"`
-    AuthorID  uint      `json:"author_id"`
-    Author    User      `json:"author" gorm:"foreignKey:AuthorID"`
+    AuthorId  uint      `json:"author_id"`
+    Author    User      `json:"author" gorm:"foreignKey:AuthorId"`
     Tags      []Tag     `json:"tags" gorm:"many2many:post_tags;"`
-    Comments  []Comment `json:"comments" gorm:"foreignKey:PostID"`
+    Comments  []Comment `json:"comments" gorm:"foreignKey:PostId"`
 }
 
 // app/posts/controller.go
@@ -413,7 +454,7 @@ type PostController struct {
     logger  logger.Logger
 }
 
-func (c *PostController) Routes(router *gin.RouterGroup) {
+func (c *PostController) Routes(router *router.RouterGroup) {
     router.GET("", c.List)
     router.GET("/:id", c.Get)
     router.POST("", c.Create)
@@ -446,7 +487,7 @@ type PostModule struct {
     service    *PostService
 }
 
-func NewPostModule(db *gorm.DB, router *gin.RouterGroup, log logger.Logger, emitter *emitter.Emitter) module.Module {
+func NewPostModule(db *gorm.DB, router *router.RouterGroup, log logger.Logger, emitter *emitter.Emitter) module.Module {
     service := &PostService{
         db:      db,
         emitter: emitter,

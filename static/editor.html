@@ -267,7 +267,7 @@ console.log(greet('World'));`;
         function connect() {
             const clientId = 'editor_' + Math.random().toString(36).substr(2, 9);
             const nickname = nicknameInput.value.trim() || 'Guest';
-            socket = new WebSocket(`ws://localhost:8001/api/ws?id=${clientId}&room=code_editor&nickname=${encodeURIComponent(nickname)}`);
+            socket = new WebSocket(`ws://localhost:8100/api/ws?id=${clientId}&room=code_editor&nickname=${encodeURIComponent(nickname)}`);
 
             socket.onopen = function() {
                 updateStatus('Connected');

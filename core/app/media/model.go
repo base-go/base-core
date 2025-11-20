@@ -18,7 +18,7 @@ type Media struct {
 	File        *storage.Attachment `json:"file,omitempty" gorm:"polymorphic:Model"`
 	CreatedAt   time.Time           `json:"created_at"`
 	UpdatedAt   time.Time           `json:"updated_at"`
-	DeletedAt   gorm.DeletedAt      `json:"deleted_at,omitempty" gorm:"index"`
+	DeletedAt   gorm.DeletedAt      `json:"deleted_at" gorm:"index"`
 }
 
 // TableName returns the table name for the Media model
@@ -54,6 +54,18 @@ type MediaListResponse struct {
 
 // MediaResponse represents the detailed view response
 type MediaResponse struct {
+	Id          uint                `json:"id"`
+	CreatedAt   time.Time           `json:"created_at"`
+	UpdatedAt   time.Time           `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt      `json:"deleted_at,omitempty"`
+	Name        string              `json:"name"`
+	Type        string              `json:"type"`
+	Description string              `json:"description"`
+	File        *storage.Attachment `json:"file,omitempty"`
+}
+
+// MediaResponse represents the detailed view response
+type MediaModelResponse struct {
 	Id          uint                `json:"id"`
 	CreatedAt   time.Time           `json:"created_at"`
 	UpdatedAt   time.Time           `json:"updated_at"`
@@ -107,12 +119,26 @@ func (item *Media) ToResponse() *MediaResponse {
 	}
 }
 
+// ToResponse converts the model to a detailed response
+func (item *Media) ToModelResponse() *MediaModelResponse {
+	return &MediaModelResponse{
+		Id:          item.Id,
+		CreatedAt:   item.CreatedAt,
+		UpdatedAt:   item.UpdatedAt,
+		DeletedAt:   item.DeletedAt,
+		Name:        item.Name,
+		Type:        item.Type,
+		Description: item.Description,
+		File:        item.File,
+	}
+}
+
 var _ storage.Attachable = (*Media)(nil)
 
 // GetAttachmentConfig returns the attachment configuration for the model
-func (item *Media) GetAttachmentConfig() map[string]interface{} {
-	return map[string]interface{}{
-		"file": map[string]interface{}{
+func (item *Media) GetAttachmentConfig() map[string]any {
+	return map[string]any{
+		"file": map[string]any{
 			"path":       "media/:id/:filename",
 			"validators": []string{"image", "audio"},
 			"min_size":   1,                 // 1 byte

@@ -1,6 +1,8 @@
 basePath: /api
+consumes:
+- application/json
 definitions:
-  auth.AuthResponse:
+  authentication.AuthResponse:
     properties:
       accessToken:
         type: string
@@ -11,21 +13,29 @@ definitions:
       exp:
         type: integer
       extend: {}
+      first_name:
+        type: string
       id:
         type: integer
       last_login:
         type: string
-      name:
+      last_name:
+        type: string
+      phone:
+        type: string
+      role_id:
+        type: integer
+      role_name:
         type: string
       username:
         type: string
     type: object
-  auth.ErrorResponse:
+  authentication.ErrorResponse:
     properties:
       error:
         type: string
     type: object
-  auth.ForgotPasswordRequest:
+  authentication.ForgotPasswordRequest:
     properties:
       email:
         example: john@example.com
@@ -33,7 +43,8 @@ definitions:
     required:
     - email
     type: object
-  auth.LoginRequest:
+  authentication.LoginRequest:
+    description: Login request payload
     properties:
       email:
         example: john@example.com
@@ -45,21 +56,29 @@ definitions:
     - email
     - password
     type: object
-  auth.RegisterRequest:
+  authentication.RegisterRequest:
     description: Registration request payload
     properties:
       email:
         description: '@Description User''s email address'
         example: john@example.com
         type: string
-      name:
-        description: '@Description User''s full name'
-        example: John Doe
+      first_name:
+        description: '@Description User''s first name'
+        example: John
+        type: string
+      last_name:
+        description: '@Description User''s last name'
+        example: Doe
         type: string
       password:
         description: '@Description Password for the account (minimum 8 characters)'
         example: password123
         minLength: 8
+        type: string
+      phone:
+        description: '@Description User''s phone number'
+        example: "+1234567890"
         type: string
       username:
         description: '@Description Username for the account'
@@ -69,7 +88,7 @@ definitions:
     - email
     - password
     type: object
-  auth.ResetPasswordRequest:
+  authentication.ResetPasswordRequest:
     properties:
       email:
         example: john@example.com
@@ -85,9 +104,74 @@ definitions:
     - new_password
     - token
     type: object
-  auth.SuccessResponse:
+  authentication.SuccessResponse:
     properties:
       message:
+        type: string
+    type: object
+  authorization.Permission:
+    properties:
+      action:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      resource_type:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  authorization.ResourcePermission:
+    properties:
+      action:
+        description: Action type (e.g., "create", "read", "update", "delete")
+        type: string
+      created_at:
+        type: string
+      default_scope:
+        description: Default permission scope (e.g., "own", "team", "all")
+        type: string
+      id:
+        type: integer
+      permission_id:
+        description: 'Optional: legacy permission Id'
+        type: integer
+      resource_id:
+        description: 'Optional: specific resource Id if applicable'
+        type: string
+      resource_type:
+        description: Resource type (e.g., "project", "employee", etc.)
+        type: string
+      role_id:
+        description: 'Optional: role Id for role-based permissions'
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        description: 'Optional: specific user Id if applicable'
+        type: integer
+    type: object
+  authorization.Role:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      is_system:
+        type: boolean
+      name:
+        type: string
+      permission_count:
+        description: New field
+        type: integer
+      updated_at:
         type: string
     type: object
   gorm.DeletedAt:
@@ -139,6 +223,91 @@ definitions:
       error:
         type: string
     type: object
+  profile.UpdatePasswordRequest:
+    properties:
+      NewPassword:
+        maxLength: 255
+        minLength: 6
+        type: string
+      OldPassword:
+        maxLength: 255
+        type: string
+    required:
+    - NewPassword
+    - OldPassword
+    type: object
+  profile.UpdateRequest:
+    properties:
+      email:
+        maxLength: 255
+        type: string
+      first_name:
+        maxLength: 255
+        type: string
+      last_name:
+        maxLength: 255
+        type: string
+      phone:
+        maxLength: 255
+        type: string
+      username:
+        maxLength: 255
+        type: string
+    type: object
+  profile.User:
+    properties:
+      avatar:
+        $ref: '#/definitions/storage.Attachment'
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      email:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: integer
+      lastLogin:
+        type: string
+      lastName:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      role:
+        $ref: '#/definitions/authorization.Role'
+      roleId:
+        type: integer
+      updatedAt:
+        type: string
+      username:
+        type: string
+    type: object
+  profile.UserResponse:
+    properties:
+      avatar_url:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      last_login:
+        type: string
+      last_name:
+        type: string
+      phone:
+        type: string
+      role_id:
+        type: integer
+      role_name:
+        type: string
+      username:
+        type: string
+    type: object
   storage.Attachment:
     properties:
       created_at:
@@ -162,6 +331,90 @@ definitions:
       url:
         type: string
     type: object
+  translation.BulkTranslationRequest:
+    properties:
+      language:
+        type: string
+      model:
+        type: string
+      model_id:
+        type: integer
+      translations:
+        additionalProperties:
+          type: string
+        description: key -> value mapping
+        type: object
+    required:
+    - language
+    - model
+    - model_id
+    - translations
+    type: object
+  translation.CreateTranslationRequest:
+    properties:
+      key:
+        type: string
+      language:
+        type: string
+      model:
+        type: string
+      model_id:
+        type: integer
+      value:
+        type: string
+    required:
+    - key
+    - language
+    - model
+    - model_id
+    - value
+    type: object
+  translation.TranslationResponse:
+    properties:
+      created_at:
+        type: string
+      deleted_at:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      key:
+        type: string
+      language:
+        type: string
+      model:
+        type: string
+      model_id:
+        type: integer
+      updated_at:
+        type: string
+      value:
+        type: string
+    type: object
+  translation.UpdateTranslationRequest:
+    properties:
+      id:
+        type: integer
+      key:
+        type: string
+      language:
+        type: string
+      model:
+        type: string
+      model_id:
+        type: integer
+      value:
+        type: string
+    required:
+    - id
+    type: object
+  types.ErrorResponse:
+    properties:
+      details: {}
+      error:
+        type: string
+      success:
+        type: boolean
+    type: object
   types.PaginatedResponse:
     properties:
       data: {}
@@ -179,65 +432,23 @@ definitions:
       total_pages:
         type: integer
     type: object
-  users.ErrorResponse:
-    properties:
-      error:
-        type: string
-    type: object
-  users.UpdatePasswordRequest:
-    properties:
-      NewPassword:
-        minLength: 6
-        type: string
-      OldPassword:
-        type: string
-    required:
-    - NewPassword
-    - OldPassword
-    type: object
-  users.UpdateRequest:
-    properties:
-      email:
-        type: string
-      name:
-        type: string
-      username:
-        type: string
-    type: object
-  users.User:
-    properties:
-      avatar:
-        $ref: '#/definitions/storage.Attachment'
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      email:
-        type: string
-      id:
-        type: integer
-      lastLogin:
-        type: string
-      name:
-        type: string
-      password:
-        type: string
-      updatedAt:
-        type: string
-      username:
-        type: string
-    type: object
   websocket.ErrorResponse:
     properties:
       error:
         type: string
     type: object
-host: localhost:8001
 info:
-  contact: {}
-  description: This is the API documentation for Base
-  title: Base API
-  version: "1.0"
+  contact:
+    email: info@base.al
+    name: Base Team
+    url: https://base.al
+  description: This is the API documentation for Base Framework
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://base.al/terms
+  title: Base Framework API
+  version: 2.0.0
 paths:
   /auth/forgot-password:
     post:
@@ -250,26 +461,26 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/auth.ForgotPasswordRequest'
+          $ref: '#/definitions/authentication.ForgotPasswordRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/auth.SuccessResponse'
+            $ref: '#/definitions/authentication.SuccessResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/auth.ErrorResponse'
+            $ref: '#/definitions/authentication.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/auth.ErrorResponse'
+            $ref: '#/definitions/authentication.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/auth.ErrorResponse'
+            $ref: '#/definitions/authentication.ErrorResponse'
       security:
       - ApiKeyAuth: []
       summary: Forgot Password
@@ -286,30 +497,30 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/auth.LoginRequest'
+          $ref: '#/definitions/authentication.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/auth.AuthResponse'
+            $ref: '#/definitions/authentication.AuthResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/auth.ErrorResponse'
+            $ref: '#/definitions/authentication.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/auth.ErrorResponse'
+            $ref: '#/definitions/authentication.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/auth.ErrorResponse'
+            $ref: '#/definitions/authentication.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/auth.ErrorResponse'
+            $ref: '#/definitions/authentication.ErrorResponse'
       security:
       - ApiKeyAuth: []
       summary: Login
@@ -326,15 +537,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/auth.SuccessResponse'
+            $ref: '#/definitions/authentication.SuccessResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/auth.ErrorResponse'
+            $ref: '#/definitions/authentication.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/auth.ErrorResponse'
+            $ref: '#/definitions/authentication.ErrorResponse'
       security:
       - ApiKeyAuth: []
       summary: Logout
@@ -351,22 +562,26 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/auth.RegisterRequest'
+          $ref: '#/definitions/authentication.RegisterRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/auth.AuthResponse'
+            $ref: '#/definitions/authentication.AuthResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/auth.ErrorResponse'
+            $ref: '#/definitions/authentication.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/authentication.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/auth.ErrorResponse'
+            $ref: '#/definitions/authentication.ErrorResponse'
       security:
       - ApiKeyAuth: []
       summary: Register
@@ -383,35 +598,459 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/auth.ResetPasswordRequest'
+          $ref: '#/definitions/authentication.ResetPasswordRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/auth.SuccessResponse'
+            $ref: '#/definitions/authentication.SuccessResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/auth.ErrorResponse'
+            $ref: '#/definitions/authentication.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/auth.ErrorResponse'
+            $ref: '#/definitions/authentication.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/auth.ErrorResponse'
+            $ref: '#/definitions/authentication.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/auth.ErrorResponse'
+            $ref: '#/definitions/authentication.ErrorResponse'
       security:
       - ApiKeyAuth: []
       summary: Reset Password
       tags:
       - Core/Auth
+  /authorization/check:
+    post:
+      consumes:
+      - application/json
+      description: Checks if a user has permission to perform an action on a resource
+      parameters:
+      - description: Permission check request
+        in: body
+        name: checkRequest
+        required: true
+        schema:
+          properties:
+            action:
+              type: string
+            organization_id:
+              type: string
+            resource_id:
+              type: string
+            resource_type:
+              type: string
+            user_id:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Permission check result
+          schema:
+            properties:
+              has_permission:
+                type: boolean
+            type: object
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      summary: Check user permission
+      tags:
+      - Core/Authorization
+  /authorization/resource-permissions:
+    post:
+      consumes:
+      - application/json
+      description: Creates a resource-specific permission override
+      parameters:
+      - description: Resource permission to create
+        in: body
+        name: resourcePermission
+        required: true
+        schema:
+          $ref: '#/definitions/authorization.ResourcePermission'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Resource permission created successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/authorization.ResourcePermission'
+            type: object
+        "400":
+          description: Invalid resource permission data
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      summary: Create resource permission
+      tags:
+      - Core/Authorization
+  /authorization/resource-permissions/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a resource-specific permission override
+      parameters:
+      - description: Resource Permission Id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Resource permission deleted successfully
+          schema:
+            properties:
+              success:
+                type: boolean
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      summary: Delete resource permission
+      tags:
+      - Core/Authorization
+  /authorization/roles:
+    get:
+      consumes:
+      - application/json
+      description: Get all roles in the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful operation
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/authorization.Role'
+                type: array
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get all roles
+      tags:
+      - Core/Authorization
+    post:
+      consumes:
+      - application/json
+      description: Creates a new role with the provided information
+      parameters:
+      - description: Role object to be created
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/authorization.Role'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Role created successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/authorization.Role'
+            type: object
+        "400":
+          description: Invalid role data
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      summary: Create a new role
+      tags:
+      - Core/Authorization
+  /authorization/roles/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a role by its Id
+      parameters:
+      - description: Role Id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Role deleted successfully
+          schema:
+            properties:
+              success:
+                type: boolean
+            type: object
+        "403":
+          description: System role cannot be deleted
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "404":
+          description: Role not found
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      summary: Delete a role
+      tags:
+      - Core/Authorization
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a specific role by its Id
+      parameters:
+      - description: Role Id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful operation
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/authorization.Role'
+            type: object
+        "404":
+          description: Role not found
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      summary: Get role by Id
+      tags:
+      - Core/Authorization
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing role with the provided information
+      parameters:
+      - description: Role Id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated role object
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/authorization.Role'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Role updated successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/authorization.Role'
+            type: object
+        "400":
+          description: Invalid role data
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "403":
+          description: System role cannot be modified
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "404":
+          description: Role not found
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      summary: Update a role
+      tags:
+      - Core/Authorization
+  /authorization/roles/{id}/permissions:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all permissions associated with a specific role
+      parameters:
+      - description: Role Id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful operation
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/authorization.Permission'
+                type: array
+            type: object
+        "404":
+          description: Role not found
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      summary: Get permissions for a role
+      tags:
+      - Core/Authorization
+    post:
+      consumes:
+      - application/json
+      description: Assigns a permission to a role
+      parameters:
+      - description: Role Id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Permission Id to assign
+        in: body
+        name: assignRequest
+        required: true
+        schema:
+          properties:
+            permission_id:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Permission assigned successfully
+          schema:
+            properties:
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "404":
+          description: Role or permission not found
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "409":
+          description: Permission already assigned
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      summary: Assign permission to role
+      tags:
+      - Core/Authorization
+  /authorization/roles/{id}/permissions/{permissionId}:
+    delete:
+      consumes:
+      - application/json
+      description: Removes a permission from a role
+      parameters:
+      - description: Role Id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Permission Id
+        in: path
+        name: permissionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Permission revoked successfully
+          schema:
+            properties:
+              success:
+                type: boolean
+            type: object
+        "404":
+          description: Role or permission not found
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      summary: Revoke permission from role
+      tags:
+      - Core/Authorization
   /media:
     get:
       description: Get a paginated list of media items
@@ -477,7 +1116,7 @@ paths:
     delete:
       description: Delete a media item and its associated file
       parameters:
-      - description: Media ID
+      - description: Media Id
         in: path
         name: id
         required: true
@@ -494,9 +1133,9 @@ paths:
       tags:
       - Core/Media
     get:
-      description: Get a media item by ID
+      description: Get a media item by Id
       parameters:
-      - description: Media ID
+      - description: Media Id
         in: path
         name: id
         required: true
@@ -519,7 +1158,7 @@ paths:
       - multipart/form-data
       description: Update a media item's details and optionally its file
       parameters:
-      - description: Media ID
+      - description: Media Id
         in: path
         name: id
         required: true
@@ -557,7 +1196,7 @@ paths:
     delete:
       description: Remove the file attached to a media item
       parameters:
-      - description: Media ID
+      - description: Media Id
         in: path
         name: id
         required: true
@@ -580,7 +1219,7 @@ paths:
       - multipart/form-data
       description: Update the file attached to a media item
       parameters:
-      - description: Media ID
+      - description: Media Id
         in: path
         name: id
         required: true
@@ -627,7 +1266,7 @@ paths:
       - application/json
       description: Handle the OAuth callback from Apple
       parameters:
-      - description: Apple ID Token
+      - description: Apple Id Token
         in: body
         name: idToken
         required: true
@@ -639,7 +1278,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/users.User'
+            $ref: '#/definitions/profile.UserResponse'
         "400":
           description: Bad Request
           schema:
@@ -671,7 +1310,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/users.User'
+            $ref: '#/definitions/profile.UserResponse'
         "400":
           description: Bad Request
           schema:
@@ -691,7 +1330,7 @@ paths:
       - application/json
       description: Handle the OAuth callback from Google
       parameters:
-      - description: Google ID Token
+      - description: Google Id Token
         in: body
         name: idToken
         required: true
@@ -703,7 +1342,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/users.User'
+            $ref: '#/definitions/profile.UserResponse'
         "400":
           description: Bad Request
           schema:
@@ -717,77 +1356,77 @@ paths:
       summary: Google OAuth callback
       tags:
       - Core/OAuth
-  /users/me:
+  /profile:
     get:
       consumes:
       - application/json
-      description: Get user by Bearer Token
+      description: Get profile by Bearer Token
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/users.User'
+            $ref: '#/definitions/profile.User'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/users.ErrorResponse'
+            $ref: '#/definitions/types.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/users.ErrorResponse'
+            $ref: '#/definitions/types.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/users.ErrorResponse'
+            $ref: '#/definitions/types.ErrorResponse'
       security:
       - ApiKeyAuth: []
       - BearerAuth: []
-      summary: Get user from Authenticated User Token
+      summary: Get profile from Authenticated User Token
       tags:
-      - Core/Users
+      - Core/Profile
     put:
       consumes:
       - application/json
-      description: Update user by Bearer Token
+      description: Update profile by Bearer Token
       parameters:
       - description: Update Request
         in: body
         name: input
         required: true
         schema:
-          $ref: '#/definitions/users.UpdateRequest'
+          $ref: '#/definitions/profile.UpdateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/users.User'
+            $ref: '#/definitions/profile.User'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/users.ErrorResponse'
+            $ref: '#/definitions/types.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/users.ErrorResponse'
+            $ref: '#/definitions/types.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/users.ErrorResponse'
+            $ref: '#/definitions/types.ErrorResponse'
       security:
       - ApiKeyAuth: []
       - BearerAuth: []
-      summary: Update user from Authenticated User Token
+      summary: Update profile from Authenticated User Token
       tags:
-      - Core/Users
-  /users/me/avatar:
+      - Core/Profile
+  /profile/avatar:
     put:
       consumes:
       - multipart/form-data
-      description: Update user avatar by Bearer Token
+      description: Update profile avatar by Bearer Token
       parameters:
       - description: Avatar file
         in: formData
@@ -800,62 +1439,477 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/users.User'
+            $ref: '#/definitions/profile.User'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/users.ErrorResponse'
+            $ref: '#/definitions/types.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/users.ErrorResponse'
+            $ref: '#/definitions/types.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/users.ErrorResponse'
+            $ref: '#/definitions/types.ErrorResponse'
       security:
       - ApiKeyAuth: []
       - BearerAuth: []
-      summary: Update user avatar from Authenticated User Token
+      summary: Update profile avatar from Authenticated User Token
       tags:
-      - Core/Users
-  /users/me/password:
+      - Core/Profile
+  /profile/password:
     put:
       consumes:
       - application/json
-      description: Update user password by Bearer Token
+      description: Update profile password by Bearer Token
       parameters:
       - description: Update Password Request
         in: body
         name: input
         required: true
         schema:
-          $ref: '#/definitions/users.UpdatePasswordRequest'
+          $ref: '#/definitions/profile.UpdatePasswordRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/users.User'
+            $ref: '#/definitions/profile.User'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/users.ErrorResponse'
+            $ref: '#/definitions/types.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/users.ErrorResponse'
+            $ref: '#/definitions/types.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/users.ErrorResponse'
+            $ref: '#/definitions/types.ErrorResponse'
       security:
       - ApiKeyAuth: []
       - BearerAuth: []
-      summary: Update user password from Authenticated User Token
+      summary: Update profile password from Authenticated User Token
       tags:
-      - Core/Users
+      - Core/Profile
+  /scheduler/stats:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get scheduler statistics
+      tags:
+      - Core/Scheduler
+  /scheduler/tasks:
+    get:
+      description: Returns a list of all registered tasks
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Get all registered tasks
+      tags:
+      - Core/Scheduler
+  /scheduler/tasks/{name}:
+    get:
+      parameters:
+      - description: Task name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a specific task
+      tags:
+      - Core/Scheduler
+  /scheduler/tasks/{name}/disable:
+    put:
+      parameters:
+      - description: Task name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Disable a specific task
+      tags:
+      - Core/Scheduler
+  /scheduler/tasks/{name}/enable:
+    put:
+      parameters:
+      - description: Task name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Enable a specific task
+      tags:
+      - Core/Scheduler
+  /scheduler/tasks/{name}/run:
+    post:
+      parameters:
+      - description: Task name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Run a specific task immediately
+      tags:
+      - Core/Scheduler
+  /translations:
+    get:
+      description: Get a paginated list of translations with optional filtering
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Number of items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by model name
+        in: query
+        name: model
+        type: string
+      - description: Filter by model ID
+        in: query
+        name: model_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.PaginatedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: List translations
+      tags:
+      - Core/Translations
+    post:
+      consumes:
+      - application/json
+      description: Create a new translation
+      parameters:
+      - description: Translation data
+        in: body
+        name: translation
+        required: true
+        schema:
+          $ref: '#/definitions/translation.CreateTranslationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/translation.TranslationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create translation
+      tags:
+      - Core/Translations
+  /translations/bulk:
+    post:
+      consumes:
+      - application/json
+      description: Update multiple translations for a model at once
+      parameters:
+      - description: Bulk translation data
+        in: body
+        name: bulk
+        required: true
+        schema:
+          $ref: '#/definitions/translation.BulkTranslationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Bulk update translations
+      tags:
+      - Core/Translations
+  /translations/by-id/{id}:
+    delete:
+      description: Delete a translation by ID
+      parameters:
+      - description: Translation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete translation
+      tags:
+      - Core/Translations
+    get:
+      description: Get a single translation by its ID
+      parameters:
+      - description: Translation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/translation.TranslationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get translation by ID
+      tags:
+      - Core/Translations
+    put:
+      consumes:
+      - application/json
+      description: Update an existing translation
+      parameters:
+      - description: Translation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Translation data
+        in: body
+        name: translation
+        required: true
+        schema:
+          $ref: '#/definitions/translation.UpdateTranslationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/translation.TranslationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update translation
+      tags:
+      - Core/Translations
+  /translations/languages:
+    get:
+      description: Get a list of all languages that have translations in the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get supported languages
+      tags:
+      - Core/Translations
+  /translations/models/{model}/{model_id}:
+    get:
+      description: Get all translations for a specific model and model ID
+      parameters:
+      - description: Model name
+        in: path
+        name: model
+        required: true
+        type: string
+      - description: Model ID
+        in: path
+        name: model_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get translations for model
+      tags:
+      - Core/Translations
+  /translations/models/{model}/{model_id}/{language}:
+    get:
+      description: Get translations for a specific model, model ID, and language
+      parameters:
+      - description: Model name
+        in: path
+        name: model
+        required: true
+        type: string
+      - description: Model ID
+        in: path
+        name: model_id
+        required: true
+        type: integer
+      - description: Language code
+        in: path
+        name: language
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/translation.TranslationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/types.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get translations for model and language
+      tags:
+      - Core/Translations
   /ws:
     get:
       consumes:
@@ -891,6 +1945,8 @@ paths:
       summary: Connect to WebSocket
       tags:
       - Core/Websocket
+produces:
+- application/json
 schemes:
 - http
 - https

@@ -8,7 +8,7 @@ import (
 )
 
 // GenerateJWT creates a new JWT token for the given user ID
-func GenerateJWT(userID uint, extend interface{}) (string, error) {
+func GenerateJWT(userID uint, extend any) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 	cfg := config.NewConfig()
 
@@ -29,7 +29,7 @@ func GenerateJWT(userID uint, extend interface{}) (string, error) {
 func ValidateJWT(tokenString string) (uint, error) {
 	cfg := config.NewConfig()
 
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 		return []byte(cfg.JWTSecret), nil
 	})
 
