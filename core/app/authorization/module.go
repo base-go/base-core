@@ -1,6 +1,7 @@
 package authorization
 
 import (
+	"base/core/cache"
 	"base/core/logger"
 	"base/core/module"
 	"base/core/router"
@@ -16,10 +17,11 @@ type AuthorizationModule struct {
 	Controller *AuthorizationController
 	Service    *AuthorizationService
 	Logger     logger.Logger
+	Cache      cache.Cache
 }
 
-func NewAuthorizationModule(db *gorm.DB, router *router.RouterGroup, logger logger.Logger) module.Module {
-	service := NewAuthorizationService(db)
+func NewAuthorizationModule(db *gorm.DB, router *router.RouterGroup, logger logger.Logger, c cache.Cache) module.Module {
+	service := NewAuthorizationService(db, c)
 	controller := NewAuthorizationController(service, logger)
 
 	authzModule := &AuthorizationModule{
@@ -27,6 +29,7 @@ func NewAuthorizationModule(db *gorm.DB, router *router.RouterGroup, logger logg
 		Controller: controller,
 		Service:    service,
 		Logger:     logger,
+		Cache:      c,
 	}
 
 	return authzModule

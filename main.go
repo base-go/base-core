@@ -3,6 +3,7 @@ package main
 import (
 	appmodules "base/app"
 	coremodules "base/core/app"
+	"base/core/cache"
 	"base/core/config"
 	"base/core/database"
 	"base/core/email"
@@ -62,6 +63,7 @@ type App struct {
 	storage     *storage.ActiveStorage
 	emailSender email.Sender
 	wsHub       *websocket.Hub
+	cache       cache.Cache
 
 	// State
 	running bool
@@ -78,6 +80,7 @@ func (app *App) Start() error {
 		loadEnvironment().
 		initConfig().
 		initLogger().
+		initCache().
 		initDatabase().
 		initInfrastructure().
 		initRouter().
@@ -118,6 +121,43 @@ func (app *App) initLogger() *App {
 	app.logger.Info("🚀 Starting Base Framework",
 		logger.String("version", app.config.Version),
 		logger.String("environment", app.config.Env))
+
+	return app
+}
+
+// initCache initializes the cache provider
+func (app *App) initCache() *App {
+	cacheConfig := cache.Config{
+		Enabled:         app.config.Cache.Enabled,
+		Provider:        cache.Provider(app.config.Cache.Provider),
+		DefaultTTL:      app.config.Cache.DefaultTTL,
+		FallbackEnabled: app.config.Cache.FallbackEnabled,
+		Memory: cache.MemoryConfig{
+			MaxSize:         app.config.Cache.MemoryMaxSize,
+			CleanupInterval: app.config.Cache.MemoryCleanupInterval,
+		},
+		Redis: cache.RedisConfig{
+			Host:     app.config.Cache.RedisHost,
+			Port:     app.config.Cache.RedisPort,
+			Password: app.config.Cache.RedisPassword,
+			DB:       app.config.Cache.RedisDB,
+			Prefix:   app.config.Cache.RedisPrefix,
+		},
+	}
+
+	cacheInstance, err := cache.New(cacheConfig)
+	if err != nil {
+		app.logger.Warn("Failed to initialize cache - continuing with no-op cache",
+			logger.String("error", err.Error()))
+		cacheInstance = cache.NewNoopCache()
+	}
+
+	app.cache = cacheInstance
+
+	stats := app.cache.GetStats()
+	app.logger.Info("✅ Cache initialized",
+		logger.String("provider", stats.Provider),
+		logger.Bool("enabled", app.config.Cache.Enabled))
 
 	return app
 }
@@ -266,6 +306,7 @@ func (app *App) registerCoreModules() {
 		Storage:     app.storage,
 		EmailSender: app.emailSender,
 		Config:      app.config,
+		Cache:       app.cache,
 	}
 
 	// Initialize core modules via orchestrator to ensure proper init/migrate/routes
@@ -292,6 +333,7 @@ func (app *App) discoverAndRegisterAppModules() {
 		Storage:     app.storage,
 		EmailSender: app.emailSender,
 		Config:      app.config,
+		Cache:       app.cache,
 	}
 
 	// Use app module provider (like core modules)

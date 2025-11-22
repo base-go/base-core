@@ -54,6 +54,7 @@ func (cm *CoreModules) GetCoreModules(deps module.Dependencies) map[string]modul
 		deps.DB,
 		deps.Router, // Will be handled by orchestrator to use AuthRouter
 		deps.Logger,
+		deps.Cache,
 	)
 
 	modules["translation"] = translation.NewTranslationModule(

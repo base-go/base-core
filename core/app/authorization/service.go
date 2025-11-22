@@ -1,6 +1,8 @@
 package authorization
 
 import (
+	"base/core/cache"
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -11,13 +13,15 @@ import (
 
 // AuthorizationService handles business logic for authorization
 type AuthorizationService struct {
-	DB *gorm.DB
+	DB    *gorm.DB
+	Cache cache.Cache
 }
 
 // NewAuthorizationService creates a new authorization service
-func NewAuthorizationService(db *gorm.DB) *AuthorizationService {
+func NewAuthorizationService(db *gorm.DB, c cache.Cache) *AuthorizationService {
 	return &AuthorizationService{
-		DB: db,
+		DB:    db,
+		Cache: c,
 	}
 }
 
@@ -146,8 +150,17 @@ func (s *AuthorizationService) DeleteRole(id uint64) error {
 
 // GetRolePermissions returns all permissions for a role
 func (s *AuthorizationService) GetRolePermissions(roleId uint64) ([]Permission, error) {
-	// Convert string Id to uint
+	// Try cache first
+	ctx := context.Background()
+	cacheKey := cache.RolePermissionsKey(uint(roleId))
 
+	var permissions []Permission
+	err := s.Cache.Get(ctx, cacheKey, &permissions)
+	if err == nil {
+		return permissions, nil
+	}
+
+	// Cache miss - query database
 	// Check if role exists
 	var role Role
 	result := s.DB.First(&role, "id = ?", roleId)
@@ -160,8 +173,7 @@ func (s *AuthorizationService) GetRolePermissions(roleId uint64) ([]Permission, 
 	}
 
 	// Get permissions
-	var permissions []Permission
-	err := s.DB.Raw(`
+	err = s.DB.Raw(`
 		SELECT p.* FROM permissions p
 		JOIN role_permissions rp ON p.id = rp.permission_id
 		WHERE rp.role_id = ?
@@ -170,6 +182,9 @@ func (s *AuthorizationService) GetRolePermissions(roleId uint64) ([]Permission, 
 	if err != nil {
 		return nil, err
 	}
+
+	// Cache the result (15 minutes TTL)
+	s.Cache.Set(ctx, cacheKey, permissions, 15*time.Minute)
 
 	return permissions, nil
 }
@@ -231,7 +246,18 @@ func (s *AuthorizationService) UpdateRolePermissions(roleId uint64, permissionId
 	}
 
 	// Commit transaction
-	return tx.Commit().Error
+	if err := tx.Commit().Error; err != nil {
+		return err
+	}
+
+	// Invalidate cache for this role
+	ctx := context.Background()
+	s.Cache.Delete(ctx, cache.RolePermissionsKey(uint(roleId)))
+
+	// Invalidate all user permissions that might be affected by this role
+	s.Cache.DeletePattern(ctx, cache.RolePattern(uint(roleId)))
+
+	return nil
 }
 
 // AssignPermissionToRole assigns a permission to a role
@@ -366,7 +392,19 @@ func (s *AuthorizationService) GetUserPermissions(userId string) ([]Permission, 
 		return nil, ErrInvalidId
 	}
 
-	fmt.Printf("GetUserPermissions: Getting permissions for user Id: %d\n", userIdUint)
+	// Try cache first
+	ctx := context.Background()
+	cacheKey := cache.UserPermissionsKey(uint(userIdUint))
+
+	var result []Permission
+	err = s.Cache.Get(ctx, cacheKey, &result)
+	if err == nil {
+		fmt.Printf("GetUserPermissions: Cache hit for user Id: %d (%d permissions)\n", userIdUint, len(result))
+		return result, nil
+	}
+
+	// Cache miss - query database
+	fmt.Printf("GetUserPermissions: Cache miss for user Id: %d, querying database\n", userIdUint)
 
 	// Get permissions from role-based permissions
 	var permissions []Permission
@@ -411,12 +449,15 @@ func (s *AuthorizationService) GetUserPermissions(userId string) ([]Permission, 
 	}
 
 	// Convert map back to slice
-	result := make([]Permission, 0, len(permMap))
+	result = make([]Permission, 0, len(permMap))
 	for _, p := range permMap {
 		result = append(result, p)
 	}
 
-	fmt.Printf("GetUserPermissions: Returning %d total permissions\n", len(result))
+	// Cache the result (15 minutes TTL)
+	s.Cache.Set(ctx, cacheKey, result, 15*time.Minute)
+
+	fmt.Printf("GetUserPermissions: Cached and returning %d total permissions\n", len(result))
 	return result, nil
 }
 

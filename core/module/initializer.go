@@ -1,6 +1,7 @@
 package module
 
 import (
+	"base/core/cache"
 	"base/core/config"
 	"base/core/email"
 	"base/core/emitter"
@@ -20,6 +21,7 @@ type Dependencies struct {
 	Storage     *storage.ActiveStorage
 	EmailSender email.Sender
 	Config      *config.Config
+	Cache       cache.Cache
 }
 
 // Initializer handles module initialization logic
