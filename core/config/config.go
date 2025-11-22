@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -47,6 +48,18 @@ const (
 	// Feature toggles defaults
 	DefaultWebSocketEnabled = true
 	DefaultSwaggerEnabled   = true
+
+	// Cache defaults
+	DefaultCacheEnabled         = true
+	DefaultCacheProvider        = "memory"
+	DefaultCacheTTL             = 15 * time.Minute
+	DefaultCacheMemoryMaxSize   = 10000
+	DefaultCacheMemoryCleanup   = 5 * time.Minute
+	DefaultCacheRedisHost       = "localhost"
+	DefaultCacheRedisPort       = "6379"
+	DefaultCacheRedisDB         = 0
+	DefaultCacheRedisPrefix     = "base:"
+	DefaultCacheFallbackEnabled = true
 )
 
 // Config holds the application configuration.
@@ -92,9 +105,31 @@ type Config struct {
 	StorageAllowedExt    []string `json:"storage_allowed_ext"`
 	WebSocketEnabled     bool     `json:"websocket_enabled"`
 	SwaggerEnabled       bool     `json:"swagger_enabled"`
-	
+
 	// Middleware configuration
 	Middleware MiddlewareConfig `json:"middleware"`
+
+	// Cache configuration
+	Cache CacheConfig `json:"cache"`
+}
+
+// CacheConfig holds cache configuration settings
+type CacheConfig struct {
+	Enabled         bool          `json:"enabled"`
+	Provider        string        `json:"provider"` // "memory", "redis", "none"
+	DefaultTTL      time.Duration `json:"default_ttl"`
+	FallbackEnabled bool          `json:"fallback_enabled"`
+
+	// Memory cache settings
+	MemoryMaxSize       int           `json:"memory_max_size"`
+	MemoryCleanupInterval time.Duration `json:"memory_cleanup_interval"`
+
+	// Redis cache settings
+	RedisHost     string `json:"redis_host"`
+	RedisPort     string `json:"redis_port"`
+	RedisPassword string `json:"redis_password"`
+	RedisDB       int    `json:"redis_db"`
+	RedisPrefix   string `json:"redis_prefix"`
 }
 
 // MiddlewareConfig holds middleware configuration settings
@@ -260,8 +295,23 @@ func (m *MiddlewareConfig) pathMatches(path, pattern string) bool {
 	return false
 }
 
+var (
+	configOnce     sync.Once
+	configInstance *Config
+)
+
+// Get returns the singleton config instance
+// This is the preferred way to access configuration
+func Get() *Config {
+	configOnce.Do(func() {
+		configInstance = NewConfig()
+	})
+	return configInstance
+}
+
 // NewConfig returns a new Config instance with default values.
 // Improved version with better organization and error handling
+// Note: Use Get() instead for singleton pattern
 func NewConfig() *Config {
 	// Server configuration
 	serverAddr := getEnvWithLog("SERVER_ADDRESS", DefaultServerAddress)
@@ -321,6 +371,7 @@ func NewConfig() *Config {
 	parseIntegerValues(config)
 	parseBooleanValues(config)
 	parseMiddlewareConfig(config)
+	parseCacheConfig(config)
 
 	return config
 }
@@ -367,6 +418,27 @@ func parseBooleanValues(config *Config) {
 
 	// Swagger enabled
 	config.SwaggerEnabled = parseBoolWithDefault("SWAGGER_ENABLED", DefaultSwaggerEnabled)
+}
+
+// parseCacheConfig parses cache configuration from environment variables
+func parseCacheConfig(config *Config) {
+	config.Cache = CacheConfig{
+		Enabled:         parseBoolWithDefault("CACHE_ENABLED", DefaultCacheEnabled),
+		Provider:        getEnvWithLog("CACHE_PROVIDER", DefaultCacheProvider),
+		DefaultTTL:      parseDurationWithDefault("CACHE_DEFAULT_TTL", DefaultCacheTTL),
+		FallbackEnabled: parseBoolWithDefault("CACHE_FALLBACK_ENABLED", DefaultCacheFallbackEnabled),
+
+		// Memory cache settings
+		MemoryMaxSize:         parseIntWithDefault("CACHE_MEMORY_MAX_SIZE", DefaultCacheMemoryMaxSize),
+		MemoryCleanupInterval: parseDurationWithDefault("CACHE_MEMORY_CLEANUP_INTERVAL", DefaultCacheMemoryCleanup),
+
+		// Redis cache settings
+		RedisHost:     getEnvWithLog("CACHE_REDIS_HOST", DefaultCacheRedisHost),
+		RedisPort:     getEnvWithLog("CACHE_REDIS_PORT", DefaultCacheRedisPort),
+		RedisPassword: getEnvWithLog("CACHE_REDIS_PASSWORD", ""),
+		RedisDB:       parseIntWithDefault("CACHE_REDIS_DB", DefaultCacheRedisDB),
+		RedisPrefix:   getEnvWithLog("CACHE_REDIS_PREFIX", DefaultCacheRedisPrefix),
+	}
 }
 
 // parseMiddlewareConfig parses middleware configuration from environment variables
@@ -465,6 +537,17 @@ func parseBoolWithDefault(key string, defaultValue bool) bool {
 	value, err := strconv.ParseBool(valueStr)
 	if err != nil {
 		logConfigError("Invalid %s value: %s. Using default: %t", key, valueStr, defaultValue)
+		return defaultValue
+	}
+	return value
+}
+
+// parseDurationWithDefault parses a duration environment variable with default fallback
+func parseDurationWithDefault(key string, defaultValue time.Duration) time.Duration {
+	valueStr := getEnvWithLog(key, defaultValue.String())
+	value, err := time.ParseDuration(valueStr)
+	if err != nil {
+		logConfigError("Invalid %s value: %s. Using default: %s", key, valueStr, defaultValue)
 		return defaultValue
 	}
 	return value
