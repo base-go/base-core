@@ -3,10 +3,12 @@ package middleware
 import (
 	"base/core/cache"
 	"base/core/router"
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
 	"io"
+	"net"
 	"net/http"
 	"time"
 )
@@ -121,22 +123,61 @@ type CachedResponse struct {
 // responseRecorder is a custom ResponseWriter that records the response
 type responseRecorder struct {
 	http.ResponseWriter
-	status int
-	body   *bytes.Buffer
+	status  int
+	size    int
+	written bool
+	body    *bytes.Buffer
 }
 
 func (r *responseRecorder) WriteHeader(status int) {
+	if r.written {
+		return
+	}
 	r.status = status
+	r.written = true
 	r.ResponseWriter.WriteHeader(status)
 }
 
 func (r *responseRecorder) Write(b []byte) (int, error) {
+	if !r.written {
+		r.WriteHeader(http.StatusOK)
+	}
 	r.body.Write(b)
-	return r.ResponseWriter.Write(b)
+	n, err := r.ResponseWriter.Write(b)
+	r.size += n
+	return n, err
 }
 
 func (r *responseRecorder) Status() int {
 	return r.status
+}
+
+func (r *responseRecorder) Size() int {
+	return r.size
+}
+
+func (r *responseRecorder) Written() bool {
+	return r.written
+}
+
+func (r *responseRecorder) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	if hijacker, ok := r.ResponseWriter.(http.Hijacker); ok {
+		return hijacker.Hijack()
+	}
+	return nil, nil, http.ErrNotSupported
+}
+
+func (r *responseRecorder) Flush() {
+	if flusher, ok := r.ResponseWriter.(http.Flusher); ok {
+		flusher.Flush()
+	}
+}
+
+func (r *responseRecorder) Push(target string, opts *http.PushOptions) error {
+	if pusher, ok := r.ResponseWriter.(http.Pusher); ok {
+		return pusher.Push(target, opts)
+	}
+	return http.ErrNotSupported
 }
 
 // contains checks if a slice contains a specific value
@@ -182,7 +223,7 @@ func CacheStatsHandler(c cache.Cache) router.HandlerFunc {
 func CacheClearHandler(c cache.Cache) router.HandlerFunc {
 	return func(ctx *router.Context) error {
 		if err := c.Clear(context.Background()); err != nil {
-			return ctx.JSONError(http.StatusInternalServerError, "Failed to clear cache", err)
+			return ctx.JSON(http.StatusInternalServerError, map[string]any{"error": "Failed to clear cache"})
 		}
 
 		response := map[string]interface{}{
@@ -204,20 +245,20 @@ func CacheInvalidateHandler(c cache.Cache) router.HandlerFunc {
 
 		body, err := io.ReadAll(ctx.Request.Body)
 		if err != nil {
-			return ctx.JSONError(http.StatusBadRequest, "Failed to read request body", err)
+			return ctx.JSON(http.StatusBadRequest, map[string]any{"error": "Failed to read request body"})
 		}
 
 		if err := json.Unmarshal(body, &req); err != nil {
-			return ctx.JSONError(http.StatusBadRequest, "Invalid JSON", err)
+			return ctx.JSON(http.StatusBadRequest, map[string]any{"error": "Invalid JSON"})
 		}
 
 		if req.Pattern == "" {
-			return ctx.JSONError(http.StatusBadRequest, "Pattern is required", nil)
+			return ctx.JSON(http.StatusBadRequest, map[string]any{"error": "Pattern is required"})
 		}
 
 		// Invalidate matching cache entries
 		if err := c.DeletePattern(context.Background(), req.Pattern); err != nil {
-			return ctx.JSONError(http.StatusInternalServerError, "Failed to invalidate cache", err)
+			return ctx.JSON(http.StatusInternalServerError, map[string]any{"error": "Failed to invalidate cache"})
 		}
 
 		response := map[string]interface{}{
