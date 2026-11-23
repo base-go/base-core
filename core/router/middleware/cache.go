@@ -120,7 +120,7 @@ type CachedResponse struct {
 
 // responseRecorder is a custom ResponseWriter that records the response
 type responseRecorder struct {
-	http.ResponseWriter
+	router.ResponseWriter
 	status int
 	body   *bytes.Buffer
 }
@@ -137,6 +137,14 @@ func (r *responseRecorder) Write(b []byte) (int, error) {
 
 func (r *responseRecorder) Status() int {
 	return r.status
+}
+
+// jsonError writes an {"error": ...} response; err, when given, is added to the message.
+func jsonError(ctx *router.Context, code int, message string, err error) error {
+	if err != nil {
+		message = message + ": " + err.Error()
+	}
+	return ctx.JSON(code, map[string]any{"error": message})
 }
 
 // contains checks if a slice contains a specific value
@@ -182,7 +190,7 @@ func CacheStatsHandler(c cache.Cache) router.HandlerFunc {
 func CacheClearHandler(c cache.Cache) router.HandlerFunc {
 	return func(ctx *router.Context) error {
 		if err := c.Clear(context.Background()); err != nil {
-			return ctx.JSONError(http.StatusInternalServerError, "Failed to clear cache", err)
+			return jsonError(ctx, http.StatusInternalServerError, "Failed to clear cache", err)
 		}
 
 		response := map[string]interface{}{
@@ -204,20 +212,20 @@ func CacheInvalidateHandler(c cache.Cache) router.HandlerFunc {
 
 		body, err := io.ReadAll(ctx.Request.Body)
 		if err != nil {
-			return ctx.JSONError(http.StatusBadRequest, "Failed to read request body", err)
+			return jsonError(ctx, http.StatusBadRequest, "Failed to read request body", err)
 		}
 
 		if err := json.Unmarshal(body, &req); err != nil {
-			return ctx.JSONError(http.StatusBadRequest, "Invalid JSON", err)
+			return jsonError(ctx, http.StatusBadRequest, "Invalid JSON", err)
 		}
 
 		if req.Pattern == "" {
-			return ctx.JSONError(http.StatusBadRequest, "Pattern is required", nil)
+			return jsonError(ctx, http.StatusBadRequest, "Pattern is required", nil)
 		}
 
 		// Invalidate matching cache entries
 		if err := c.DeletePattern(context.Background(), req.Pattern); err != nil {
-			return ctx.JSONError(http.StatusInternalServerError, "Failed to invalidate cache", err)
+			return jsonError(ctx, http.StatusInternalServerError, "Failed to invalidate cache", err)
 		}
 
 		response := map[string]interface{}{
