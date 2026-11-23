@@ -26,6 +26,8 @@ type TokenBucket struct {
 	buckets   map[string]*bucket
 	mu        sync.RWMutex
 	cleanup   *time.Ticker
+	done      chan struct{}
+	stopOnce  sync.Once
 }
 
 type bucket struct {
@@ -42,6 +44,7 @@ func NewTokenBucket(rate int, interval time.Duration, maxTokens int) *TokenBucke
 		maxTokens: maxTokens,
 		buckets:   make(map[string]*bucket),
 		cleanup:   time.NewTicker(5 * time.Minute),
+		done:      make(chan struct{}),
 	}
 
 	// Start cleanup goroutine
@@ -58,11 +61,14 @@ func (tb *TokenBucket) Allow(key string) bool {
 
 	if !exists {
 		tb.mu.Lock()
-		b = &bucket{
-			tokens:   tb.maxTokens,
-			lastFill: time.Now(),
+		// Another request may have created the bucket since the read lock was released.
+		if b, exists = tb.buckets[key]; !exists {
+			b = &bucket{
+				tokens:   tb.maxTokens,
+				lastFill: time.Now(),
+			}
+			tb.buckets[key] = b
 		}
-		tb.buckets[key] = b
 		tb.mu.Unlock()
 	}
 
@@ -97,7 +103,12 @@ func (tb *TokenBucket) Reset(key string) {
 
 // cleanupRoutine removes old buckets periodically
 func (tb *TokenBucket) cleanupRoutine() {
-	for range tb.cleanup.C {
+	for {
+		select {
+		case <-tb.done:
+			return
+		case <-tb.cleanup.C:
+		}
 		tb.mu.Lock()
 		now := time.Now()
 		for key, b := range tb.buckets {
@@ -111,9 +122,12 @@ func (tb *TokenBucket) cleanupRoutine() {
 	}
 }
 
-// Stop stops the cleanup routine
+// Stop stops the cleanup routine and ends its goroutine. It is safe to call more than once.
 func (tb *TokenBucket) Stop() {
-	tb.cleanup.Stop()
+	tb.stopOnce.Do(func() {
+		tb.cleanup.Stop()
+		close(tb.done)
+	})
 }
 
 // RateLimitConfig contains rate limiting configuration

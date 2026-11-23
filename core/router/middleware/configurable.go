@@ -65,40 +65,31 @@ func (cm *ConfigurableMiddleware) ConditionalAuth() router.MiddlewareFunc {
 	}
 }
 
-// ConditionalRateLimit returns rate limit middleware only if required for the path
+// ConditionalRateLimit returns rate limit middleware only if required for the path.
+// The limiters are built once here, so every route and request shares them and the
+// limit is counted per client IP.
 func (cm *ConfigurableMiddleware) ConditionalRateLimit() router.MiddlewareFunc {
+	limiter := NewTokenBucket(cm.config.RateLimitRequests, cm.config.GetRateLimitDuration(), cm.config.RateLimitRequests)
+	webhookLimiter := NewTokenBucket(cm.config.WebhookRateLimitRequests, cm.config.GetWebhookRateLimitDuration(), cm.config.WebhookRateLimitRequests)
+
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
 			path := c.Request.URL.Path
-			
+
 			if cm.config.IsRateLimitRequired(path) {
-				// Determine rate limit settings based on path
-				requests := cm.config.RateLimitRequests
-				window := cm.config.GetRateLimitDuration()
-				
 				// Use webhook settings if it's a webhook path
+				l := limiter
 				if cm.isWebhookPath(path) {
-					requests = cm.config.WebhookRateLimitRequests
-					window = cm.config.GetWebhookRateLimitDuration()
+					l = webhookLimiter
 				}
-				
-				// Apply rate limit middleware
-				rateLimitConfig := &RateLimitConfig{
-					Limiter: NewTokenBucket(requests, window, requests),
-					KeyFunc: func(c *router.Context) string {
-						return c.ClientIP()
-					},
-					ErrorHandler: func(c *router.Context) error {
-						return c.JSON(429, map[string]string{
-							"error": "Rate limit exceeded",
-						})
-					},
+
+				if !l.Allow(c.ClientIP()) {
+					return c.JSON(429, map[string]string{
+						"error": "Rate limit exceeded",
+					})
 				}
-				rateLimitMiddleware := RateLimit(rateLimitConfig)
-				return rateLimitMiddleware(next)(c)
 			}
-			
-			// Skip rate limit middleware
+
 			return next(c)
 		}
 	}
