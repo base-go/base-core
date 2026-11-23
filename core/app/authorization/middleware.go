@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"sync/atomic"
 )
 
 var (
@@ -15,6 +16,32 @@ var (
 	ErrPermissionDenied     = errors.New("permission denied")
 	ErrResourceAccessDenied = errors.New("resource access denied")
 )
+
+// OrganizationHeader is the request header that carries the organization Id.
+// It matches the name the CORS middleware allows.
+const OrganizationHeader = "Base-Orgid"
+
+// defaultService is the service the checks consult when the request context
+// carries none. NewAuthorizationModule sets it.
+var defaultService atomic.Pointer[AuthorizationService]
+
+// serviceFor returns the authorization service for a request: the one stored in
+// the context under "authorization_service", or else the module's. When there is
+// neither it answers 500 itself and returns false.
+func serviceFor(c *router.Context) (*AuthorizationService, bool) {
+	if v, exists := c.Get("authorization_service"); exists {
+		if s, ok := v.(*AuthorizationService); ok && s != nil {
+			return s, true
+		}
+	}
+	if s := defaultService.Load(); s != nil {
+		return s, true
+	}
+	c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
+		"error": "authorization service not found: core/app/authorization must be registered before its checks run",
+	})
+	return nil, false
+}
 
 // GetUserIdFromContext extracts the user Id from the context
 func GetUserIdFromContext(c *router.Context) (uint64, error) {
@@ -62,8 +89,12 @@ func GetOrganizationIdFromContext(c *router.Context) (uint64, error) {
 		}
 	}
 
-	// Try to get from header
-	orgIdHeader := c.GetHeader("base_header_orgid")
+	// Try to get from header. Base-Orgid is the name CORS allows; the old
+	// base_header_orgid is still read for clients that send it.
+	orgIdHeader := c.GetHeader(OrganizationHeader)
+	if orgIdHeader == "" {
+		orgIdHeader = c.GetHeader("base_header_orgid")
+	}
 	if orgIdHeader != "" {
 		orgIdInt, err := strconv.ParseUint(orgIdHeader, 10, 64)
 		if err != nil {
@@ -79,20 +110,8 @@ func GetOrganizationIdFromContext(c *router.Context) (uint64, error) {
 func AuthMiddleware(resourceType string, action string) router.MiddlewareFunc {
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
-			// Get the authorization service from the context
-			authorizationServiceValue, exists := c.Get("authorization_service")
-			if !exists {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
-					"error": "authorization service not found",
-				})
-				return nil
-			}
-
-			authorizationService, ok := authorizationServiceValue.(*AuthorizationService)
+			authorizationService, ok := serviceFor(c)
 			if !ok {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
-					"error": "invalid authorization service",
-				})
 				return nil
 			}
 
@@ -149,20 +168,8 @@ func ResourceAuthMiddleware(resourceType string, action string, resourceIdParam 
 func RequireRole(roleName string) router.MiddlewareFunc {
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
-			// Get the authorization service from the context
-			authorizationServiceValue, exists := c.Get("authorization_service")
-			if !exists {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
-					"error": "authorization service not found",
-				})
-				return nil
-			}
-
-			authorizationService, ok := authorizationServiceValue.(*AuthorizationService)
+			authorizationService, ok := serviceFor(c)
 			if !ok {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
-					"error": "invalid authorization service",
-				})
 				return nil
 			}
 
@@ -175,17 +182,16 @@ func RequireRole(roleName string) router.MiddlewareFunc {
 				return nil
 			}
 
-			// TODO: Implement HasRole method in AuthorizationService or use alternative approach
-			// For now, just check if user has general permission
-			hasPermission, err := authorizationService.HasPermission(userId, "role", "read")
+			// Check if the user has the required role
+			hasRole, err := authorizationService.HasRole(userId, roleName)
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
-					"error": fmt.Sprintf("error checking role permission: %v", err),
+					"error": fmt.Sprintf("error checking role: %v", err),
 				})
 				return nil
 			}
 
-			if !hasPermission {
+			if !hasRole {
 				c.AbortWithStatusJSON(http.StatusForbidden, map[string]any{
 					"error": "insufficient role permissions",
 				})

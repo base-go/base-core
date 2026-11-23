@@ -12,20 +12,8 @@ import (
 func Can(action, resourceType string) router.MiddlewareFunc {
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
-			// Get the authorization service from the context
-			authorizationServiceValue, exists := c.Get("authorization_service")
-			if !exists {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
-					"error": "authorization service not found",
-				})
-				return nil
-			}
-
-			authorizationService, ok := authorizationServiceValue.(*AuthorizationService)
+			authorizationService, ok := serviceFor(c)
 			if !ok {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
-					"error": "invalid authorization service",
-				})
 				return nil
 			}
 
@@ -68,20 +56,8 @@ func Can(action, resourceType string) router.MiddlewareFunc {
 func CanAccess(action, resourceType, resourceIdParam string) router.MiddlewareFunc {
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
-			// Get the authorization service from the context
-			authorizationServiceValue, exists := c.Get("authorization_service")
-			if !exists {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
-					"error": "authorization service not found",
-				})
-				return nil
-			}
-
-			authorizationService, ok := authorizationServiceValue.(*AuthorizationService)
+			authorizationService, ok := serviceFor(c)
 			if !ok {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
-					"error": "invalid authorization service",
-				})
 				return nil
 			}
 
@@ -132,20 +108,8 @@ func CanAccess(action, resourceType, resourceIdParam string) router.MiddlewareFu
 func HasRole(roleName string) router.MiddlewareFunc {
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
-			// Get the authorization service from the context
-			authorizationServiceValue, exists := c.Get("authorization_service")
-			if !exists {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
-					"error": "authorization service not found",
-				})
-				return nil
-			}
-
-			authorizationService, ok := authorizationServiceValue.(*AuthorizationService)
+			authorizationService, ok := serviceFor(c)
 			if !ok {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
-					"error": "invalid authorization service",
-				})
 				return nil
 			}
 
@@ -158,16 +122,16 @@ func HasRole(roleName string) router.MiddlewareFunc {
 				return nil
 			}
 
-			// Check if user has the required role by checking role permissions
-			hasPermission, err := authorizationService.HasPermission(userId, "role", "read")
+			// Check if the user has the required role
+			hasRole, err := authorizationService.HasRole(userId, roleName)
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
-					"error": fmt.Sprintf("error checking role permission: %v", err),
+					"error": fmt.Sprintf("error checking role: %v", err),
 				})
 				return nil
 			}
 
-			if !hasPermission {
+			if !hasRole {
 				c.AbortWithStatusJSON(http.StatusForbidden, map[string]any{
 					"error": fmt.Sprintf("insufficient permissions: %s role required", roleName),
 				})
@@ -184,20 +148,8 @@ func HasRole(roleName string) router.MiddlewareFunc {
 func CanAny(permissions []string) router.MiddlewareFunc {
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
-			// Get the authorization service from the context
-			authorizationServiceValue, exists := c.Get("authorization_service")
-			if !exists {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
-					"error": "authorization service not found",
-				})
-				return nil
-			}
-
-			authorizationService, ok := authorizationServiceValue.(*AuthorizationService)
+			authorizationService, ok := serviceFor(c)
 			if !ok {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
-					"error": "invalid authorization service",
-				})
 				return nil
 			}
 
@@ -244,20 +196,8 @@ func CanAny(permissions []string) router.MiddlewareFunc {
 func CanAll(permissions []string) router.MiddlewareFunc {
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
-			// Get the authorization service from the context
-			authorizationServiceValue, exists := c.Get("authorization_service")
-			if !exists {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
-					"error": "authorization service not found",
-				})
-				return nil
-			}
-
-			authorizationService, ok := authorizationServiceValue.(*AuthorizationService)
+			authorizationService, ok := serviceFor(c)
 			if !ok {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, map[string]any{
-					"error": "invalid authorization service",
-				})
 				return nil
 			}
 

@@ -24,6 +24,9 @@ func NewAuthorizationModule(db *gorm.DB, router *router.RouterGroup, logger logg
 	service := NewAuthorizationService(db, c)
 	controller := NewAuthorizationController(service, logger)
 
+	// Can, HasRole and the other checks consult this service.
+	defaultService.Store(service)
+
 	authzModule := &AuthorizationModule{
 		DB:         db,
 		Controller: controller,

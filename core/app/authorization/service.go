@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -367,20 +368,64 @@ func (s *AuthorizationService) GetUserMembershipInfo(userId uint64) (*UserMember
 	}, nil
 }
 
-// HasPermission checks if a user has permission for a resource type
+// HasPermission reports whether the user's role grants action on resourceType.
+// Resource types and actions are compared in lower case.
 func (s *AuthorizationService) HasPermission(userId uint64, resourceType, action string) (bool, error) {
-	// Simplified permission check without organization context
-	// For now, return true for all permission checks
-	// This should be implemented with proper user role system
-	return true, nil
+	var count int64
+	err := s.DB.Table("role_permissions rp").
+		Joins("JOIN permissions p ON p.id = rp.permission_id").
+		Joins("JOIN users u ON u.role_id = rp.role_id").
+		Where("u.id = ? AND u.deleted_at IS NULL", userId).
+		Where("LOWER(p.resource_type) = ? AND LOWER(p.action) = ?", strings.ToLower(resourceType), strings.ToLower(action)).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
-// HasResourcePermission checks if a user has permission for a specific resource
+// HasResourcePermission reports whether the user may perform action on one resource:
+// either the user's role grants it for the whole resource type, or a resource
+// permission grants it for this resource Id to the user or to the user's role.
 func (s *AuthorizationService) HasResourcePermission(userId uint64, resourceType, resourceId, action string) (bool, error) {
-	// Simplified resource permission check without organization context
-	// For now, return true for all permission checks
-	// This should be implemented with proper user role system
-	return true, nil
+	allowed, err := s.HasPermission(userId, resourceType, action)
+	if err != nil || allowed {
+		return allowed, err
+	}
+
+	var roleIds []uint
+	if err := s.DB.Table("users").Where("id = ? AND deleted_at IS NULL", userId).Pluck("role_id", &roleIds).Error; err != nil {
+		return false, err
+	}
+	if len(roleIds) == 0 {
+		return false, nil // no such user
+	}
+
+	normalizedAction := strings.ToLower(action)
+	var count int64
+	err = s.DB.Table("resource_permissions rp").
+		Joins("LEFT JOIN permissions p ON p.id = rp.permission_id").
+		Where("LOWER(rp.resource_type) = ? AND rp.resource_id = ?", strings.ToLower(resourceType), resourceId).
+		Where("(LOWER(rp.action) = ? OR LOWER(p.action) = ?)", normalizedAction, normalizedAction).
+		Where("(rp.user_id = ? OR rp.role_id = ?)", userId, strconv.FormatUint(uint64(roleIds[0]), 10)).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+// HasRole reports whether the user's role is named roleName, compared without case.
+func (s *AuthorizationService) HasRole(userId uint64, roleName string) (bool, error) {
+	var count int64
+	err := s.DB.Table("users u").
+		Joins("JOIN roles r ON r.id = u.role_id").
+		Where("u.id = ? AND u.deleted_at IS NULL AND LOWER(r.name) = ?", userId, strings.ToLower(roleName)).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
 // GetUserPermissions returns all permissions for a user across all organizations
