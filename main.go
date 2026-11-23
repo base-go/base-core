@@ -178,7 +178,7 @@ func (app *App) initDatabase() *App {
 // initInfrastructure initializes core infrastructure components
 func (app *App) initInfrastructure() *App {
 	// Initialize emitter
-	app.emitter = &emitter.Emitter{}
+	app.emitter = emitter.New()
 
 	// Initialize storage
 	storageConfig := storage.Config{

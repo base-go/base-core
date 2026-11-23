@@ -21,16 +21,22 @@ func New() *Emitter {
 func (e *Emitter) On(event string, listener func(any)) {
 	e.mutex.Lock()
 	defer e.mutex.Unlock()
+	if e.listeners == nil {
+		e.listeners = make(map[string][]func(any))
+	}
 	e.listeners[event] = append(e.listeners[event], listener)
 }
 
 func (e *Emitter) Emit(event string, data any) {
+	// Copy the listeners so none runs under the lock: a listener may call On.
 	e.mutex.RLock()
-	defer e.mutex.RUnlock()
+	listeners := make([]func(any), len(e.listeners[event]))
+	copy(listeners, e.listeners[event])
+	e.mutex.RUnlock()
 
 	// Use a WaitGroup to wait for all listeners to finish
 	var wg sync.WaitGroup
-	for _, listener := range e.listeners[event] {
+	for _, listener := range listeners {
 		wg.Add(1)
 		go func(listener func(any)) {
 			defer wg.Done()
