@@ -153,7 +153,8 @@ func (m *AuthorizationModule) seedDefaultData() error {
 		return tx.Error
 	}
 
-	// Seed roles
+	// Seed roles, remembering which ones this run created
+	createdRoles := map[string]bool{}
 	for _, role := range defaultRoles {
 		var existingRole Role
 		result := tx.Where("name = ? AND is_system = ?", role.Name, role.IsSystem).First(&existingRole)
@@ -162,6 +163,7 @@ func (m *AuthorizationModule) seedDefaultData() error {
 				tx.Rollback()
 				return err
 			}
+			createdRoles[role.Name] = true
 		}
 	}
 
@@ -257,6 +259,14 @@ func (m *AuthorizationModule) seedDefaultData() error {
 			"role:read", "role:list",
 			"permission:read", "permission:list",
 			"resource_permission:read", "resource_permission:list",
+		}
+		// Member reads and writes content; Viewer only reads. The write permissions
+		// are seeded only with a new Member role, so existing databases keep theirs.
+		if createdRoles["Member"] {
+			memberPermissions = append(memberPermissions,
+				"media:create", "media:update", "media:delete",
+				"profile:create", "profile:update", "profile:delete",
+			)
 		}
 
 		for _, permName := range memberPermissions {

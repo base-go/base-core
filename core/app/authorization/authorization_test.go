@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"strings"
 	"testing"
 
 	"base/core/app/authorization"
@@ -172,5 +173,72 @@ func TestOrganizationIdIsReadFromTheCORSAllowedHeader(t *testing.T) {
 	r.ServeHTTP(w, req)
 	if w.Code != http.StatusNoContent || got != 42 {
 		t.Fatalf("Base-Orgid: 42 gave status %d and id %d, want 204 and 42", w.Code, got)
+	}
+}
+
+func rolePermissions(t *testing.T, db *gorm.DB, role string) map[string]bool {
+	t.Helper()
+	var rows []struct{ ResourceType, Action string }
+	err := db.Table("role_permissions rp").
+		Select("p.resource_type, p.action").
+		Joins("JOIN permissions p ON p.id = rp.permission_id").
+		Joins("JOIN roles r ON r.id = rp.role_id").
+		Where("r.name = ?", role).Scan(&rows).Error
+	if err != nil {
+		t.Fatalf("permissions of %s: %v", role, err)
+	}
+	got := map[string]bool{}
+	for _, r := range rows {
+		got[r.ResourceType+":"+r.Action] = true
+	}
+	return got
+}
+
+func TestSeededRolesFormAHierarchy(t *testing.T) {
+	db := testutil.NewDB(t)
+	if err := authorization.NewAuthorizationModule(db, nil, testutil.Logger(), cache.NewNoopCache()).Migrate(); err != nil {
+		t.Fatalf("migrate: %v", err)
+	}
+	owner, admin := rolePermissions(t, db, "Owner"), rolePermissions(t, db, "Administrator")
+	member, viewer := rolePermissions(t, db, "Member"), rolePermissions(t, db, "Viewer")
+
+	for perm := range viewer {
+		if !strings.HasSuffix(perm, ":read") && !strings.HasSuffix(perm, ":list") {
+			t.Errorf("Viewer has %s; Viewer is read-only", perm)
+		}
+	}
+	for _, perm := range []string{"media:create", "media:update", "media:delete", "profile:update"} {
+		if !member[perm] {
+			t.Errorf("Member lacks %s; Member is read-write", perm)
+		}
+	}
+	subset := func(small, big map[string]bool, a, b string) {
+		for perm := range small {
+			if !big[perm] {
+				t.Errorf("%s has %s but %s does not", a, perm, b)
+			}
+		}
+	}
+	subset(viewer, member, "Viewer", "Member")
+	subset(member, admin, "Member", "Administrator")
+	subset(admin, owner, "Administrator", "Owner")
+	if len(member) == len(viewer) {
+		t.Errorf("Member and Viewer have the same %d permissions", len(member))
+	}
+}
+
+func TestSeedingAnExistingDatabaseLeavesMemberAsItWas(t *testing.T) {
+	db := testutil.NewDB(t)
+	if err := db.AutoMigrate(&authorization.Role{}); err != nil {
+		t.Fatalf("migrate roles: %v", err)
+	}
+	if err := db.Create(&authorization.Role{Name: "Member", IsSystem: true}).Error; err != nil {
+		t.Fatalf("create Member: %v", err)
+	}
+	if err := authorization.NewAuthorizationModule(db, nil, testutil.Logger(), cache.NewNoopCache()).Migrate(); err != nil {
+		t.Fatalf("migrate: %v", err)
+	}
+	if member := rolePermissions(t, db, "Member"); member["media:create"] {
+		t.Error("seeding an existing Member role granted media:create; only new databases get the write permissions")
 	}
 }
