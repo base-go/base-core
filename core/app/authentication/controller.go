@@ -197,7 +197,7 @@ func (c *AuthController) ResetPassword(ctx *router.Context) error {
 	err := c.service.ResetPassword(req.Email, req.Token, req.NewPassword)
 	if err != nil {
 		switch {
-		case errors.Is(err, ErrInvalidToken):
+		case errors.Is(err, ErrInvalidToken), errors.Is(err, ErrTokenExpired):
 			return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid or expired token"})
 		case errors.Is(err, ErrUserNotFound):
 			return ctx.JSON(http.StatusNotFound, ErrorResponse{Error: "User not found"})

@@ -262,17 +262,17 @@ func (s *AuthService) ResetPassword(email, token, newPassword string) error {
 	var user AuthUser
 	if err := s.db.Where("email = ?", email).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return fmt.Errorf("user not found: %w", err)
+			return ErrUserNotFound
 		}
 		return fmt.Errorf("database error: %w", err)
 	}
 
 	if user.ResetToken != token {
-		return errors.New("invalid token")
+		return ErrInvalidToken
 	}
 
 	if user.ResetTokenExpiry == nil || time.Now().After(*user.ResetTokenExpiry) {
-		return errors.New("token expired")
+		return ErrTokenExpired
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
