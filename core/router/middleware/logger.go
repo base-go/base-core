@@ -113,13 +113,15 @@ func Recovery(log logger.Logger) router.MiddlewareFunc {
 		return func(c *router.Context) (err error) {
 			defer func() {
 				if r := recover(); r != nil {
-					// Log the panic
-					log.Error("Panic recovered",
-						logger.Any("panic", r),
-						logger.String("path", c.Request.URL.Path),
-						logger.String("method", c.Request.Method),
-						logger.String("ip", c.ClientIP()),
-					)
+					// Log the panic, when there is a logger: ApplyConfigurableMiddleware passes nil
+					if log != nil {
+						log.Error("Panic recovered",
+							logger.Any("panic", r),
+							logger.String("path", c.Request.URL.Path),
+							logger.String("method", c.Request.Method),
+							logger.String("ip", c.ClientIP()),
+						)
+					}
 
 					// Return 500 error
 					err = c.JSON(500, map[string]string{
