@@ -24,13 +24,13 @@ func (cm *ConfigurableMiddleware) ConditionalAPIKey() router.MiddlewareFunc {
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
 			path := c.Request.URL.Path
-			
+
 			if cm.config.IsAPIKeyRequired(path) {
 				// Apply API key middleware
 				apiKeyMiddleware := Api()
 				return apiKeyMiddleware(next)(c)
 			}
-			
+
 			// Skip API key middleware
 			return next(c)
 		}
@@ -47,7 +47,7 @@ func (cm *ConfigurableMiddleware) ConditionalAuth() router.MiddlewareFunc {
 			}
 
 			path := c.Request.URL.Path
-			
+
 			if cm.config.IsAuthRequired(path) {
 				// Apply auth middleware
 				authConfig := DefaultAuthConfig()
@@ -58,7 +58,7 @@ func (cm *ConfigurableMiddleware) ConditionalAuth() router.MiddlewareFunc {
 				authMiddleware := Auth(authConfig)
 				return authMiddleware(next)(c)
 			}
-			
+
 			// Skip auth middleware
 			return next(c)
 		}
@@ -100,13 +100,13 @@ func (cm *ConfigurableMiddleware) ConditionalLogging() router.MiddlewareFunc {
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
 			path := c.Request.URL.Path
-			
+
 			if cm.config.IsLoggingRequired(path) {
 				// Apply logging middleware - this will be handled by main.go
 				// For now, just continue to next middleware
 				return next(c)
 			}
-			
+
 			// Skip logging middleware
 			return next(c)
 		}
@@ -118,14 +118,14 @@ func (cm *ConfigurableMiddleware) WebhookSignature(provider string) router.Middl
 	return func(next router.HandlerFunc) router.HandlerFunc {
 		return func(c *router.Context) error {
 			path := c.Request.URL.Path
-			
+
 			// Only apply to webhook paths if signature verification is enabled
 			if cm.isWebhookPath(path) && cm.config.WebhookSignatureEnabled {
 				// TODO: Implement provider-specific signature verification
 				// For now, just log and continue
 				// This would verify HMAC signatures from Stripe, GitHub, etc.
 			}
-			
+
 			return next(c)
 		}
 	}
@@ -146,29 +146,29 @@ func (cm *ConfigurableMiddleware) pathMatches(path, pattern string) bool {
 	if pattern == path {
 		return true
 	}
-	
+
 	// Handle wildcard patterns
 	if strings.HasSuffix(pattern, "/*") {
 		prefix := strings.TrimSuffix(pattern, "/*")
 		return strings.HasPrefix(path, prefix)
 	}
-	
+
 	return false
 }
 
 // ApplyConfigurableMiddleware is a helper function to apply all configurable middleware
 func ApplyConfigurableMiddleware(router *router.Router, cfg *config.MiddlewareConfig) {
 	cm := NewConfigurableMiddleware(cfg)
-	
+
 	// Apply middleware in the correct order
 	if cfg.RecoveryEnabled {
 		router.Use(Recovery(nil)) // Recovery should be first
 	}
-	
+
 	if cfg.CORSEnabled {
 		// CORS middleware will be applied in main.go
 	}
-	
+
 	// Apply conditional middleware
 	router.Use(cm.ConditionalAPIKey())
 	router.Use(cm.ConditionalAuth())

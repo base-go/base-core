@@ -13,12 +13,12 @@ import (
 
 // CacheMiddlewareConfig holds configuration for cache middleware
 type CacheMiddlewareConfig struct {
-	TTL                time.Duration
-	CacheableStatuses  []int
-	CacheableMethods   []string
-	SkipPaths          []string
-	VaryByQueryParams  bool
-	VaryByHeaders      []string
+	TTL               time.Duration
+	CacheableStatuses []int
+	CacheableMethods  []string
+	SkipPaths         []string
+	VaryByQueryParams bool
+	VaryByHeaders     []string
 }
 
 // DefaultCacheMiddlewareConfig returns default cache middleware configuration
@@ -170,14 +170,14 @@ func CacheStatsHandler(c cache.Cache) router.HandlerFunc {
 		}
 
 		response := map[string]interface{}{
-			"provider":    stats.Provider,
-			"hits":        stats.Hits,
-			"misses":      stats.Misses,
-			"hit_rate":    hitRate,
-			"sets":        stats.Sets,
-			"deletes":     stats.Deletes,
-			"size":        stats.Size,
-			"evictions":   stats.Evictions,
+			"provider":     stats.Provider,
+			"hits":         stats.Hits,
+			"misses":       stats.Misses,
+			"hit_rate":     hitRate,
+			"sets":         stats.Sets,
+			"deletes":      stats.Deletes,
+			"size":         stats.Size,
+			"evictions":    stats.Evictions,
 			"last_cleanup": stats.LastCleanup,
 		}
 
