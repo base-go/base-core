@@ -88,3 +88,27 @@ func TestResetPasswordForAnUnknownEmailAnswers404(t *testing.T) {
 		t.Fatalf("unknown email: got %d %v, want 404", code, body)
 	}
 }
+
+// With no email sender configured (main.go carries on without one), a reset
+// must succeed and must not crash the process when it tries to send the notice.
+func TestResetPasswordWithTheRightCodeSucceedsWithoutAnEmailSender(t *testing.T) {
+	r, db := newAuthRouter(t)
+	createUserWithResetToken(t, db, "123456", time.Now().Add(10*time.Minute))
+
+	code, body := postJSON(r, "/api/auth/reset-password",
+		`{"email":"ada@example.com","token":"123456","new_password":"newpassword"}`)
+	if code != http.StatusOK {
+		t.Fatalf("right code: got %d %v, want 200", code, body)
+	}
+	time.Sleep(200 * time.Millisecond) // the notice is sent from a goroutine
+}
+
+func TestForgotPasswordWithoutAnEmailSenderDoesNotCrash(t *testing.T) {
+	r, db := newAuthRouter(t)
+	createUserWithResetToken(t, db, "", time.Now())
+
+	code, _ := postJSON(r, "/api/auth/forgot-password", `{"email":"ada@example.com"}`)
+	if code != http.StatusInternalServerError {
+		t.Fatalf("forgot password without a sender: got %d, want 500", code)
+	}
+}

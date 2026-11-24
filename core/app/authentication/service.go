@@ -321,6 +321,10 @@ func generateToken() (string, error) {
 
 // Email sending functions
 func (s *AuthService) sendEmail(to, subject, title, content string) error {
+	if s.emailSender == nil {
+		return errors.New("no email sender is configured: set EMAIL_PROVIDER and its settings in .env")
+	}
+
 	var cachedTemplate *template.Template
 	emailTemplateMutex.RLock()
 	cachedTemplate = emailTemplateCache
